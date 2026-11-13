@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lobe Limpet — Hub</title>
+  <link rel="icon" type="image/svg+xml" href="assets/images/brand/favicon.svg?v=20261113d">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brand/favicon-32.png?v=20261113d">
+  <link rel="apple-touch-icon" href="assets/images/brand/apple-touch-icon.png?v=20261113d">
+  <link rel="manifest" href="manifest.webmanifest?v=20261113d">
+  <meta name="apple-mobile-web-app-title" content="Lobe Limpet">
+  <meta name="application-name" content="Lobe Limpet">
+  <link rel="stylesheet" href="theme.css?v=20261113d">
+  <script src="icons.js?v=20261113d"></script>
+  <link rel="stylesheet" href="stats.css?v=20261113d">
+  <style>
+    body { min-height: 100vh; background: var(--color-bg); }
+
+    /* ── Top nav ─────────────────────────────────────────── */
+    .topnav {
+      background: var(--color-surface); border-bottom: 1px solid var(--color-border);
+      padding: 0 var(--space-xl); height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: var(--font-heading); font-weight: 800; font-size: 1.3rem;
+      color: var(--color-text); text-decoration: none;
+    }
+    .nav-logo-icon {
+      width: 32px; height: 32px; background: var(--color-primary);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .nav-right { display: flex; align-items: center; gap: var(--space-md); }
+    .nav-user {
+      font-family: var(--font-ui); font-size: 0.88rem;
+      color: var(--color-text-muted);
+    }
+    .nav-user strong { color: var(--color-text); }
+
+    /* ── Page layout ─────────────────────────────────────── */
+    .page { max-width: 900px; margin: 0 auto; padding: var(--space-xl) var(--space-lg); }
+
+    /* ── Welcome banner ──────────────────────────────────── */
+    .welcome-banner {
+      margin-bottom: var(--space-xl);
+      animation: fadeIn 0.5s ease both;
+    }
+    .welcome-greeting {
+      font-family: var(--font-heading); font-size: 1.8rem; font-weight: 800;
+      margin-bottom: var(--space-xs);
+    }
+    .welcome-greeting span { color: var(--color-primary); }
+    .welcome-sub { color: var(--color-text-muted); font-size: 0.95rem; }
+    .pack-picker { display: inline-flex; align-items: center; gap: 8px; position: relative; font-family: var(--font-ui); max-width: 100%; min-width: 0; }
+    .pack-picker span { color: var(--color-text-muted); }
+    .pack-picker select { min-width: 0; max-width: 100%; text-overflow: ellipsis; width: auto; appearance: none; -webkit-appearance: none; padding: 7px 34px 7px 12px; font-weight: 700; color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 999px; cursor: pointer; font-family: var(--font-ui); font-size: 0.92rem; }
+    .pack-picker .icon { position: absolute; right: 12px; pointer-events: none; width: 16px; height: 16px; color: var(--color-text-muted); }
+
+    /* ── Section header ──────────────────────────────────── */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: var(--space-md);
+    }
+    .section-title {
+      font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700;
+    }
+
+    /* ── Subject cards ───────────────────────────────────── */
+    .subjects-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: var(--space-md); margin-bottom: var(--space-2xl);
+    }
+    .subject-card {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-card); padding: var(--space-lg);
+      transition: all var(--transition-base);
+      animation: fadeIn 0.4s ease both;
+    }
+    .subject-card:hover { border-color: var(--color-primary); transform: translateY(-2px); box-shadow: var(--shadow-glow); }
+    .subject-card-header {
+      display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-md);
+    }
+    .subject-emoji {
+      font-size: 2rem; width: 52px; height: 52px;
+      background: var(--color-surface-2); border-radius: var(--radius-card);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .subject-name {
+      font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700;
+    }
+    .subject-meta { font-size: 0.82rem; color: var(--color-text-muted); margin-top: 2px; }
+    .subject-actions {
+      display: flex; gap: var(--space-sm);
+    }
+    .subject-actions .btn {
+      flex: 1; padding: 9px var(--space-sm); font-size: 0.82rem;
+      border-radius: var(--radius-button);
+    }
+
+    /* ── Topics expandable ───────────────────────────────── */
+    .topics-section { margin-top: var(--space-md); border-top: 1px solid var(--color-border); padding-top: var(--space-md); }
+    .topics-toggle {
+      background: none; border: none; color: var(--color-text-muted);
+      font-family: var(--font-ui); font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; gap: 6px;
+      padding: 0; transition: color var(--transition-fast);
+    }
+    .topics-toggle:hover { color: var(--color-primary); }
+    .topics-toggle .chevron { transition: transform var(--transition-fast); display: inline-block; }
+    .topics-toggle.open .chevron { transform: rotate(90deg); }
+    .topics-list {
+      display: none; flex-direction: column; gap: 6px; margin-top: var(--space-sm);
+    }
+    .topics-list.open { display: flex; }
+    .topic-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--color-surface-2); border-radius: var(--radius-button);
+      padding: 8px 12px;
+    }
+    .topic-row-name { font-size: 0.85rem; color: var(--color-text); font-family: var(--font-ui); }
+    .topic-row-actions { display: flex; gap: 6px; }
+    .topic-btn {
+      padding: 4px 10px; border-radius: var(--radius-pill);
+      font-family: var(--font-ui); font-size: 0.75rem; font-weight: 600;
+      border: none; cursor: pointer; transition: all var(--transition-fast);
+    }
+    .topic-btn-quiz { background: var(--color-primary-glow); color: var(--color-primary); }
+    .topic-btn-quiz:hover { background: var(--color-primary); color: var(--color-on-primary); }
+    .topic-btn-map { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-muted); }
+    .topic-btn-map:hover { border-color: var(--color-accent); color: var(--color-accent); }
+    .topic-btn-watch { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-muted); text-decoration: none; }
+    .topic-btn-watch:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .topic-videos { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 0 8px; }
+    .topic-videos a { font-size: 0.8rem; font-weight: 600; color: var(--color-primary); text-decoration: none; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--color-border); }
+
+    /* ── Empty / loading states ──────────────────────────── */
+    .empty-state {
+      text-align: center; padding: var(--space-2xl) var(--space-lg);
+      color: var(--color-text-muted); grid-column: 1/-1;
+    }
+    .empty-state-icon { font-size: 3rem; margin-bottom: var(--space-md); }
+    .empty-state h3 { font-family: var(--font-heading); margin-bottom: var(--space-sm); }
+
+    /* ── Gamification bar ────────────────────────────────── */
+    .xp-bar-wrap {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-card); padding: var(--space-md) var(--space-lg);
+      margin-bottom: var(--space-lg); display: flex; align-items: center; gap: var(--space-lg);
+    }
+    .xp-level-badge { font-size: 2rem; flex-shrink: 0; }
+    /* ── Review today ─────────────────────────────────────── */
+    .review-card {
+      display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap;
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-card); padding: var(--space-md) var(--space-lg);
+      margin-bottom: var(--space-lg); box-shadow: var(--shadow-card);
+    }
+    .review-card.due { border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border)); }
+    .review-icon { width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      background: var(--color-primary-glow); color: var(--color-primary); }
+    .review-icon .icon { width: 22px; height: 22px; }
+    .review-text { flex: 1; min-width: 180px; }
+    .review-title { font-family: var(--font-heading); font-weight: 800; font-size: 1.05rem; color: var(--color-text); }
+    .review-sub { font-size: 0.86rem; color: var(--color-text-muted); }
+    .review-card .btn { flex-shrink: 0; }
+    @media (max-width: 600px) { .review-card .btn { width: 100%; } }
+    /* ── Win your streak back ─────────────────────────────── */
+    /* ── Study plan ───────────────────────────────────────── */
+    .plan-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card);
+      padding: var(--space-md) var(--space-lg); margin-bottom: var(--space-lg); box-shadow: var(--shadow-card); }
+    .plan-card.push, .plan-card.final { border-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-border)); }
+    .plan-top { display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap; }
+    .plan-ring { --p: 0; width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center;
+      background: conic-gradient(var(--color-primary) calc(var(--p) * 1%), var(--color-surface-2) 0); }
+    .plan-ring span { width: 50px; height: 50px; border-radius: 50%; background: var(--color-surface); display: grid; place-items: center;
+      font-family: var(--font-heading); font-weight: 800; font-size: 0.95rem; color: var(--color-text); }
+    .plan-ring.done { background: var(--color-success); }
+    .plan-head { flex: 1; min-width: 200px; }
+    .plan-level { font-family: var(--font-ui); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-primary); }
+    .plan-title { font-family: var(--font-heading); font-weight: 800; font-size: 1.1rem; color: var(--color-text); }
+    .plan-count { text-align: center; flex-shrink: 0; }
+    .plan-link { background: none; border: none; padding: 0; margin-top: 4px; cursor: pointer; color: var(--color-primary); font-family: var(--font-ui); font-weight: 600; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 5px; }
+    .plan-count b { display: block; font-family: var(--font-heading); font-size: 1.9rem; font-weight: 800; line-height: 1; color: var(--color-text); }
+    .plan-count span { font-family: var(--font-ui); font-size: 0.72rem; color: var(--color-text-muted); }
+    .plan-parts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .plan-part { font-family: var(--font-ui); font-size: 0.8rem; font-weight: 600; padding: 5px 11px; border-radius: 999px; background: var(--color-surface-2); color: var(--color-text-muted); }
+    .plan-part.ok { background: color-mix(in srgb, var(--color-success) 16%, transparent); color: var(--color-success); }
+    .plan-focus { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-border); font-size: 0.9rem; }
+    .plan-focus .txt { flex: 1; min-width: 200px; }
+    .plan-focus small { display: block; color: var(--color-text-muted); font-size: 0.8rem; }
+    .plan-focus .btn { padding: 7px 14px; font-size: 0.82rem; }
+    .repair-card { border-color: color-mix(in srgb, var(--color-streak) 55%, var(--color-border)) !important; }
+    .repair-card .review-icon { background: color-mix(in srgb, var(--color-streak) 16%, transparent); color: var(--color-streak); font-size: 1.4rem; }
+    .repair-bar { height: 8px; border-radius: 99px; background: var(--color-surface-2); overflow: hidden; margin-top: 8px; }
+    .repair-bar span { display: block; height: 100%; background: var(--color-streak); border-radius: 99px; transition: width .6s ease; }
+    .repair-meta { display: flex; justify-content: space-between; font-family: var(--font-ui); font-size: 0.78rem; color: var(--color-text-muted); margin-top: 4px; }
+    .xp-level-info { flex: 1; min-width: 0; }
+    .xp-level-name {
+      font-family: var(--font-heading); font-size: 1rem; font-weight: 700;
+      margin-bottom: 4px; display: flex; align-items: center; gap: var(--space-sm);
+    }
+    .xp-level-num {
+      font-size: 0.72rem; font-family: var(--font-ui); font-weight: 700;
+      background: var(--color-primary-glow); color: var(--color-primary);
+      border-radius: var(--radius-pill); padding: 2px 8px;
+    }
+    .xp-bar-track {
+      background: var(--color-surface-2); border-radius: var(--radius-pill);
+      height: 8px; overflow: hidden; margin-bottom: 4px;
+    }
+    .xp-bar-fill {
+      height: 100%; background: var(--color-primary);
+      border-radius: var(--radius-pill); transition: width 1s ease;
+    }
+    .xp-bar-label {
+      font-family: var(--font-ui); font-size: 0.72rem; color: var(--color-text-muted);
+      display: flex; justify-content: space-between;
+    }
+    .xp-stats { display: flex; gap: var(--space-lg); flex-shrink: 0; }
+    .xp-stat { text-align: center; }
+    .xp-stat-val {
+      font-family: var(--font-heading); font-size: 1.1rem; font-weight: 800;
+      color: var(--color-text);
+    }
+    .xp-stat-label {
+      font-family: var(--font-ui); font-size: 0.68rem; color: var(--color-text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .badges-row {
+      display: flex; gap: var(--space-sm); flex-wrap: wrap;
+      margin-bottom: var(--space-lg);
+    }
+    .badge-chip {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-pill); padding: 4px 12px;
+      font-family: var(--font-ui); font-size: 0.78rem; font-weight: 600;
+      color: var(--color-text); display: flex; align-items: center; gap: 5px;
+    }
+
+    /* ── Jump bar (links down to stats sections) ─────────── */
+    html { scroll-behavior: smooth; }
+    .jumpbar {
+      position: sticky; top: 64px; z-index: 90;
+      background: var(--color-bg); border-bottom: 1px solid var(--color-border);
+      display: flex; gap: 6px; padding: 8px var(--space-xl);
+      overflow-x: auto; scrollbar-width: none; justify-content: center;
+    }
+    .jumpbar::-webkit-scrollbar { display: none; }
+    .jump-link {
+      flex-shrink: 0; text-decoration: none; white-space: nowrap;
+      font-family: var(--font-ui); font-size: 0.8rem; font-weight: 700; color: var(--color-text);
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-pill); padding: 6px 12px; transition: border-color .15s, color .15s;
+    }
+    .jump-link:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    #hub-content { scroll-margin-top: 120px; }
+    .stats-divider { border: none; border-top: 1px solid var(--color-border); margin: var(--space-2xl) 0 var(--space-xl); }
+    @media (max-width: 600px) {
+      .jumpbar { justify-content: flex-start; padding: 8px var(--space-md); }
+      .nav-user { display: none; }
+      .xp-bar-wrap { flex-wrap: wrap; gap: var(--space-md); padding: var(--space-md); }
+      .xp-level-info { flex: 1 1 calc(100% - 60px); }
+      .xp-stats { width: 100%; justify-content: space-around; border-top: 1px solid var(--color-border); padding-top: var(--space-sm); }
+      .xp-level-num { white-space: nowrap; }
+    }
+
+    /* ── No group assigned ───────────────────────────────── */
+    .no-group-banner {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-card); padding: var(--space-xl);
+      text-align: center; margin-bottom: var(--space-xl);
+    }
+    .no-group-banner h3 { font-family: var(--font-heading); margin-bottom: var(--space-sm); }
+    .no-group-banner p { color: var(--color-text-muted); font-size: 0.9rem; }
+    /* ── Join a class ─────────────────────────────────────── */
+    .join-toggle { margin-top: 10px; background: none; border: none; padding: 0; cursor: pointer; font-family: var(--font-ui); font-size: 0.85rem; font-weight: 600; color: var(--color-primary); display: inline-flex; align-items: center; gap: 6px; }
+    .join-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+    .no-group-banner .join-form { justify-content: center; margin-top: var(--space-lg); }
+    .join-form input { width: 9.5em; text-transform: uppercase; letter-spacing: 0.18em; font-family: var(--font-ui); font-weight: 700; font-size: 1rem; text-align: center; padding: 9px 12px; border-radius: var(--radius-button); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); }
+    .join-form button[type=submit] { padding: 9px 18px; }
+    .join-msg { flex-basis: 100%; font-family: var(--font-ui); font-size: 0.82rem; min-height: 1em; }
+    .no-group-banner .join-msg { text-align: center; }
+    .join-msg.err { color: #e03131; }
+    .join-msg.ok { color: #0ca678; }
+  </style>
+  <link rel="stylesheet" href="ui.css?v=20261113d">
+</head>
+<body>
+<div id="toast-container"></div>
+
+<nav class="topnav">
+  <a href="hub.html" class="nav-logo">
+    <div class="nav-logo-icon"><svg class="brand-mark" viewBox="0 0 120 100" aria-hidden="true"><path d="M4 86 L16 80 L38 82 L60 79 L84 82 L104 80 L116 86 V92 a4 4 0 0 1 -4 4 H8 a4 4 0 0 1 -4 -4 Z" fill="#5d7c89"/><path d="M14 82 C18 46 38 16 60 14 C82 16 102 46 106 82 Q100 87 94 82 Q88 87 82 82 Q76 87 70 82 Q64 87 58 82 Q52 87 46 82 Q40 87 34 82 Q28 87 22 82 Q18 86 14 82 Z" fill="#ff7a59"/><path d="M60 16 C57 28 63 40 60 54" fill="none" stroke="#b8401f" stroke-width="6" stroke-linecap="round"/><circle cx="52" cy="66" r="6" fill="#123a4a"/><circle cx="68" cy="66" r="6" fill="#123a4a"/></svg></div><span class="brand-word">lobe <span class="brand-accent">limpet</span></span>
+  </a>
+  <div class="nav-right">
+    <span id="plus-link"></span>
+    <span class="nav-user">Hey, <strong id="nav-name">...</strong></span>
+    <a class="help-btn" href="help.html" aria-label="Help" title="Help"><i data-icon="circle-help"></i><span>Help</span></a>
+    <button class="btn btn-ghost" style="padding:8px 14px;font-size:0.85rem;" onclick="doSignOut()">Sign out</button>
+  </div>
+</nav>
+<div class="jumpbar" id="jumpbar" style="display:none;">
+  <a class="jump-link" href="#hub-content"><i data-icon="book-open"></i> Revise</a>
+  <a class="jump-link" href="#goals"><i data-icon="target"></i> Goals</a>
+  <a class="jump-link" href="#time"><i data-icon="clock"></i> Time</a>
+  <a class="jump-link" href="#subjects"><i data-icon="library"></i> By subject</a>
+  <a class="jump-link" href="#badges"><i data-icon="award"></i> Badges</a>
+  <a class="jump-link" href="cards.html"><i data-icon="layers"></i> My flashcards</a>
+  <a class="jump-link" href="profile.html"><i data-icon="user"></i> Full profile</a>
+  <a class="jump-link" href="help.html"><i data-icon="circle-help"></i> Help</a>
+</div>
+
+<div class="page page-fade">
+  <div class="welcome-banner">
+    <div class="welcome-greeting">Hey, <span id="student-name">...</span></div>
+    <div class="welcome-sub" id="welcome-sub">Loading your subjects…</div>
+    <div id="join-wrap"></div>
+  </div>
+  <div id="first-steps"></div>
+
+  <div id="gamification-wrap" style="display:none;">
+    <div class="xp-bar-wrap" id="xp-bar-wrap">
+      <div class="xp-level-badge" id="xp-level-badge">🌱</div>
+      <div class="xp-level-info">
+        <div class="xp-level-name">
+          <span id="xp-level-name">Beginner</span>
+          <span class="xp-level-num" id="xp-level-num">Level 1</span>
+        </div>
+        <div class="xp-bar-track"><div class="xp-bar-fill" id="xp-bar-fill" style="width:0%"></div></div>
+        <div class="xp-bar-label">
+          <span id="xp-bar-left"></span>
+          <span id="xp-bar-right"></span>
+        </div>
+      </div>
+      <div class="xp-stats">
+        <div class="xp-stat">
+          <div class="xp-stat-val" id="xp-streak-val">0 <i data-icon="flame"></i></div>
+          <div class="xp-stat-label" id="xp-streak-label">Streak</div>
+        </div>
+        <div class="xp-stat">
+          <div class="xp-stat-val" id="xp-total-val">0</div>
+          <div class="xp-stat-label">Total XP</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="plan-wrap"></div>
+  <div id="streak-wrap"></div>
+  <div id="review-wrap"></div>
+  <div id="hub-content">
+    <div class="subjects-grid">
+      <div class="empty-state">
+        <div class="spinner" style="margin:0 auto var(--space-md);"></div>
+      </div>
+    </div>
+  </div>
+  <div id="stats-wrap" style="display:none;">
+    <hr class="stats-divider">
+    <div id="stats-root"></div>
+  </div>
+  </div>
+</div>
+
+<script>
+  function doSignOut() { window._doSignOut && window._doSignOut(); }
+  function dismissNotification() { const els = document.querySelectorAll('[style*="primary-glow"]'); els.forEach(e => e.remove()); }
+  function goQuiz(params) { window._goQuiz && window._goQuiz(params); }
+  function goMindmap(params) { window._goMindmap && window._goMindmap(params); }
+  function toggleTopics(btn) { window._toggleTopics && window._toggleTopics(btn); }
+</script>
+
+<script type="module">
+import { auth, db } from './firebase-config.js?v=20261113d';
+import { requireAuth, handleSignOut, showToast, isPreview, isStudent, hasRole } from './auth.js?v=20261113d';
+import { getLevelInfo, currentStreak, streakStatus, repairOffer, REPAIR, awardXp, loadStreakSettings } from './gamification.js?v=20261113d';
+import { statsSectionsHtml, renderStats } from './stats.js?v=20261113d';
+import { findClass, joinClass, cleanCode } from './join-class.js?v=20261113d';
+import { listPacks, samePackIds } from './packs.js?v=20261113d';
+import { plusPillHtml } from './plus.js?v=20261113d';
+import { inOrder } from './order.js?v=20261113d';
+import { videosOf, readsOf, readLabel, namedLinks } from './videos.js?v=20261113d';
+import { topicLocked, plusTagHtml, addAccessCss, showTopicLocked } from './access.js?v=20261113d';
+import { showLinkRequests } from './parent-link.js?v=20261113d';
+import { dueEntries, nextDueDay, scheduledCount, whenText, REVIEW_SIZE } from './srs.js?v=20261113d';
+import { goalStatus, planSummary, loadPlanSettings, targetText, isoDay, daysBetween, planSchedule, subjectNeed } from './plan.js?v=20261113d';
+import { openPlanCalendar } from './plan-view.js?v=20261113d';
+import { logEvent } from './log.js?v=20261113d';
+import { loadCardSets } from './card-sets.js?v=20261113d';
+import { noPackHtml, openChoosePacks, mountStudentStart, packSource, SOURCE_TEXT } from './student-start.js?v=20261113d';
+import {
+  collection, getDocs, doc, getDoc, updateDoc, query, orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+window._doSignOut = () => handleSignOut();
+
+window._goQuiz = (params) => {
+  const url = new URL('quiz.html', location.href);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+  location.href = url.toString();
+};
+
+window._goMindmap = (params) => {
+  const url = new URL('mindmap.html', location.href);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+  location.href = url.toString();
+};
+
+window._lockedTopic = (name) => showTopicLocked(name);
+
+window._toggleTopics = (btn) => {
+  btn.classList.toggle('open');
+  const list = btn.nextElementSibling;
+  list.classList.toggle('open');
+};
+
+requireAuth(async (user, profile) => {
+  hubProfile = profile; hubUser = user;
+  await Promise.all([loadStreakSettings(), loadPlanSettings()]);   // admin's streak and study plan rules
+  // Allow student, parent, admin — parents/admins can preview hub
+  const firstName = (profile.name || 'there').split(' ')[0];
+  document.getElementById('student-name').textContent = firstName;
+  document.getElementById('nav-name').textContent = firstName;
+  if (!isPreview()) document.getElementById('plus-link').innerHTML = plusPillHtml(profile);
+  // A parent asking to link with this account: Accept or Decline at the top
+  if (!isPreview() && isStudent(profile)) showLinkRequests(document.querySelector('.welcome-banner'), user.uid, profile).catch(() => {});
+
+  // Admin/parent: show admin link and load first available group for preview
+  if (!isStudent(profile)) {
+    document.getElementById('welcome-sub').textContent = 'Previewing student hub';
+    const adminBar = document.createElement('div');
+    adminBar.style.cssText = 'background:var(--color-primary-glow);border:1px solid var(--color-primary);border-radius:var(--radius-card);padding:10px 16px;margin-bottom:var(--space-lg);display:flex;align-items:center;justify-content:space-between;font-family:var(--font-ui);font-size:0.85rem;';
+    adminBar.innerHTML = `<span style="color:var(--color-primary);font-weight:600;"><i data-icon="eye"></i> Preview mode, viewing as a student</span><a href="admin.html" style="color:var(--color-primary);font-weight:700;">← Back to admin</a>`;
+    document.getElementById('hub-content').before(adminBar);
+    // Load first group for preview
+    const firstGroupId = (await listPacks(user.uid).catch(() => []))[0]?.id || null;
+    if (firstGroupId) await loadSubjects(user, firstGroupId);
+    else document.getElementById('hub-content').innerHTML = `<div class="no-group-banner"><h3>No revision packs yet</h3><p>Create one in the admin panel first.</p></div>`;
+    return;
+  }
+
+  // Student: which revision packs do they have? (chosen by a parent, or via
+  // a class). If several, they pick one; the choice is remembered.
+  const groupIds = packIdsFor(profile);
+  const groupId = chosenPack(user, profile, groupIds);
+
+  // Keep the flat list of my packs up to date: the security rules use it
+  // to let me read packs a parent or teacher made themselves
+  if (!isPreview() && user.uid !== 'preview-readonly') {
+    if (!samePackIds(profile.packIds || [], groupIds)) {
+      await updateDoc(doc(db, 'users', user.uid), { packIds: groupIds }).catch(e => console.warn('Could not update pack list', e.message));
+    }
+  }
+
+  if (!groupId) {
+    document.getElementById('welcome-sub').textContent = "Welcome! Let's choose what you'll revise.";
+    document.getElementById('hub-content').innerHTML = noPackHtml(joinFormHtml());
+    wireJoinForm(user, profile);
+    document.querySelector('[data-ss="choose"]').onclick = () => openChoosePacks({ uid: user.uid, profile, toast: showToast, preview: isPreview(), onDone: () => location.reload() });
+    return;
+  }
+
+  // Small "Join a class" link under the welcome line
+  const jw = document.getElementById('join-wrap');
+  if (jw && !isPreview()) {
+    jw.innerHTML = `<a class="join-toggle" href="cards.html" style="margin-right:16px;text-decoration:none;"><i data-icon="layers"></i> My flashcards</a><button class="join-toggle" type="button" data-add-pack style="margin-right:16px;"><i data-icon="library"></i> Add a pack</button><button class="join-toggle" type="button" data-join><i data-icon="plus"></i> Join a class</button>`;
+    jw.querySelector('[data-join]').onclick = () => { jw.innerHTML = joinFormHtml(); wireJoinForm(user, profile); jw.querySelector('input').focus(); };
+    jw.querySelector('[data-add-pack]').onclick = () => openChoosePacks({ uid: user.uid, profile, toast: showToast, onDone: () => location.reload() });
+  }
+
+  await loadSubjects(user, groupId);
+  if (groupIds.length > 1) renderPackPicker(user, groupIds, groupId);
+  // "Your first week" (student-start.js), until done or hidden
+  const firstBtn = sel => document.querySelector(`#hub-content button[onclick^="${sel}"]`) || document.querySelector(`button[onclick^="${sel}"]`);
+  const cardSets = profile.myPackId ? (await loadCardSets(profile).catch(() => null))?.length ?? null : 0;
+  mountStudentStart(document.getElementById('first-steps'), {
+    uid: user.uid, profile, preview: isPreview(), toast: showToast, cardSets,
+    source: SOURCE_TEXT[packSource(profile, groupId)] || '',
+    actions: {
+      quiz: () => { const b = firstBtn('goQuiz'); b ? b.click() : document.getElementById('hub-content').scrollIntoView({ behavior: 'smooth' }); },
+      learn: () => { const b = firstBtn('goMindmap'); b ? b.click() : document.getElementById('hub-content').scrollIntoView({ behavior: 'smooth' }); },
+      cards: () => { location.href = 'cards.html'; },
+    },
+  });
+  renderGamification(profile, user);
+  // Show parent notification if any
+  if (profile.notification && !profile.notification.read) {
+    const n = profile.notification;
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:var(--color-primary-glow);border:1px solid var(--color-primary);border-radius:var(--radius-card);padding:var(--space-md) var(--space-lg);margin-bottom:var(--space-lg);display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-md);';
+    banner.innerHTML = `<div><div style="font-family:var(--font-ui);font-size:0.78rem;font-weight:700;color:var(--color-primary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;"><i data-icon="message-square"></i> Message from your parent</div><div style="font-size:0.92rem;color:var(--color-text);">${esc(n.message)}</div></div><button onclick="dismissNotification()" style="flex-shrink:0;background:none;border:none;color:var(--color-text-muted);cursor:pointer;font-size:1.1rem;padding:4px;" aria-label="Dismiss"><i data-icon="x"></i></button>`;
+    document.getElementById('hub-content').before(banner);
+    // Mark as read (not when an adult is previewing, so the child still sees it)
+    if (isPreview()) return;
+    const { updateDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await updateDoc(doc(db, 'users', user.uid), { 'notification.read': true }).catch(()=>{});
+  }
+});
+
+/* ── Join a class with a code ─────────────────────────────── */
+function joinFormHtml() {
+  return `<form class="join-form" id="join-form" autocomplete="off">
+    <input id="join-code" maxlength="7" placeholder="CODE" aria-label="Class code" inputmode="text" autocapitalize="characters">
+    <button type="submit" class="btn btn-primary" id="join-btn">Join class</button>
+    <div class="join-msg" id="join-msg" role="status"></div>
+  </form>`;
+}
+function wireJoinForm(user, profile) {
+  const form = document.getElementById('join-form');
+  if (!form) return;
+  const msg = (t, cls) => { const m = document.getElementById('join-msg'); m.textContent = t; m.className = 'join-msg ' + (cls || ''); };
+  form.onsubmit = async e => {
+    e.preventDefault();
+    if (isPreview() || user.uid === 'preview-readonly') { msg('Not available while previewing.', 'err'); return; }
+    const code = cleanCode(document.getElementById('join-code').value);
+    if (code.length !== 6) { msg('Class codes are 6 letters and numbers.', 'err'); return; }
+    const btn = document.getElementById('join-btn');
+    btn.disabled = true; msg('Checking code…');
+    try {
+      const info = await findClass(code);
+      if (!info) { msg('That code wasn\'t found. Check it with your teacher.', 'err'); return; }
+      if (profile.classes?.[info.classId]) { msg(`You're already in ${info.className || 'this class'}.`, 'ok'); return; }
+      await joinClass(user.uid, profile, info);
+      logEvent('class.join', { target: info.className || '', targetId: info.classId, detail: 'With a class code' });
+      const firstNew = (info.packIds || []).find(id => !packIdsFor(profile).includes(id));
+      if (firstNew) { try { localStorage.setItem('clasp_pack_' + user.uid, firstNew); } catch (err) {} }
+      msg(`You've joined ${info.className || 'the class'}!${info.packIds?.length ? ' Loading your revision…' : ' Your teacher hasn\'t chosen a revision pack yet.'}`, 'ok');
+      showToast(`Joined ${info.className || 'class'}`, 'success');
+      if (info.packIds?.length) setTimeout(() => location.reload(), 1200);
+    } catch (err) {
+      console.warn('Join class failed', err);
+      msg('Couldn\'t join just now. Please try again.', 'err');
+    } finally { btn.disabled = false; }
+  };
+}
+
+/* ── Revision pack picker ─────────────────────────────────── */
+function packIdsFor(profile) {
+  const ids = [...(profile.groupIds || (profile.groupId ? [profile.groupId] : []))];
+  Object.values(profile.classPacks || {}).forEach(list => (list || []).forEach(id => ids.push(id)));
+  if (profile.myPackId) ids.push(profile.myPackId);   // their own flashcard sets
+  return [...new Set(ids.filter(Boolean))];
+}
+function chosenPack(user, profile, ids) {
+  let saved = null;
+  try { saved = localStorage.getItem('clasp_pack_' + user.uid); } catch (e) {}
+  if (ids.includes(saved)) return saved;
+  if (ids.includes(profile.currentPackId)) return profile.currentPackId;
+  return ids[0] || null;
+}
+async function renderPackPicker(user, ids, current) {
+  const names = await Promise.all(ids.map(id => getDoc(doc(db, 'content', id)).then(s => s.exists() ? s.data().name : null).catch(() => null)));
+  const options = ids.map((id, i) => ({ id, name: names[i] })).filter(o => o.name);
+  if (options.length < 2) return;
+  const sub = document.getElementById('welcome-sub');
+  sub.innerHTML = `<label class="pack-picker"><span>Revising for</span>
+    <select id="pack-select" aria-label="Choose a revision pack">${options.map(o => `<option value="${o.id}"${o.id === current ? ' selected' : ''}>${esc(o.name)}</option>`).join('')}</select>
+    <i data-icon="chevron-down"></i></label>`;
+  document.getElementById('pack-select').onchange = async e => {
+    const id = e.target.value;
+    try { localStorage.setItem('clasp_pack_' + user.uid, id); } catch (err) {}
+    if (!isPreview() && user.uid !== 'preview-readonly') {
+      const { updateDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+      updateDoc(doc(db, 'users', user.uid), { currentPackId: id }).catch(() => {});
+    }
+    document.getElementById('hub-content').innerHTML = '<div class="subjects-grid"><div class="empty-state"><div class="spinner" style="margin:0 auto;"></div></div></div>';
+    await loadSubjects(user, id);
+    renderPackPicker(user, ids, id);
+  };
+}
+
+let hubProfile = null;   // the student whose hub this is (for Review today)
+let hubUser = null;
+
+/* ── Study plan: countdown, today's goal, what to focus on ───── */
+function focusSubject(profile, subjects, groupId) {
+  if (!subjects?.length) return null;
+  const today = isoDay();
+  const due = dueEntries(profile, groupId);
+  const scored = subjects.map(s => {
+    const ses = (profile.sessions || []).filter(x => !x.review && (x.subjectId === s.id || x.subject === s.name));
+    const recent = ses.slice(-6);
+    const avg = recent.length ? recent.reduce((a, x) => a + (x.pct || 0), 0) / recent.length : null;
+    const dueN = due.filter(e => e.s === s.id).length;
+    // days since this subject was last revised (quiz or study time)
+    const lastQuiz = Math.max(0, ...ses.map(x => x.date || 0));
+    const studyDays = Object.keys(profile.study || {}).filter(d => (profile.study[d] || {})[s.id] > 0).sort();
+    const lastStudy = studyDays.length ? new Date(studyDays[studyDays.length - 1] + 'T12:00:00').getTime() : 0;
+    const last = Math.max(lastQuiz, lastStudy);
+    const since = last ? daysBetween(isoDay(new Date(last)), today) : 30;
+    const score = (avg === null ? 40 : 100 - avg) + dueN * 3 + Math.min(since, 14) * 4;
+    let why = [];
+    if (avg !== null && avg < 65) why.push(`your average is ${Math.round(avg)}%`);
+    if (dueN) why.push(`${dueN} review${dueN === 1 ? '' : 's'} due`);
+    if (since >= 3) why.push(last ? `not revised for ${since} days` : 'not started yet');
+    if (!why.length) why.push(avg !== null ? `keep it ticking over (${Math.round(avg)}% average)` : 'keep every subject ticking over');
+    return { s, score, why };
+  }).sort((a, b) => b.score - a.score);
+  return scored[0];
+}
+
+function renderPlanCard(groupId, subjects) {
+  const wrap = document.getElementById('plan-wrap');
+  if (!wrap) return;
+  const profile = hubProfile;
+  if (!profile || !isStudent(profile)) { wrap.innerHTML = ''; return; }
+  const g = goalStatus(profile);
+  const sum = planSummary(profile);
+  const L = g.L;
+  const pct = Math.round(g.pct * 100);
+  const toExam = sum.exam ? daysBetween(isoDay(), sum.exam.start) : null;
+  const parts = [`<span class="plan-part${g.minsOk ? ' ok' : ''}">${g.minsOk ? '✓ ' : ''}${Math.min(g.mins, L.mins)} / ${L.mins} min</span>`];
+  if (L.quizzes) parts.push(`<span class="plan-part${g.quizOk ? ' ok' : ''}">${g.quizOk ? '✓ ' : ''}${Math.min(g.quizzes, L.quizzes)} / ${L.quizzes} quiz${L.quizzes === 1 ? '' : 'zes'}</span>`);
+  if (L.reviews) parts.push(`<span class="plan-part${g.revOk ? ' ok' : ''}">${g.revOk ? '✓ reviews done' : `${g.reviewsLeft} review${g.reviewsLeft === 1 ? '' : 's'} due`}</span>`);
+  // Today's subject: from the plan (a parent may have chosen it), else the one that needs it most
+  let f = null;
+  if (!g.done && !g.rest) {
+    const today = planSchedule(profile, subjects, groupId, { back: 0 }).days[0];
+    if (today?.subject) f = { s: today.subject, why: subjectNeed(profile, today.subject, groupId).why, chosen: !!today.override?.subjectId };
+    else f = focusSubject(profile, subjects, groupId);
+  }
+  window._openMyPlan = () => openPlanCalendar(profile, { editable: false });
+  const go = s => `{groupId:'${groupId}',subjectId:'${s.id}',subjectName:'${esc(s.name)}'}`;
+  wrap.innerHTML = `<div class="plan-card ${g.level}">
+    <div class="plan-top">
+      <div class="plan-ring${g.done ? ' done' : ''}" style="--p:${pct}"><span>${g.done ? '✓' : pct + '%'}</span></div>
+      <div class="plan-head">
+        <div class="plan-level">${L.emoji} ${L.label}${L.either ? ` · ${targetText(L)}` : ''}</div>
+        <div class="plan-title">${g.rest ? 'Rest day 😴' : g.done ? 'Goal hit for today! 🎉' : "Today's goal"}</div>
+        ${g.rest ? `<div class="review-sub">No goal today. Enjoy the break.</div>` : g.done ? `<div class="review-sub">Nice work. Anything more today is a bonus.</div>` : ''}
+        <button type="button" class="plan-link" onclick="_openMyPlan()"><i data-icon="calendar"></i> See my plan</button>
+      </div>
+      ${toExam !== null && toExam >= 0 ? `<div class="plan-count" role="button" tabindex="0" onclick="_openMyPlan()" style="cursor:pointer" title="See my plan to the exams"><b>${toExam === 0 ? 'Today' : toExam}</b><span>${toExam === 0 ? esc(sum.exam.name || 'Exams') : `day${toExam === 1 ? '' : 's'} to ${esc(sum.exam.name || 'exams')}`}</span></div>` : ''}
+    </div>
+    ${g.done || g.rest ? '' : `<div class="plan-parts">${parts.join('')}</div>`}
+    ${f ? `<div class="plan-focus"><span style="font-size:1.3rem">🎯</span><div class="txt"><strong>Focus today: ${esc(f.s.name)}</strong>${f.chosen ? ' <span style="font-size:0.75rem;color:var(--color-text-muted)">(chosen for you)</span>' : ''}${f.why.length ? `<small>${f.why.join(', ')}</small>` : ''}</div>
+      <button class="btn btn-secondary" onclick="goMindmap(${go(f.s)})"><i data-icon="book-open"></i> Learn</button>
+      <button class="btn btn-primary" onclick="goQuiz(${go(f.s)})"><i data-icon="zap"></i> Quiz</button></div>` : ''}
+  </div>`;
+}
+
+/* ── Win your streak back ─────────────────────────────────── */
+function durationText(m) {
+  if (m === 60) return 'an hour';
+  if (m === 90) return 'an hour and a half';
+  if (m % 60 === 0) return `${m / 60} hours`;
+  return `${m} minutes`;
+}
+function renderRepairCard(profile) {
+  const wrap = document.getElementById('streak-wrap');
+  if (!wrap) return;
+  const r = isStudent(profile) ? repairOffer(profile) : null;
+  if (!r) { wrap.innerHTML = ''; return; }
+  // Hour reached but not yet confirmed (e.g. they stopped right on it): confirm now
+  if (r.started && !r.done && r.progress.done && !isPreview() && hubUser) {
+    awardXp(hubUser.uid, 'time', { minutes: 0 }).then(res => { if (res?.repaired) { profile.streak = res.streak; profile.streakRepair = { ...profile.streakRepair, done: true }; renderRepairCard(profile); renderGamification(profile, hubUser); } }).catch(() => {});
+  }
+  if (r.done) {
+    wrap.innerHTML = `<div class="review-card repair-card"><div class="review-icon">🦸</div>
+      <div class="review-text"><div class="review-title">Streak won back!</div>
+      <div class="review-sub">Your ${r.from + 1}-day streak is back on. Keep it going tomorrow.</div></div></div>`;
+    return;
+  }
+  const p = r.progress, pct = Math.round(p.mins / REPAIR.MINUTES * 100);
+  wrap.innerHTML = `<div class="review-card repair-card">
+    <div class="review-icon">🔥</div>
+    <div class="review-text">
+      <div class="review-title">Win back your ${r.from}-day streak</div>
+      <div class="review-sub">Revise for ${durationText(REPAIR.MINUTES)} today: study time counts minute for minute, and each quiz or review scoring ${REPAIR.QUIZ_PASS}%+ counts as ${REPAIR.QUIZ_MINUTES} minutes.</div>
+      <div class="repair-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${REPAIR.MINUTES}" aria-valuenow="${p.mins}"><span style="width:${pct}%"></span></div>
+      <div class="repair-meta"><span>${p.mins} / ${REPAIR.MINUTES} minutes</span><span>${p.studyMins} min study · ${p.quizzes} quiz${p.quizzes === 1 ? '' : 'zes'}</span></div>
+    </div></div>`;
+}
+
+/* ── Review today card ───────────────────────────────────── */
+function renderReviewCard(groupId) {
+  const wrap = document.getElementById('review-wrap');
+  if (!wrap) return;
+  if (!hubProfile || !isStudent(hubProfile)) { wrap.innerHTML = ''; return; }
+  const due = dueEntries(hubProfile, groupId).length;
+  const scheduled = scheduledCount(hubProfile, groupId);
+  const go = `quiz.html?review=1&groupId=${encodeURIComponent(groupId)}`;
+  if (due) {
+    const n = Math.min(due, REVIEW_SIZE);
+    wrap.innerHTML = `<div class="review-card due">
+      <div class="review-icon"><i data-icon="repeat"></i></div>
+      <div class="review-text"><div class="review-title">Review today · ${due} due</div>
+        <div class="review-sub">Questions you've met before, back at just the right time to make them stick${due > n ? `. ${n} at a time.` : '.'}</div></div>
+      <a class="btn btn-primary" href="${go}"><i data-icon="repeat"></i> Start review</a></div>`;
+  } else if (scheduled) {
+    wrap.innerHTML = `<div class="review-card">
+      <div class="review-icon"><i data-icon="circle-check"></i></div>
+      <div class="review-text"><div class="review-title">All caught up</div>
+        <div class="review-sub">Nothing to review right now. Next review ${whenText(nextDueDay(hubProfile, groupId))}.</div></div></div>`;
+  } else {
+    wrap.innerHTML = `<div class="review-card">
+      <div class="review-icon"><i data-icon="repeat"></i></div>
+      <div class="review-text"><div class="review-title">Review today</div>
+        <div class="review-sub">Do a quiz and its questions will come back here for review, just as you're about to forget them.</div></div></div>`;
+  }
+}
+
+async function loadSubjects(user, groupId) {
+  const grid = document.getElementById('hub-content');
+  renderReviewCard(groupId);
+
+  // Get group info
+  const groupSnap = await getDoc(doc(db, 'content', groupId));
+  if (!groupSnap.exists()) {
+    grid.innerHTML = `<div class="no-group-banner"><h3>Revision pack not found</h3><p>Ask your parent or teacher to choose another pack for you.</p></div>`;
+    return;
+  }
+
+  document.getElementById('welcome-sub').textContent = `Revising: ${groupSnap.data().name}`;
+
+  // Get subjects
+  // All subjects (orderBy('order') would leave out any without an order number), then sorted
+  const subjectsSnap = await getDocs(collection(db, `content/${groupId}/subjects`));
+  const subjects = inOrder(subjectsSnap);
+
+  if (subjects.length === 0) {
+    grid.innerHTML = `<div class="subjects-grid"><div class="empty-state"><div class="empty-state-icon"><i data-icon="inbox"></i></div><h3>No subjects yet</h3><p>Your admin is still adding content.</p></div></div>`;
+    return;
+  }
+
+  // For each subject, load topics
+  const subjectTopics = {};
+  await Promise.all(subjects.map(async s => {
+    const tSnap = await getDocs(collection(db, `content/${groupId}/subjects/${s.id}/topics`)).catch(() => null);
+    subjectTopics[s.id] = [];
+    if (tSnap) subjectTopics[s.id] = inOrder(tSnap);
+  }));
+  renderPlanCard(groupId, subjects);
+
+  grid.innerHTML = `
+    <div class="section-header">
+      <div class="section-title">Your subjects</div>
+    </div>
+    <div class="subjects-grid" id="subjects-grid"></div>`;
+
+  const sgrid = document.getElementById('subjects-grid');
+  addAccessCss();
+
+  // Official links set on the subject in admin (spec, past papers, Bitesize...)
+  const resHtml = (list) => {
+    // Links saved without a name show the site's name ("BBC Bitesize page 1"), not "bbc.co.uk"
+    const ok = namedLinks(list);
+    if (!ok.length) return '';
+    return `<div class="topics-section"><button class="topics-toggle" onclick="toggleTopics(this)"><span class="chevron">›</span> Official resources</button>
+      <div class="topics-list">${ok.map(r => `<div class="topic-row"><a class="topic-row-name" href="${esc(r.url)}" target="_blank" rel="noopener" style="color:var(--color-primary);text-decoration:none;">${esc(r.label)} <span style="opacity:.6">↗</span></a></div>`).join('')}</div></div>`;
+  };
+  subjects.forEach((s, i) => {
+    const topics = subjectTopics[s.id] || [];
+    const topicCount = topics.length;
+
+    // Explainer videos set on the topic: one opens directly, several open a list
+    // Web pages to read first (e.g. the BBC Bitesize page the topic was made from)
+    const readHtml = t => {
+      const reads = readsOf(t);
+      if (!reads.length) return '';
+      if (reads.length === 1) return `<a class="topic-btn topic-btn-watch" href="${esc(reads[0].url)}" target="_blank" rel="noopener" title="${esc(readLabel(reads[0]))}">📖 Read</a>`;
+      return `<button class="topic-btn topic-btn-watch" title="${reads.length} pages" onclick="const n=this.closest('.topic-row').nextElementSibling;n.hidden=!n.hidden">📖 Read (${reads.length})</button>`;
+    };
+    const watchHtml = t => {
+      const vids = videosOf(t);
+      if (!vids.length) return readHtml(t);
+      if (vids.length === 1) return readHtml(t) + `<a class="topic-btn topic-btn-watch" href="${esc(vids[0].url)}" target="_blank" rel="noopener" title="${esc(vids[0].label)}">▶ Watch</a>`;
+      return readHtml(t) + `<button class="topic-btn topic-btn-watch" title="${vids.length} videos" onclick="const n=this.closest('.topic-row').nextElementSibling;n.hidden=!n.hidden">▶ Watch (${vids.length})</button>`;
+    };
+    const watchListHtml = t => {
+      const vids = videosOf(t), reads = readsOf(t);
+      const links = [...(reads.length > 1 ? reads.map(r => [`📖 ${readLabel(r)}`, r.url]) : []), ...(vids.length > 1 ? vids.map(v => [v.label, v.url]) : [])];
+      return links.length ? `<div class="topic-videos" hidden>${links.map(([l, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(l)} ↗</a>`).join('')}</div>` : '';
+    };
+    const lockedRowHtml = t => `
+      <div class="topic-row locked">
+        <span class="topic-row-name">${esc(t.name)}${plusTagHtml()}</span>
+        <div class="topic-row-actions">
+          <button class="topic-btn topic-btn-map" onclick="_lockedTopic(this.dataset.name)" data-name="${esc(t.name)}"><i data-icon="book-open"></i> Learn</button>
+          <button class="topic-btn topic-btn-quiz" onclick="_lockedTopic(this.dataset.name)" data-name="${esc(t.name)}"><i data-icon="zap"></i> Quiz</button>
+          ${watchHtml(t)}
+        </div>
+      </div>${watchListHtml(t)}`;
+    const lockedCount = topics.filter(t => topicLocked(t, hubProfile)).length;
+    const topicRowsHtml = topics.map(t => topicLocked(t, hubProfile) ? lockedRowHtml(t) : `
+      <div class="topic-row">
+        <span class="topic-row-name">${esc(t.name)}</span>
+        <div class="topic-row-actions">
+          <button class="topic-btn topic-btn-map"
+            onclick="goMindmap({groupId:'${groupId}',subjectId:'${s.id}',topicId:'${t.id}',topicName:'${esc(t.name)}',subjectName:'${esc(s.name)}'})">
+            <i data-icon="book-open"></i> Learn
+          </button>
+          <button class="topic-btn topic-btn-quiz"
+            onclick="goQuiz({groupId:'${groupId}',subjectId:'${s.id}',topicId:'${t.id}',topicName:'${esc(t.name)}',subjectName:'${esc(s.name)}'})">
+            <i data-icon="zap"></i> Quiz
+          </button>
+          <button class="topic-btn topic-btn-map"
+            onclick="goMindmap({groupId:'${groupId}',subjectId:'${s.id}',topicId:'${t.id}',topicName:'${esc(t.name)}',subjectName:'${esc(s.name)}',view:'cheatsheet'})">
+            <i data-icon="file-text"></i> Cheat sheet
+          </button>
+          ${watchHtml(t)}
+        </div>
+      </div>${watchListHtml(t)}`).join('');
+
+    const card = document.createElement('div');
+    card.className = 'subject-card';
+    card.style.animationDelay = `${i * 0.07}s`;
+    card.innerHTML = `
+      <div class="subject-card-header">
+        <div class="subject-emoji">${s.emoji || '📚'}</div>
+        <div>
+          <div class="subject-name">${esc(s.name)}</div>
+          <div class="subject-meta">${topicCount} topic${topicCount !== 1 ? 's' : ''}${lockedCount ? ` · ${topicCount - lockedCount} free, ${lockedCount} with <a href="plus.html" style="color:inherit;">Plus</a>` : ''}</div>
+        </div>
+      </div>
+      <div class="subject-actions">
+        <button class="btn btn-secondary" title="Spider map, outline, flashcards and cheat sheets"
+          onclick="goMindmap({groupId:'${groupId}',subjectId:'${s.id}',subjectName:'${esc(s.name)}'})">
+          <i data-icon="book-open"></i> Learn
+        </button>
+        <button class="btn btn-primary" title="Quiz on the whole subject"
+          onclick="goQuiz({groupId:'${groupId}',subjectId:'${s.id}',subjectName:'${esc(s.name)}'})">
+          <i data-icon="zap"></i> Quiz
+        </button>
+      </div>
+      ${resHtml(s.resources)}
+      ${topicCount > 0 ? `
+      <div class="topics-section">
+        <button class="topics-toggle" onclick="toggleTopics(this)">
+          <span class="chevron">›</span> Topics
+        </button>
+        <div class="topics-list">${topicRowsHtml}</div>
+      </div>` : ''}`;
+    sgrid.appendChild(card);
+  });
+}
+
+function renderGamification(profile, user) {
+  if (!isStudent(profile)) return;
+  const wrap = document.getElementById('gamification-wrap');
+  wrap.style.display = 'block';
+
+  const xp = profile.xp || 0;
+  const { current, next, progress, xpIntoLevel, xpNeeded } = getLevelInfo(xp);
+
+  document.getElementById('xp-level-badge').textContent = current.icon;
+  document.getElementById('xp-level-name').textContent  = current.name;
+  document.getElementById('xp-level-num').textContent   = 'Level ' + current.level;
+  const st = streakStatus(profile);
+  const shields = Math.min(profile.shields || 0, 2);
+  document.getElementById('xp-streak-val').innerHTML  = st.current + ' <i data-icon="flame"></i>' + (shields ? ` <span title="${shields} streak shield${shields > 1 ? 's' : ''}: a missed day won't break your streak" style="font-size:0.8em">🛡️${shields > 1 ? '×' + shields : ''}</span>` : '');
+  renderRepairCard(profile);
+  if (st.lapsed) {
+    // Streak ended: show their best and nudge them to start again
+    const lbl = document.getElementById('xp-streak-label');
+    lbl.textContent = `Best ${st.best} · revise today!`;
+    lbl.title = `Your streak ended. Your best was ${st.best} day${st.best === 1 ? '' : 's'} in a row: revise today to start a new one.`;
+  } else if (st.current >= 2 && st.current >= st.best) {
+    document.getElementById('xp-streak-label').textContent = '🏆 Personal best!';
+  } else if (st.best > st.current) {
+    document.getElementById('xp-streak-label').textContent = `Streak · best ${st.best}`;
+  }
+  document.getElementById('xp-total-val').textContent   = xp + ' XP';
+
+  setTimeout(() => {
+    document.getElementById('xp-bar-fill').style.width = progress + '%';
+  }, 200);
+
+  if (next) {
+    document.getElementById('xp-bar-left').textContent  = xpIntoLevel + ' / ' + xpNeeded + ' XP to ' + next.name;
+    document.getElementById('xp-bar-right').textContent = next.icon + ' ' + next.name;
+  } else {
+    document.getElementById('xp-bar-left').textContent  = 'Max level reached!';
+    document.getElementById('xp-bar-right').textContent = '';
+  }
+
+  // Goals, time, subjects and badges (shared with profile.html)
+  document.getElementById('jumpbar').style.display = 'flex';
+  document.getElementById('stats-root').innerHTML = statsSectionsHtml();
+  document.getElementById('stats-wrap').style.display = 'block';
+  const owed = renderStats(profile, { goalLimit: 4 });
+  if (owed.length && user && !isPreview()) {
+    updateDoc(doc(db, 'users', user.uid), { badges: [...(profile.badges || []), ...owed] }).catch(() => {});
+    showToast(`${owed.length} new badge${owed.length !== 1 ? 's' : ''} unlocked!`, 'success');
+  }
+  // Arrived via a jump link from another page? Scroll now the sections exist.
+  if (location.hash) document.querySelector(location.hash)?.scrollIntoView();
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+</script>
+<script>
+window.showToast = function(msg, type='info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`; t.textContent = msg;
+  c.appendChild(t); setTimeout(() => t.remove(), 3500);
+};
+</script>
+<script>
+/* If the page's code fails to load (usually an old copy in the browser's cache), offer a reload instead of spinning forever. */
+(function(){var shown=false;function offer(){if(shown||window.__bonceReady)return;shown=true;var d=document.createElement('div');d.setAttribute('role','alert');d.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9999;background:#1c1917;color:#fff;padding:14px 18px;border-radius:14px;font:600 15px/1.4 system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.3);display:flex;gap:12px;align-items:center;max-width:calc(100% - 32px)';d.innerHTML='<span>Lobe Limpet didn\'t load properly.</span><button style="background:#ff8a65;color:#1c1917;border:0;border-radius:10px;padding:8px 14px;font:700 15px system-ui,sans-serif;cursor:pointer">Reload</button>';d.querySelector('button').onclick=function(){var u=new URL(location.href);u.searchParams.set('r',Date.now());location.replace(u.href);};document.body.appendChild(d);}
+window.addEventListener('error',function(e){if(e&&e.target&&e.target.tagName==='SCRIPT'||/import|export|module/i.test(String(e&&e.message)))setTimeout(offer,1500);},true);
+setTimeout(function(){var w=document.getElementById('welcome-sub');if(w&&/Loading/.test(w.textContent))offer();},12000);})();
+</script>
+<script src="site.js?v=20261113d"></script>
+</body>
+</html>

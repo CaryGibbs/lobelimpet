@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="parent">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lobe Limpet — Parent Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="assets/images/brand/favicon.svg?v=20261113d">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brand/favicon-32.png?v=20261113d">
+  <link rel="apple-touch-icon" href="assets/images/brand/apple-touch-icon.png?v=20261113d">
+  <link rel="manifest" href="manifest.webmanifest?v=20261113d">
+  <meta name="apple-mobile-web-app-title" content="Lobe Limpet">
+  <meta name="application-name" content="Lobe Limpet">
+  <link rel="stylesheet" href="theme.css?v=20261113d">
+  <script src="icons.js?v=20261113d"></script>
+  <link rel="stylesheet" href="stats.css?v=20261113d">
+  <style>
+    body { min-height: 100vh; background: var(--color-bg); }
+    .topnav { background: var(--color-surface); border-bottom: 1px solid var(--color-border); padding: 0 var(--space-xl); height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-card); }
+    .nav-logo { display: flex; align-items: center; gap: 10px; font-family: var(--font-heading); font-weight: 800; font-size: 1.3rem; color: var(--color-text); text-decoration: none; }
+    .nav-logo-icon { width: 32px; height: 32px; background: var(--color-primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .nav-right { display: flex; align-items: center; gap: var(--space-md); }
+    .nav-user { font-family: var(--font-ui); font-size: 0.9rem; color: var(--color-text-muted); }
+    .nav-user strong { color: var(--color-text); }
+    .page { max-width: 960px; margin: 0 auto; padding: var(--space-xl) var(--space-lg); }
+    .page-header { margin-bottom: var(--space-xl); }
+    .page-header h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: var(--space-xs); }
+    .page-header p { color: var(--color-text-muted); font-size: 0.95rem; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-lg); }
+    .section-header h2 { font-size: 1.1rem; font-weight: 700; }
+
+    /* ── Child cards ─────────────────────────────────────── */
+    .plan-exams { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .plan-exam-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px 8px; align-items: end; padding: 10px; border: 1px solid var(--color-border); border-radius: 10px; margin-bottom: 8px; }
+    .plan-exam-row > div:first-child { grid-column: 1 / -1; }
+    .plan-exam-row.bad { border-color: var(--color-danger); }
+    .plan-exam-row input { width: 100%; box-sizing: border-box; }
+    .plan-exam-row label { font-size: 0.72rem; color: var(--color-text-muted); font-weight: 600; display: block; margin-bottom: 2px; }
+    .plan-exam-row input { padding: 8px 10px; font-size: 0.9rem; }
+    .plan-exam-row .btn { padding: 8px 10px; }
+    @media (max-width: 600px) { .plan-exam-row { grid-template-columns: 1fr 1fr; } }
+    .plan-week { background: var(--color-surface-2); border-radius: var(--radius-card); padding: 14px 16px; margin-bottom: var(--space-md); }
+    .plan-week-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-family: var(--font-ui); font-size: 0.85rem; margin-bottom: 10px; }
+    .plan-week-head strong { font-family: var(--font-heading); }
+    .plan-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .plan-day { text-align: center; font-family: var(--font-ui); font-size: 0.72rem; color: var(--color-text-muted); }
+    .plan-day .bar { height: 46px; border-radius: 8px; background: var(--color-surface); position: relative; overflow: hidden; margin-bottom: 4px; border: 1px solid var(--color-border); }
+    .plan-day .bar i { position: absolute; left: 0; right: 0; bottom: 0; background: color-mix(in srgb, var(--color-primary) 55%, transparent); }
+    .plan-day.met .bar i { background: var(--color-success); }
+    .plan-day .mark { font-weight: 700; color: var(--color-text); }
+    .family-heading { font-family: var(--font-heading); font-size: 1.15rem; font-weight: 800; color: var(--color-text); margin: 4px 0 4px; }
+    .children-count { font-family: var(--font-ui); font-size: 0.82rem; font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+    .children-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-lg); }
+    .child-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--shadow-card); transition: transform var(--transition-base), box-shadow var(--transition-base); }
+    .child-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card), 0 8px 24px rgba(0,0,0,0.08); }
+    .child-card-header { padding: var(--space-lg); display: flex; align-items: center; gap: var(--space-md); }
+    .child-avatar { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; flex-shrink: 0; }
+    .child-info { flex: 1; min-width: 0; }
+    .child-name { font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; margin-bottom: 2px; }
+    .child-email { font-size: 0.8rem; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .child-card-body { padding: 0 var(--space-lg) var(--space-md); }
+    .child-groups { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--space-sm); min-height: 28px; }
+    .group-chip { background: var(--color-primary-glow); color: var(--color-primary); border-radius: var(--radius-pill); padding: 3px 10px; font-family: var(--font-ui); font-size: 0.75rem; font-weight: 600; }
+    .no-group-chip { color: var(--color-text-faint); font-family: var(--font-ui); font-size: 0.78rem; font-style: italic; }
+
+    /* Progress mini stats */
+    .child-stats { display: flex; gap: var(--space-sm); margin-bottom: var(--space-md); }
+    .child-stat { flex: 1; background: var(--color-surface-2); border-radius: var(--radius-sm); padding: 8px; text-align: center; }
+    .child-stat-val { font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800; color: var(--color-primary); }
+    .child-stat-label { font-family: var(--font-ui); font-size: 0.68rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .child-card-actions { display: flex; border-top: 1px solid var(--color-border); }
+    .child-action-btn { flex: 1; padding: 10px; background: none; border: none; border-right: 1px solid var(--color-border); font-family: var(--font-ui); font-size: 0.8rem; font-weight: 600; color: var(--color-text-muted); cursor: pointer; transition: all var(--transition-fast); }
+    .child-action-btn:last-child { border-right: none; }
+    .child-action-btn:hover { background: var(--color-surface-2); color: var(--color-primary); }
+
+    /* ── Empty state ─────────────────────────────────────── */
+    .empty-state { grid-column: 1/-1; text-align: center; padding: var(--space-2xl) var(--space-lg); background: var(--color-surface); border: 2px dashed var(--color-border); border-radius: var(--radius-card); }
+    .empty-icon { font-size: 3rem; margin-bottom: var(--space-md); }
+    .empty-state h3 { font-size: 1.1rem; margin-bottom: var(--space-sm); }
+    .empty-state p { color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: var(--space-lg); }
+
+    /* ── Modals ──────────────────────────────────────────── */
+    .modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: var(--space-lg); opacity: 0; pointer-events: none; transition: opacity var(--transition-base); }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); padding: var(--space-xl); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); transform: translateY(16px); transition: transform var(--transition-base); }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-lg); }
+    .modal-header h2 { font-size: 1.2rem; font-weight: 700; }
+    .modal-close { background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: var(--radius-sm); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; color: var(--color-text-muted); transition: all var(--transition-fast); }
+    .modal-close:hover { color: var(--color-text); background: var(--color-border); }
+    .form-group { margin-bottom: var(--space-md); }
+    .form-group label { display: block; font-family: var(--font-ui); font-size: 0.82rem; font-weight: 600; color: var(--color-text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .form-group input, .form-group select, .form-group textarea { padding: 12px var(--space-md); border-radius: var(--radius-button); font-size: 0.95rem; }
+    .form-group textarea { min-height: 90px; resize: vertical; }
+    .password-row { display: flex; gap: var(--space-sm); }
+    .password-row input { flex: 1; }
+    .btn-generate { padding: 12px var(--space-md); border-radius: var(--radius-button); background: var(--color-surface-2); border: 1px solid var(--color-border); color: var(--color-text-muted); font-family: var(--font-ui); font-size: 0.82rem; font-weight: 600; white-space: nowrap; cursor: pointer; transition: all var(--transition-fast); }
+    .btn-generate:hover { color: var(--color-primary); border-color: var(--color-primary); }
+    .password-reveal { background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-sm) var(--space-md); margin-top: var(--space-sm); font-family: var(--font-ui); font-size: 0.9rem; display: none; }
+    .password-reveal.visible { display: flex; align-items: center; justify-content: space-between; }
+    .pw-value { font-weight: 700; color: var(--color-primary); letter-spacing: 0.05em; }
+    .pw-note { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 2px; }
+    .theme-options { display: flex; gap: var(--space-sm); }
+    .theme-option { flex: 1; padding: 10px var(--space-sm); border-radius: var(--radius-card); border: 2px solid var(--color-border); background: var(--color-surface-2); cursor: pointer; text-align: center; font-family: var(--font-ui); font-size: 0.8rem; font-weight: 600; color: var(--color-text-muted); transition: all var(--transition-base); }
+    .theme-option .t-icon { display: block; font-size: 1.3rem; margin-bottom: 4px; }
+    .theme-option.selected { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-glow); }
+    .modal-footer { display: flex; gap: var(--space-sm); margin-top: var(--space-lg); }
+    .modal-footer .btn { flex: 1; padding: 12px; }
+    .error-msg { background: rgba(250,82,82,0.1); border: 1px solid rgba(250,82,82,0.3); border-radius: var(--radius-sm); color: var(--color-danger); padding: var(--space-sm) var(--space-md); font-size: 0.875rem; margin-bottom: var(--space-md); display: none; }
+    .error-msg.visible { display: block; }
+    .btn.loading { opacity: 0.7; pointer-events: none; }
+    .btn.loading::after { content: ''; display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; margin-left: 8px; vertical-align: middle; }
+    .share-zone { border-top: 1px solid var(--color-border); margin-top: var(--space-lg); padding-top: var(--space-lg); }
+    .share-zone > label { font-family: var(--font-ui); font-size: 0.8rem; font-weight: 600; }
+    .guardian-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+    .guardian-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: var(--color-surface-2); font-size: 0.86rem; }
+    .guardian-row small { color: var(--color-text-muted); margin-left: auto; }
+    .share-row { display: flex; gap: 8px; }
+    .share-row input { flex: 1; }
+    .danger-zone { border-top: 1px solid var(--color-border); margin-top: var(--space-lg); padding-top: var(--space-lg); }
+    .danger-zone p { font-size: 0.82rem; color: var(--color-text-muted); margin-bottom: var(--space-sm); }
+    .btn-danger { background: rgba(250,82,82,0.1); color: var(--color-danger); border: 1px solid rgba(250,82,82,0.3); }
+    .btn-danger:hover { background: var(--color-danger); color: #fff; }
+
+    /* ── Group checkboxes ────────────────────────────────── */
+    .group-check-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .group-check-item { display: flex; align-items: center; gap: var(--space-sm); background: var(--color-surface-2); border: 2px solid var(--color-border); border-radius: var(--radius-button); padding: 10px var(--space-md); cursor: pointer; transition: all var(--transition-fast); }
+    .group-check-item:hover { border-color: var(--color-primary); }
+    .group-check-item.checked { border-color: var(--color-primary); background: var(--color-primary-glow); }
+    .group-check-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--color-primary); cursor: pointer; flex-shrink: 0; }
+    .group-check-label { font-family: var(--font-ui); font-size: 0.9rem; font-weight: 600; color: var(--color-text); flex: 1; }
+    .group-check-desc { font-size: 0.78rem; color: var(--color-text-muted); }
+    .group-check-head { font-family: var(--font-ui); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted); margin-top: 4px; }
+    .group-check-make { font-family: var(--font-ui); font-size: 0.85rem; font-weight: 600; color: var(--color-primary); text-decoration: none; display: inline-flex; gap: 6px; align-items: center; margin-top: 2px; }
+
+    /* ── Progress modal ──────────────────────────────────── */
+    .progress-modal { max-width: 860px; }
+    .progress-modal .st-section { scroll-margin-top: 0; }
+    .progress-modal .goal-list { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+    .progress-modal .badges-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+    .progress-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: var(--space-lg); }
+    .progress-tab { font-family: var(--font-ui); font-size: 0.8rem; font-weight: 700; color: var(--color-text); background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: var(--radius-pill); padding: 6px 12px; cursor: pointer; }
+    .progress-tab:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .progress-xp { margin-left: auto; text-align: right; font-family: var(--font-ui); font-size: 0.8rem; color: var(--color-text-muted); }
+    .progress-xp strong { display: block; font-family: var(--font-heading); font-size: 1rem; color: var(--color-text); }
+    .session-types { font-size: 0.72rem; color: var(--color-text-muted); }
+    .child-week { font-family: var(--font-ui); font-size: 0.78rem; color: var(--color-text-muted); margin: -4px 0 var(--space-md); display: flex; gap: var(--space-md); flex-wrap: wrap; }
+    .child-week strong { color: var(--color-text); }
+    .progress-header-info { display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-lg); padding-bottom: var(--space-lg); border-bottom: 1px solid var(--color-border); }
+    .progress-avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; flex-shrink: 0; }
+    .progress-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-sm); margin-bottom: var(--space-lg); }
+    .progress-stat { background: var(--color-surface-2); border-radius: var(--radius-card); padding: var(--space-md); text-align: center; }
+    .progress-stat-val { font-family: var(--font-heading); font-size: 1.6rem; font-weight: 800; color: var(--color-primary); }
+    .progress-stat-label { font-family: var(--font-ui); font-size: 0.72rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+    .sessions-list { display: flex; flex-direction: column; gap: var(--space-sm); max-height: 360px; overflow-y: auto; }
+    .session-row { background: var(--color-surface-2); border-radius: var(--radius-button); padding: 10px var(--space-md); display: flex; align-items: center; justify-content: space-between; }
+    .session-topic { font-family: var(--font-ui); font-size: 0.88rem; font-weight: 600; }
+    .session-meta { font-size: 0.78rem; color: var(--color-text-muted); }
+    .session-score { font-family: var(--font-heading); font-size: 1rem; font-weight: 700; }
+    .score-good { color: var(--color-success); }
+    .score-mid  { color: var(--color-warning); }
+    .score-low  { color: var(--color-danger); }
+    .no-sessions { text-align: center; padding: var(--space-xl); color: var(--color-text-muted); font-size: 0.9rem; }
+
+    /* ── Notify modal ────────────────────────────────────── */
+    .notify-preview { background: var(--color-primary-glow); border: 1px solid var(--color-primary); border-radius: var(--radius-card); padding: var(--space-md); margin-top: var(--space-md); font-size: 0.88rem; color: var(--color-text); }
+    .notify-preview-label { font-family: var(--font-ui); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-primary); margin-bottom: 4px; }
+
+    @media (max-width: 600px) {
+      .topnav { padding: 0 var(--space-md); }
+      .page { padding: var(--space-lg) var(--space-md); }
+      .nav-user { display: none; }
+      .progress-stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .modal.progress-modal { padding: var(--space-lg) var(--space-md); }
+      .progress-xp { display: none; }
+    }
+    .link-offer { background: var(--color-primary-glow); border: 1px solid var(--color-primary); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; font-size: 0.9rem; }
+    .link-offer p { margin: 6px 0 10px; color: var(--color-text-muted); line-height: 1.5; }
+    .pending-links { display: flex; flex-direction: column; gap: 8px; margin-bottom: var(--space-lg); }
+    .pending-link { display: flex; align-items: center; gap: 12px; background: var(--color-surface); border: 1px dashed var(--color-border); border-radius: var(--radius-card); padding: 12px 16px; }
+    .pending-link > span { font-size: 1.3rem; }
+    .pending-link div { flex: 1; }
+    .pending-link small { display: block; color: var(--color-text-muted); font-size: 0.82rem; margin-top: 2px; }
+  </style>
+  <link rel="stylesheet" href="ui.css?v=20261113d">
+</head>
+<body class="app-layout">
+<div id="toast-container"></div>
+<aside id="app-sidebar"></aside>
+<main class="main">
+  <header class="topbar">
+    <div class="breadcrumb"><span>My Family</span><span class="breadcrumb-sep">›</span><span class="breadcrumb-current" id="crumb-current">Home</span></div>
+    <div class="topbar-actions"></div>
+  </header>
+  <div class="content-area page-fade">
+  <!-- ── HOME ──────────────────────────────────────────── -->
+  <section id="parent-home">
+    <div id="first-steps"></div>
+    <div class="home-hello">
+      <div>
+        <div class="home-date" id="home-date"></div>
+        <h1 class="home-greeting" id="home-greeting">Welcome back</h1>
+        <p class="home-sub" id="home-sub">Here's how revision is going.</p>
+      </div>
+      <div class="home-quick">
+        <button class="btn btn-secondary" onclick="location.hash='students'"><i data-icon="users"></i> My students</button>
+        <button class="btn btn-primary" onclick="openAddModal()"><i data-icon="plus"></i> Add student</button>
+      </div>
+    </div>
+    <div class="home-tiles" id="home-tiles"></div>
+    <div class="home-grid">
+      <div class="home-card">
+        <h3><i data-icon="circle-alert"></i> Needs your attention</h3>
+        <div id="home-attention"></div>
+      </div>
+      <div class="home-card">
+        <h3><i data-icon="clock"></i> Recent activity</h3>
+        <div id="home-activity"></div>
+      </div>
+    </div>
+    <div class="home-card">
+      <h3><i data-icon="users"></i> This week</h3>
+      <div id="home-students"></div>
+    </div>
+  </section>
+
+  <!-- ── MY STUDENTS ───────────────────────────────────── -->
+  <section id="parent-students" hidden>
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">My students</div>
+        <div class="panel-subtitle">Manage accounts, choose revision packs and track progress.</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-secondary" onclick="openInvite()"><i data-icon="user-plus"></i> Invite a parent</button>
+        <button class="btn btn-primary" onclick="openAddModal()"><i data-icon="plus"></i> Add student</button>
+      </div>
+    </div>
+    <div id="first-steps-mini"></div>
+    <h2 class="family-heading">My Family</h2>
+    <div class="children-count" id="children-count">Loading…</div>
+    <div id="pending-links"></div>
+    <div class="children-grid" id="children-grid"></div>
+  </section>
+  </div>
+</main>
+
+<!-- ── ADD CHILD MODAL ──────────────────────────────────── -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Add a student</h2>
+      <button class="modal-close" onclick="closeModal('modal-add')" aria-label="Close"><i data-icon="x"></i></button>
+    </div>
+    <div class="error-msg" id="add-error"></div>
+    <div class="form-group"><label>Student's name</label><input type="text" id="child-name" placeholder="e.g. Emily"></div>
+    <div class="form-group"><label>Email address</label><input type="email" id="child-email" placeholder="emily@example.com"></div>
+    <p class="form-hint" style="margin:-6px 0 12px;">If they already have a Lobe Limpet account, we'll spot it from their email and ask them to link with you.</p>
+    <div id="link-offer"></div>
+    <div class="form-group">
+      <label>Password</label>
+      <div class="password-row">
+        <input type="text" id="child-password" placeholder="Optional">
+        <button class="btn-generate" onclick="generatePw()"><i data-icon="sparkles"></i> Generate</button>
+      </div>
+      <div class="form-hint">Leave it blank and we'll email them a link to choose their own password. Or set one (or Generate) and give it to them.</div>
+      <div class="password-reveal" id="pw-reveal">
+        <div><div class="pw-value" id="pw-value"></div><div class="pw-note">Share this with the student and keep a copy somewhere safe.</div></div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Theme</label>
+      <div class="theme-grid" id="add-theme-grid"></div>
+      <div class="form-hint">They can change this themselves later from their profile.</div>
+    </div>
+    <div class="form-group">
+      <label>Revision packs</label>
+      <div class="form-hint" style="margin-bottom:8px;">Not sure yet? Leave this empty and add packs later from Manage student.</div>
+      <div class="group-check-list" id="add-group-list">
+        <div style="color:var(--color-text-muted);font-size:0.85rem;">Loading packs…</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add')">Cancel</button>
+      <button class="btn btn-primary" id="btn-add-child" onclick="addChild()">Create account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MANAGE CHILD MODAL ───────────────────────────────── -->
+<div class="modal-overlay" id="modal-manage">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="manage-title">Manage student</h2>
+      <button class="modal-close" onclick="closeModal('modal-manage')" aria-label="Close"><i data-icon="x"></i></button>
+    </div>
+    <div class="error-msg" id="manage-error"></div>
+    <div class="form-group"><label>Name</label><input type="text" id="manage-name"></div>
+    <div class="form-group">
+      <label>Theme</label>
+      <div class="theme-grid" id="manage-theme-grid"></div>
+    </div>
+    <div class="form-group">
+      <label for="manage-card-length">Flashcard answers</label>
+      <select id="manage-card-length">
+        <option value="full">Full: the whole answer</option>
+        <option value="short">Short: 15 words or fewer</option>
+        <option value="keywords">Key words: just the words that matter</option>
+      </select>
+      <div class="form-hint">They can also change this themselves on the Cards screen.</div>
+    </div>
+    <div class="form-group plan-edit">
+      <label for="manage-plan-mode">Study plan</label>
+      <select id="manage-plan-mode"></select>
+      <div class="form-hint" id="manage-plan-hint"></div>
+      <div class="plan-exams" id="manage-exams"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <button type="button" class="btn btn-secondary" id="btn-add-exam" style="padding:7px 12px;font-size:0.82rem"><i data-icon="plus"></i> Add exam dates</button>
+        <button type="button" class="btn btn-secondary" id="btn-day-plan" style="padding:7px 12px;font-size:0.82rem"><i data-icon="calendar"></i> Day-by-day plan</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Revision packs</label>
+      <div class="group-check-list" id="manage-group-list">
+        <div style="color:var(--color-text-muted);font-size:0.85rem;">Loading packs…</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-manage')">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-child" onclick="saveChild()">Save changes</button>
+    </div>
+    <div class="share-zone">
+      <label>Parents and guardians</label>
+      <p class="form-hint" style="margin:2px 0 8px;">Everyone listed can see progress, send messages and manage this student.</p>
+      <div id="guardian-list" class="guardian-list"></div>
+      <div class="share-row">
+        <input type="email" id="share-email" placeholder="Another parent's email address">
+        <button class="btn btn-secondary" id="btn-share" onclick="shareStudent()"><i data-icon="user-plus"></i> Share</button>
+      </div>
+      <div class="form-hint" id="share-hint">They need their own Lobe Limpet parent account with that email. Not on Lobe Limpet yet? <a href="#" onclick="openInvite(true);return false;" style="color:var(--color-primary);font-weight:600;">Invite them</a></div>
+    </div>
+    <div class="danger-zone">
+      <p>Reset progress clears XP, level, badges, streak and quiz history. Their login, groups and theme are kept.</p>
+      <button class="btn btn-danger" id="btn-reset-progress" style="width:100%;padding:10px;margin-bottom:var(--space-md);" onclick="resetProgress()">Reset progress</button>
+      <p id="remove-note">Removing a student will delete their account data. This cannot be undone.</p>
+      <button class="btn btn-danger" id="btn-remove-student" style="width:100%;padding:10px;" onclick="confirmRemoveChild()">Remove student</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PROGRESS MODAL ───────────────────────────────────── -->
+<div class="modal-overlay" id="modal-progress">
+  <div class="modal progress-modal">
+    <div class="modal-header">
+      <h2 id="progress-title">Progress</h2>
+      <button class="modal-close" onclick="closeModal('modal-progress')" aria-label="Close"><i data-icon="x"></i></button>
+    </div>
+    <div class="progress-header-info">
+      <div class="progress-avatar" id="progress-avatar"></div>
+      <div>
+        <div style="font-family:var(--font-heading);font-size:1.05rem;font-weight:700;" id="progress-name"></div>
+        <div style="font-size:0.82rem;color:var(--color-text-muted);" id="progress-groups"></div>
+      </div>
+      <div class="progress-xp" id="progress-xp"></div>
+    </div>
+    <div class="progress-stats-grid">
+      <div class="progress-stat"><div class="progress-stat-val" id="stat-level">—</div><div class="progress-stat-label">Level</div></div>
+      <div class="progress-stat"><div class="progress-stat-val" id="stat-quizzes">0</div><div class="progress-stat-label">Quizzes taken</div></div>
+      <div class="progress-stat"><div class="progress-stat-val" id="stat-avg">—</div><div class="progress-stat-label">Avg score · all time</div></div>
+      <div class="progress-stat"><div class="progress-stat-val" id="stat-streak">0</div><div class="progress-stat-label" id="stat-streak-label">Streak</div></div>
+    </div>
+    <div class="plan-week" id="progress-plan"></div>
+    <div class="progress-tabs">
+      <button class="progress-tab" data-jump="goals"><i data-icon="target"></i> Goals</button>
+      <button class="progress-tab" data-jump="time"><i data-icon="clock"></i> Time</button>
+      <button class="progress-tab" data-jump="subjects"><i data-icon="library"></i> By subject</button>
+      <button class="progress-tab" data-jump="badges"><i data-icon="award"></i> Badges</button>
+      <button class="progress-tab" data-jump="recent"><i data-icon="clipboard-list"></i> Recent quizzes</button>
+    </div>
+    <div id="progress-stats-root"></div>
+    <section class="st-section" id="recent">
+      <div class="st-title"><i data-icon="clipboard-list"></i> Recent quizzes</div>
+      <div class="sessions-list" id="sessions-list"></div>
+    </section>
+  </div>
+</div>
+
+<!-- ── NOTIFY MODAL ─────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-notify">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="notify-title">Send message</h2>
+      <button class="modal-close" onclick="closeModal('modal-notify')" aria-label="Close"><i data-icon="x"></i></button>
+    </div>
+    <p style="font-size:0.88rem;color:var(--color-text-muted);margin-bottom:var(--space-md);">This message will appear on the student's hub next time they log in.</p>
+    <div class="form-group">
+      <label>Message</label>
+      <textarea id="notify-message" placeholder="e.g. Great work this week! Try the Geography quiz today." oninput="updateNotifyPreview()"></textarea>
+    </div>
+    <div class="notify-preview" id="notify-preview" style="display:none;">
+      <div class="notify-preview-label">Preview</div>
+      <div id="notify-preview-text"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-notify')">Cancel</button>
+      <button class="btn btn-primary" id="btn-send-notify" onclick="sendNotification()"><i data-icon="send"></i> Send message</button>
+    </div>
+  </div>
+</div>
+
+<!-- Safari bridge -->
+<script>
+  function doSignOut()           { window._doSignOut && window._doSignOut(); }
+  function openAddModal()        { window._openAddModal && window._openAddModal(); }
+  function closeModal(id)        { window._closeModal && window._closeModal(id); }
+  function selectTheme(t)        { window._selectTheme && window._selectTheme(t); }
+  function generatePw()          { window._generatePw && window._generatePw(); }
+  function addChild()            { window._addChild && window._addChild(); }
+  function openManageModal(id)   { window._openManageModal && window._openManageModal(id); }
+  function selectManageTheme(t)  { window._selectManageTheme && window._selectManageTheme(t); }
+  function saveChild()           { window._saveChild && window._saveChild(); }
+  function confirmRemoveChild()  { window._confirmRemoveChild && window._confirmRemoveChild(); }
+  function shareStudent()        { window._shareStudent && window._shareStudent(); }
+  function openInvite(fromManage) { window._openInvite && window._openInvite(fromManage); }
+  function resetProgress()       { window._resetProgress && window._resetProgress(); }
+  function openProgressModal(id) { window._openProgressModal && window._openProgressModal(id); }
+  function viewAs(id)            { window._viewAs && window._viewAs(id); }
+  function openNotifyModal(id)   { window._openNotifyModal && window._openNotifyModal(id); }
+  function sendNotification()    { window._sendNotification && window._sendNotification(); }
+  function updateNotifyPreview() { window._updateNotifyPreview && window._updateNotifyPreview(); }
+  function toggleGroupCheck(el)  { window._toggleGroupCheck && window._toggleGroupCheck(el); }
+</script>
+
+<script type="module">
+import { auth, db } from './firebase-config.js?v=20261113d';
+import { requireAuth, handleSignOut, generatePassword, showToast, openViewAs, hasRole, hasPlus, onAiTrial, trialSheetsText } from './auth.js?v=20261113d';
+import { ownPackStats, firstStepsState, saveFirstSteps, askedToShow, firstStepsHtml, wireFirstSteps, FIRST_STEPS_CSS, appStep, noteAppInstalled } from './first-steps.js?v=20261113d';
+import { showPlusUpsell } from './plus.js?v=20261113d';
+import { syncMyChildPlus } from './family-plus.js?v=20261113d';
+import { saveEmailIndex, findByEmail } from './email-index.js?v=20261113d';
+import { getLevelInfo, studyEntries, currentStreak, streakStatus, repairOffer, REPAIR, loadStreakSettings } from './gamification.js?v=20261113d';
+import { THEMES, themeColour, themeSwatchHtml, THEME_SWATCH_CSS } from './themes.js?v=20261113d';
+import { mountShell, refreshShellChildren } from './shell.js?v=20261113d';
+import { logEvent } from './log.js?v=20261113d';
+import { openInviteDialog } from './invite.js?v=20261113d';
+import { statsSectionsHtml, renderStats, fmtTime } from './stats.js?v=20261113d';
+import { dueEntries, scheduledCount } from './srs.js?v=20261113d';
+import { MODES, LEVELS, levelFor, goalStatus, planSummary, planHistory, behindPlan, loadPlanSettings, targetText, isoDay } from './plan.js?v=20261113d';
+import { openPlanCalendar } from './plan-view.js?v=20261113d';
+import { listPacks, packNames, packSections, flatPackIds } from './packs.js?v=20261113d';
+import { pickerHtml, wirePicker, boardTagHtml } from './pack-picker.js?v=20261113d';
+import { openDeleteAccount } from './account.js?v=20261113d';
+import { sendLinkRequest, myLinkRequests, cancelLinkRequest } from './parent-link.js?v=20261113d';
+import {
+  doc, setDoc, getDoc, updateDoc, deleteDoc, deleteField,
+  collection, getDocs, onSnapshot, serverTimestamp, query, where, arrayUnion, arrayRemove
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const API_KEY = 'AIzaSyDjkqzERaCoaGUBeQCHpaVtwPEbcWN5yB4';
+
+let parentUid     = null;
+let shellUser = null, shellProfile = null; // for keeping the sidebar's child list fresh
+let selectedTheme = 'edge';
+
+/* ── Theme pickers ───────────────────────────────────────── */
+document.head.insertAdjacentHTML('beforeend', `<style>${THEME_SWATCH_CSS}${FIRST_STEPS_CSS}.form-hint{font-size:.76rem;color:var(--color-text-muted);margin-top:6px;}</style>`);
+function renderThemeGrid(containerId, current, onPick) {
+  const grid = document.getElementById(containerId);
+  grid.innerHTML = THEMES.map(t => themeSwatchHtml(t, t.id === current)).join('');
+  grid.querySelectorAll('[data-theme-id]').forEach(btn => btn.onclick = () => {
+    grid.querySelectorAll('.theme-swatch').forEach(b => { b.classList.toggle('selected', b === btn); b.setAttribute('aria-pressed', b === btn); });
+    onPick(btn.dataset.themeId);
+  });
+}
+let manageTheme   = 'edge';
+let managingChildId = null;
+let notifyingChildId = null;
+let childrenData  = {};
+let allGroups     = []; // [{ id, name, mine }]: official packs and my own
+let otherPackNames = {}; // packs a student has that I can't assign (e.g. another parent's own pack)
+const packName = id => allGroups.find(g => g.id === id)?.name || otherPackNames[id] || 'Another pack';
+
+/* ── Auth ────────────────────────────────────────────────── */
+requireAuth((user, profile) => {
+  if (!hasRole(profile, 'parent')) {
+    window.location.href = 'login.html'; return;
+  }
+  parentUid = user.uid;
+  // Streak repair / shield rules set by the admin; redraw cards once known
+  Promise.all([loadStreakSettings(), loadPlanSettings()]).then(() => { if (Object.keys(childrenData || {}).length) renderChildren(); });
+  mountShell(user, profile, { view: 'parent', active: currentSection() === 'students' ? 'children' : 'home' });
+  shellUser = user; shellProfile = profile;
+  homeName = (profile.name || '').split(' ')[0] || '';
+  showSection();
+  // "Getting started" (sidebar or Help) brings the checklist back
+  if (askedToShow()) {
+    if (firstStepsState(profile).hidden) saveFirstSteps(user.uid, profile, { hidden: false });
+    try { history.replaceState(null, '', 'parent.html#home'); } catch (e) {}
+    if (location.hash !== '#home') { location.hash = 'home'; }
+  }
+  // Groups first, so child cards show group names rather than ids
+  loadGroups().finally(() => { loadChildren(); loadPendingLinks(); loadOwnStats(); });
+});
+
+window._doSignOut = () => handleSignOut();
+window._viewAs = (uid) => openViewAs(uid);
+window._openInvite = (fromManage) => {
+  if (fromManage) document.getElementById('modal-manage').classList.remove('open');
+  openInviteDialog({
+    byUid: parentUid, byName: shellProfile?.name || '', roles: ['parent'],
+    students: Object.entries(childrenData).map(([id, c]) => ({ id, name: c.name })),
+    preselect: fromManage && managingChildId ? [managingChildId] : Object.keys(childrenData),
+    toast: showToast,
+  });
+};
+
+/* ── Load available groups ───────────────────────────────── */
+async function loadGroups() {
+  allGroups = await listPacks(parentUid).catch(() => []);
+}
+// Questions and notes per topic in my own packs (for the checklist and warnings)
+let ownStats = null;
+async function loadOwnStats() {
+  ownStats = await ownPackStats(allGroups.filter(g => g.mine)).catch(() => ({}));
+  renderHome();
+}
+
+/* ── Getting started (first-steps.js) ────────────────────── */
+// The builder (My packs) with something to do when it opens
+window.goPack = (packId, start) => {
+  if (start === 'classnotes' && !hasPlus(shellProfile)) { showPlusUpsell('Turning class notes into revision'); return; }
+  const q = new URLSearchParams({ mine: 'parent' });
+  if (packId) q.set('pack', packId);
+  if (start) q.set('start', start);
+  location.href = 'admin.html?' + q.toString();
+};
+// Manage student, scrolled to the packs or the exam dates
+window.openManageAt = (uid, where) => {
+  window._openManageModal(uid);
+  setTimeout(() => {
+    if (where === 'exams') { document.getElementById('btn-add-exam')?.click(); document.getElementById('manage-exams')?.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+    if (where === 'packs') document.getElementById('manage-group-list')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, 80);
+};
+const packsOf = k => k.groupIds || (k.groupId ? [k.groupId] : []);
+// A pack the child can actually revise from: a Lobe Limpet pack, another
+// parent's pack, or my own once it has questions
+function usablePack(id) {
+  const g = allGroups.find(x => x.id === id);
+  if (!g || !g.mine) return true;
+  return !ownStats || (ownStats[id]?.questions || 0) > 0;
+}
+function parentSteps(kids) {
+  const own = allGroups.filter(g => g.mine);
+  const st = ownStats || {};
+  const fs = firstStepsState(shellProfile || {});
+  const first = kids[0];
+  const firstName = first ? esc(first.first) : 'your child';
+  const needing = kids.find(k => !packsOf(k).some(usablePack)) || first;
+  const notesOnly = own.flatMap(p => (st[p.id]?.notesOnly || []).map(t => ({ ...t, packId: p.id })));
+  const ownWithQ = own.filter(p => st[p.id]?.questions);
+  const plus = hasPlus(shellProfile || {});
+  const trial = onAiTrial(shellProfile || {});
+  const anyPack = own.length || kids.some(k => packsOf(k).length);
+  return [
+    { id: 'child', title: 'Add your child',
+      text: "Create their account (they'll get an email to choose a password), or link to an account they already have.",
+      done: kids.length > 0, doneText: kids.map(k => esc(k.first)).join(', ') + ' added.',
+      actions: [{ label: '＋ Add your child', primary: true, act: () => openAddModal() }] },
+    { id: 'pack', title: "Choose what they'll revise",
+      text: "Make your own pack for their subjects, or pick a ready-made Lobe Limpet pack for their exam board.",
+      done: !!anyPack, doneText: own.length ? `Your pack${own.length === 1 ? '' : 's'}: ${own.map(p => '“' + esc(p.name) + '”').join(', ')}.` : 'Lobe Limpet pack chosen.',
+      actions: [{ label: 'Make a pack', primary: true, act: () => goPack('', 'newpack') },
+        ...(first ? [{ label: 'Pick a Lobe Limpet pack', act: () => openManageAt(needing.uid, 'packs') }] : [])] },
+    { id: 'notes', title: 'Turn their class notes into notes and quiz questions', plus: !plus, trial,
+      text: notesOnly.length
+        ? `${notesOnly.length} topic${notesOnly.length === 1 ? ' has' : 's have'} notes but no quiz questions yet (${notesOnly.slice(0, 3).map(t => esc(t.name)).join(', ')}${notesOnly.length > 3 ? '…' : ''}). Make the questions, or add more class notes.`
+        : "Got a revision sheet, worksheet or class notes from school? Take a photo or upload it, and we'll turn exactly that into notes and quiz questions." +
+          (trial ? ` Your first ${trialSheetsText(shellProfile)} are free to try.` : ''),
+      done: ownWithQ.length > 0 || fs.skipped.includes('notes'),
+      doneText: ownWithQ.length ? `${ownWithQ.reduce((a, p) => a + st[p.id].questions, 0)} questions in your own pack${ownWithQ.length === 1 ? '' : 's'}.` : 'Skipped: using a ready-made pack.',
+      actions: [
+        ...(notesOnly.length ? [{ label: '✨ Make questions', primary: true, act: () => goPack(notesOnly[0].packId, 'questions') }] : []),
+        { label: '📷 Add class notes', primary: !notesOnly.length, act: () => goPack(own[0]?.id || '', 'classnotes') }],
+      skip: "Skip: we're using a ready-made pack" },
+    { id: 'give', title: 'Give the pack to your child',
+      // They have my pack already, it just has no questions yet: step 3 is the fix
+      text: needing && packsOf(needing).length
+        ? `${esc(needing.first)} has ${packsOf(needing).length === 1 ? 'your pack' : 'your packs'}, but there are no quiz questions in ${packsOf(needing).length === 1 ? 'it' : 'them'} yet. Make questions (step 3) and this ticks itself off.`
+        : `Tick the pack in Manage, so it's there when ${firstName} signs in.`,
+      done: kids.length > 0 && kids.every(k => packsOf(k).some(usablePack)),
+      doneText: kids.length === 1 ? `${firstName} has a pack to revise from.` : 'Everyone has a pack to revise from.',
+      actions: first ? [{ label: `Choose packs for ${esc(needing.first)}`, primary: !packsOf(needing).length, act: () => openManageAt(needing.uid, 'packs') }] : [] },
+    { id: 'exams', title: 'Set an exam date', optional: true,
+      text: 'Add their exam or test dates, and the daily goal steps up as the exams get closer.',
+      done: kids.some(k => (k.plan?.exams || []).length), doneText: 'Exam dates set.',
+      actions: first ? [{ label: 'Add exam dates', act: () => openManageAt(first.uid, 'exams') }] : [] },
+    appStep(shellProfile || {}, 'parent'),
+  ];
+}
+function renderFirstSteps(kids) {
+  const big = document.getElementById('first-steps');
+  const mini = document.getElementById('first-steps-mini');
+  if (!big || !shellProfile) return;
+  noteAppInstalled(parentUid, shellProfile);
+  const fs = firstStepsState(shellProfile);
+  if (fs.hidden) { big.innerHTML = ''; mini.innerHTML = ''; return; }
+  const steps = parentSteps(kids);
+  const allDone = steps.filter(s => !s.optional).every(s => s.done);
+  if (allDone && !fs.doneAt && ownStats) { saveFirstSteps(parentUid, shellProfile, { doneAt: Date.now() }); logEvent('account.getting_started', { detail: 'Parent' }); }
+  const handlers = {
+    hide: async () => { await saveFirstSteps(parentUid, shellProfile, { hidden: true }); renderHome(); if (!allDone) showToast('Hidden. Find it again under Getting started in the menu.', 'info'); },
+    skip: async id => { await saveFirstSteps(parentUid, shellProfile, { skipped: [...new Set([...fs.skipped, id])] }); renderHome(); },
+    open: () => { location.hash = 'home'; },
+  };
+  big.innerHTML = firstStepsHtml({ title: 'Set up revision for your child',
+    lead: "Got a revision sheet or class notes? Take a photo and we'll turn it into notes and quiz questions. Here's how to get going:", steps });
+  wireFirstSteps(big, steps, handlers);
+  mini.innerHTML = allDone ? '' : firstStepsHtml({ steps, compact: true });
+  wireFirstSteps(mini, steps, handlers);
+}
+// Names for packs on my students that aren't in my list
+async function loadOtherPackNames() {
+  const ids = new Set();
+  Object.values(childrenData).forEach(c => flatPackIds(c).forEach(id => ids.add(id)));
+  const missing = [...ids].filter(id => !allGroups.some(g => g.id === id) && !(id in otherPackNames));
+  if (!missing.length) return;
+  missing.forEach(id => { otherPackNames[id] = otherPackNames[id] || null; });
+  Object.assign(otherPackNames, await packNames(missing));
+  renderChildren();
+}
+
+/* ── Load children ───────────────────────────────────────── */
+function loadChildren() {
+  onSnapshot(collection(db, 'users', parentUid, 'children'), snap => {
+    childrenData = {};
+    snap.forEach(d => { childrenData[d.id] = { ...d.data(), ...(liveStats[d.id] || {}) }; });
+    renderChildren();
+    if (shellUser) refreshShellChildren(shellUser, shellProfile);
+    refreshFromChildRecords();
+  });
+}
+
+// Each card shows the student's own record (the copy under the parent is
+// just the list of "my students"). Read once per page load, then the live
+// record wins over anything in the copy.
+const liveStats = {};
+async function refreshFromChildRecords() {
+  const ids = Object.keys(childrenData).filter(id => !(id in liveStats));
+  if (!ids.length) return;
+  ids.forEach(id => { liveStats[id] = {}; });
+  await Promise.all(ids.map(async id => {
+    const snap = await getDoc(doc(db, 'users', id)).catch(() => null);
+    const p = snap?.data(); if (!p) return;
+    syncMyChildPlus(parentUid, shellProfile, id, p);   // my Plus covers my students
+    const keep = ['name', 'email', 'theme', 'groupIds', 'groupId', 'sessions', 'streak', 'bestStreak', 'plan', 'planGoals', 'shields', 'streakRepair', 'lastRepairDay', 'lastShieldUsed', 'lastRevisionDate', 'xp', 'level',
+                  'study', 'studySubjects', 'parentUid', 'guardianIds', 'classPacks', 'srs', 'cardLength'];
+    const fresh = {};
+    keep.forEach(k => { if (p[k] !== undefined) fresh[k] = p[k]; });
+    liveStats[id] = fresh;
+    Object.assign(childrenData[id] || {}, fresh);
+  }));
+  renderChildren();
+  loadOtherPackNames();
+}
+
+/* ── Home / My students sections (#home, #students) ─────────── */
+let homeName = '';
+function currentSection() { return location.hash.replace('#', '') === 'students' ? 'students' : 'home'; }
+function showSection() {
+  const sec = currentSection();
+  document.getElementById('parent-home').hidden = sec !== 'home';
+  document.getElementById('parent-students').hidden = sec !== 'students';
+  document.getElementById('crumb-current').textContent = sec === 'home' ? 'Home' : 'My students';
+  document.querySelectorAll('[data-ph]').forEach(a => a.classList.toggle('active', a.dataset.ph === sec));
+  window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', showSection);
+
+const DAY = 86400000;
+function startOfDay(t = Date.now()) { const d = new Date(t); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
+function agoText(t) {
+  const days = Math.round((startOfDay() - startOfDay(t)) / DAY);
+  if (days <= 0) {
+    const mins = Math.round((Date.now() - t) / 60000);
+    return mins < 60 ? `${Math.max(1, mins)} min ago` : `${Math.round(mins / 60)}h ago`;
+  }
+  if (days === 1) return 'yesterday';
+  if (days < 7) return new Date(t).toLocaleDateString('en-GB', { weekday: 'long' });
+  return new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+function weekFigures(child) {
+  const from = startOfDay() - 6 * DAY;
+  const secsOf = x => typeof x.secondsSpent === 'number' ? x.secondsSpent : (x.minutesSpent || 0) * 60;
+  const sessions = (child.sessions || []).filter(s => (s.date || 0) >= from);
+  const study = studyEntries(child).filter(e => e.date >= from);
+  const lastSess = Math.max(0, ...(child.sessions || []).map(s => s.date || 0));
+  const lastStudy = Math.max(0, ...studyEntries(child).map(e => e.date));
+  const last = Math.max(lastSess, lastStudy, child.lastRevisionDate ? new Date(child.lastRevisionDate).getTime() : 0);
+  return {
+    secs: sessions.reduce((a, s) => a + secsOf(s), 0) + study.reduce((a, e) => a + e.secs, 0),
+    quizzes: sessions.length,
+    avg: sessions.length ? Math.round(sessions.reduce((a, s) => a + (s.pct || 0), 0) / sessions.length) : null,
+    last,
+  };
+}
+
+function renderHome() {
+  const now = new Date();
+  const h = now.getHours();
+  document.getElementById('home-date').textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  document.getElementById('home-greeting').textContent = `${h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'}${homeName ? ', ' + homeName : ''}`;
+  const kids = Object.entries(childrenData).map(([uid, c]) => ({ uid, ...c, first: (c.name || 'Student').split(' ')[0] }))
+    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  const tiles = document.getElementById('home-tiles');
+  const att = document.getElementById('home-attention');
+  const act = document.getElementById('home-activity');
+  const wk = document.getElementById('home-students');
+  renderFirstSteps(kids);
+  const waitingHtml = pendingLinks.filter(l => l.status === 'pending' && !childrenData[l.studentUid])
+    .map(l => `<div class="att-item"><span class="att-emoji">⏳</span><div class="att-text">Waiting for ${esc(l.studentName || l.studentEmail)} to accept your link request<small>They'll see it next time they open Lobe Limpet.</small></div></div>`).join('');
+  if (!kids.length) {
+    document.getElementById('home-sub').textContent = 'Add a student to get started.';
+    tiles.innerHTML = '';
+    att.innerHTML = waitingHtml || `<div class="home-empty">No students yet. <a href="#" onclick="openAddModal();return false;">Add your first student</a> and their progress will show here.</div>`;
+    act.innerHTML = '<div class="home-empty">Nothing yet.</div>';
+    wk.innerHTML = '';
+    return;
+  }
+
+  // ── At a glance ──
+  const figs = kids.map(k => ({ k, w: weekFigures(k), st: streakStatus(k), due: scheduledCount(k) ? dueEntries(k).length : 0 }));
+  const totalSecs = figs.reduce((a, f) => a + f.w.secs, 0);
+  const totalQuiz = figs.reduce((a, f) => a + f.w.quizzes, 0);
+  const totalDue  = figs.reduce((a, f) => a + f.due, 0);
+  const activeToday = figs.filter(f => f.w.last >= startOfDay()).length;
+  document.getElementById('home-sub').textContent = activeToday
+    ? `${activeToday} of ${kids.length} revised today. Here's how the week is going.`
+    : `No revision yet today. Here's how the week is going.`;
+  const bestNow = figs.slice().sort((a, b) => b.st.current - a.st.current)[0];
+  tiles.innerHTML = `
+    <div class="home-tile"><b>${fmtTime(totalSecs)}</b><span>revision this week</span></div>
+    <div class="home-tile"><b>${totalQuiz}</b><span>quiz${totalQuiz === 1 ? '' : 'zes'} this week</span></div>
+    <div class="home-tile"><b>${totalDue}</b><span>reviews due today</span></div>
+    <div class="home-tile"><b>${bestNow.st.current} 🔥</b><span>top streak now${bestNow.st.current ? ` (${esc(bestNow.k.first)})` : ''}</span></div>`;
+
+  // ── Needs your attention ──
+  const items = [];
+  const btn = (label, onclick, primary) => `<button class="btn ${primary ? 'btn-primary' : 'btn-secondary'}" onclick="${onclick}">${label}</button>`;
+  figs.forEach(({ k, w, st, due }) => {
+    const daysOff = w.last ? Math.round((startOfDay() - startOfDay(w.last)) / DAY) : null;
+    const packs = (k.groupIds || []).length + Object.values(k.classPacks || {}).reduce((a, l) => a + (l || []).length, 0);
+    if (!packs) items.push({ p: 0, emoji: '📦', text: `${esc(k.first)} has no revision pack yet`, sub: 'Choose one so they can start revising.', act: btn('Choose pack', `openManageAt('${k.uid}','packs')`, true) });
+    if (daysOff === null) items.push({ p: 1, emoji: '👋', text: `${esc(k.first)} hasn't started yet`, sub: 'A quick message can help them get going.', act: btn('Message', `openNotifyModal('${k.uid}')`) });
+    else if (daysOff >= 2) items.push({ p: 1, emoji: '💤', text: `${esc(k.first)} hasn't revised since ${agoText(w.last)}`, sub: st.best ? `Best streak ${st.best} day${st.best === 1 ? '' : 's'}.` : '', act: btn('Message', `openNotifyModal('${k.uid}')`) });
+    const behind = behindPlan(k);
+    const ps = planSummary(k);
+    if (behind && ps.level !== 'relaxed') {
+      const g = goalStatus(k);
+      items.push({ p: ps.level === 'push' || ps.level === 'final' ? 0.5 : 2.5, emoji: ps.L.emoji, text: `${esc(k.first)} is behind ${ps.exam ? 'the exam plan' : 'plan'}${ps.when ? ` · ${esc(ps.when)}` : ''}`, sub: `${behind}. Today ${g.done ? 'goal hit ✓' : `${Math.min(g.mins, g.L.mins)}/${g.L.mins} min`}.`, act: btn('Message', `openNotifyModal('${k.uid}')`) });
+    }
+    const r = repairOffer(k);
+    if (r && !(r.done || r.progress.done)) items.push({ p: 2, emoji: '🔥', text: `${esc(k.first)} can win back a ${r.from}-day streak today`, sub: `${r.progress.mins} of ${REPAIR.MINUTES} minutes done.`, act: btn('Message', `openNotifyModal('${k.uid}')`) });
+    if (due >= 10) items.push({ p: 3, emoji: '🔁', text: `${esc(k.first)} has ${due} reviews due`, sub: 'Reviews make what they learnt stick.', act: btn('View as', `viewAs('${k.uid}')`) });
+    // Weakest subject over the last 30 days
+    const bySub = {};
+    (k.sessions || []).filter(s => !s.review && (s.date || 0) >= Date.now() - 30 * DAY).forEach(s => {
+      (bySub[s.subject || 'Other'] = bySub[s.subject || 'Other'] || []).push(s.pct || 0);
+    });
+    const weak = Object.entries(bySub).filter(([, l]) => l.length >= 2).map(([n, l]) => [n, Math.round(l.reduce((a, b) => a + b, 0) / l.length)]).sort((a, b) => a[1] - b[1])[0];
+    if (weak && weak[1] < 50) items.push({ p: 4, emoji: '📉', text: `${esc(k.first)} is finding ${esc(weak[0])} tricky`, sub: `Average ${weak[1]}% over the last month.`, act: btn('Progress', `openProgressModal('${k.uid}')`) });
+    if (st.current >= 3 && st.current >= st.best) items.push({ p: 5, emoji: '🏆', text: `${esc(k.first)} is on a ${st.current}-day personal best`, sub: 'Worth a well done!', act: btn('Message', `openNotifyModal('${k.uid}')`) });
+  });
+  // My own packs given to my students with no questions, or topics with notes only
+  if (ownStats) allGroups.filter(g => g.mine && ownStats[g.id]).forEach(g => {
+    const st = ownStats[g.id];
+    const who = kids.filter(k => packsOf(k).includes(g.id)).map(k => esc(k.first));
+    if (!who.length) return;
+    const names = who.length > 2 ? `${who.slice(0, -1).join(', ')} and ${who[who.length - 1]}` : who.join(' and ');
+    if (!st.questions) items.push({ p: 0.2, emoji: '📭', text: `${names} ${who.length === 1 ? 'has' : 'have'} a pack with no questions yet: “${esc(g.name)}”`,
+      sub: st.notesOnly.length ? `${st.notesOnly.length} topic${st.notesOnly.length === 1 ? ' has' : 's have'} notes ready. Make quiz questions from them so there's something to revise.` : 'Add revision to it (a photo of class notes works) so there\'s something to revise.',
+      act: btn(st.notesOnly.length ? 'Make questions' : 'Add revision', `goPack('${g.id}','${st.notesOnly.length ? 'questions' : 'classnotes'}')`, true) });
+    else if (st.notesOnly.length) items.push({ p: 1.5, emoji: '📝', text: `${st.notesOnly.length} topic${st.notesOnly.length === 1 ? '' : 's'} in “${esc(g.name)}” ${st.notesOnly.length === 1 ? 'has' : 'have'} notes but no questions`,
+      sub: `${st.notesOnly.slice(0, 3).map(t => esc(t.name)).join(', ')}${st.notesOnly.length > 3 ? ` and ${st.notesOnly.length - 3} more` : ''}. ${names} can read them in Learn, but can't quiz on them yet.`,
+      act: btn('Make questions', `goPack('${g.id}','questions')`) });
+  });
+  items.sort((a, b) => a.p - b.p);
+  att.innerHTML = waitingHtml + (items.length
+    ? items.slice(0, 6).map(i => `<div class="att-item"><span class="att-emoji">${i.emoji}</span><div class="att-text">${i.text}${i.sub ? `<small>${i.sub}</small>` : ''}</div>${i.act}</div>`).join('')
+    : (waitingHtml ? '' : '<div class="home-empty">✅ All good: nothing needs you right now.</div>'));
+
+  // ── Recent activity (last 7 days) ──
+  const events = [];
+  const from = Date.now() - 7 * DAY;
+  kids.forEach(k => {
+    const c = themeColour(k.theme);
+    const dot = `<span class="act-dot" style="background:${c}22;color:${c}">${esc(k.first[0] || '?')}</span>`;
+    (k.sessions || []).filter(s => (s.date || 0) >= from).forEach(s => events.push({ t: s.date, html:
+      `${dot}<div class="act-text">${esc(k.first)} ${s.review ? 'did a review' : `did a quiz on <strong>${esc(s.topic || s.subject || '')}</strong>`}<small>${agoText(s.date)}${s.subject && !s.review ? ' · ' + esc(s.subject) : ''}</small></div><span class="act-score">${s.pct ?? ''}%</span>` }));
+    // study time per day and subject (5 minutes or more)
+    studyEntries(k).filter(e => e.date >= from && e.secs >= 300).forEach(e => events.push({ t: e.date, html:
+      `${dot}<div class="act-text">${esc(k.first)} studied <strong>${esc(e.subject)}</strong><small>${agoText(e.date)}</small></div><span class="act-score">${fmtTime(e.secs)}</span>` }));
+  });
+  events.sort((a, b) => b.t - a.t);
+  act.innerHTML = events.length
+    ? events.slice(0, 8).map(e => `<div class="act-item">${e.html}</div>`).join('')
+    : '<div class="home-empty">No revision in the last 7 days.</div>';
+
+  // ── This week, per student ──
+  wk.innerHTML = figs.map(({ k, w, st, due }) => {
+    const c = themeColour(k.theme);
+    const streakSub = st.lapsed ? `ended · best ${st.best}` : (st.current >= 2 && st.current >= st.best ? '🏆 best!' : st.best ? `best ${st.best}` : 'streak');
+    return `<div class="wk-row">
+      <div class="wk-name"><span class="act-dot" style="background:${c}22;color:${c}">${esc((k.name || '?').split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase())}</span><div>${esc(k.name || '')}<small style="display:block;font-weight:400;font-size:0.75rem;color:var(--color-text-muted)">${(() => { const ps = planSummary(k), g = goalStatus(k); return `${esc(ps.text)} · today ${g.done ? '✓ goal hit' : `${Math.min(g.mins, g.L.mins)}/${g.L.mins} min`}`; })()}</small><small style="display:block;font-weight:400;font-size:0.75rem;color:var(--color-text-muted)">Last active ${w.last ? agoText(w.last) : 'never'}</small></div></div>
+      <div class="wk-stat"><b>${fmtTime(w.secs)}</b><span>this week</span></div>
+      <div class="wk-stat"><b>${w.quizzes}${w.avg !== null ? ` <small style="font-size:0.75rem;color:var(--color-text-muted)">· ${w.avg}%</small>` : ''}</b><span>quizzes</span></div>
+      <div class="wk-stat"><b>${st.current} 🔥</b><span>${streakSub}</span></div>
+      <div class="wk-stat"><b>${due}</b><span>reviews due</span></div>
+      <div class="wk-actions">${packsOf(k).length ? btn('Manage', `openManageModal('${k.uid}')`) : btn('Choose packs', `openManageAt('${k.uid}','packs')`, true)}${btn('Plan', `openPlanFor('${k.uid}')`)}${btn('Progress', `openProgressModal('${k.uid}')`)}${btn('View as', `viewAs('${k.uid}')`)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderChildren() {
+  renderHome();
+  const grid  = document.getElementById('children-grid');
+  const count = Object.keys(childrenData).length;
+  document.getElementById('children-count').textContent =
+    count === 0 ? 'No students yet' : `${count} student${count !== 1 ? 's' : ''}`;
+
+  if (count === 0) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-icon"><i data-icon="users"></i></div><h3>No students added yet</h3><p>Create an account for a student and they'll be able to log in and start revising.</p><button class="btn btn-primary" onclick="openAddModal()">＋ Add your first student</button></div>`;
+    return;
+  }
+
+  grid.innerHTML = '';
+  Object.entries(childrenData).forEach(([uid, child]) => {
+    const initials = (child.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const avatarBg = themeColour(child.theme);
+    const groupIds = child.groupIds || (child.groupId ? [child.groupId] : []);
+    const groupNames = groupIds.map(packName);
+    const groupsHtml = groupNames.length
+      ? groupNames.map(n => `<span class="group-chip">${esc(n)}</span>`).join('')
+      : `<span class="no-group-chip">No packs assigned</span>`;
+    const sessions = child.sessions || [];
+    const quizCount = sessions.length;
+    const avgScore  = quizCount ? Math.round(sessions.reduce((a,s) => a + (s.pct||0), 0) / quizCount) : null;
+    const streak    = currentStreak(child);
+    const stInfo    = streakStatus(child);
+    const secsOf = x => typeof x.secondsSpent === 'number' ? x.secondsSpent : (x.minutesSpent || 0) * 60;
+    const now = new Date();
+    const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    // Quiz time plus study time (Learn screen: map, learn panel, cards, cheat sheets)
+    const study = studyEntries(child);
+    const todaySecs = sessions.filter(x => (x.date || 0) >= startToday).reduce((a, x) => a + secsOf(x), 0)
+                    + study.filter(e => e.date >= startToday).reduce((a, e) => a + e.secs, 0);
+    const weekSecs  = sessions.filter(x => (x.date || 0) >= startToday - 6 * 86400000).reduce((a, x) => a + secsOf(x), 0)
+                    + study.filter(e => e.date >= startToday - 6 * 86400000).reduce((a, e) => a + e.secs, 0);
+    const lastStudy = study.reduce((m, e) => Math.max(m, e.date), 0);
+    const lastDate  = Math.max(lastStudy, sessions.reduce((m, x) => Math.max(m, x.date || 0), 0));
+    const lastLabel = lastDate ? new Date(lastDate).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' }) : 'never';
+
+    const card = document.createElement('div');
+    card.className = 'child-card';
+    card.innerHTML = `
+      <div class="child-card-header">
+        <div class="child-avatar" style="background:${avatarBg}22;color:${avatarBg}">${esc(initials)}</div>
+        <div class="child-info">
+          <div class="child-name">${esc(child.name)}</div>
+          <div class="child-email">${esc(child.email)}</div>
+        </div>
+      </div>
+      <div class="child-card-body">
+        <div class="child-groups">${groupsHtml}</div>
+        <div class="child-stats">
+          <div class="child-stat"><div class="child-stat-val">${quizCount}</div><div class="child-stat-label">Quizzes</div></div>
+          <div class="child-stat"><div class="child-stat-val">${avgScore !== null ? avgScore+'%' : '—'}</div><div class="child-stat-label">Avg score · all time</div></div>
+          <div class="child-stat"${stInfo.lapsed ? ` title="Streak ended. Best was ${stInfo.best} days in a row."` : ''}><div class="child-stat-val">${streak}</div><div class="child-stat-label">${stInfo.lapsed ? `Streak · best ${stInfo.best}` : (stInfo.current >= 2 && stInfo.current >= stInfo.best ? 'Streak · 🏆 best!' : `Streak · best ${stInfo.best}`)}</div></div>
+        </div>
+        <div class="child-week">
+          <span><i data-icon="clock"></i> Today <strong>${fmtTime(todaySecs)}</strong></span>
+          <span>This week <strong>${fmtTime(weekSecs)}</strong></span>
+          <span>Last active <strong>${lastLabel}</strong></span>
+          ${scheduledCount(child) ? `<span><i data-icon="repeat"></i> Review due <strong>${dueEntries(child).length}</strong></span>` : ''}
+          ${(() => { const r = repairOffer(child); if (!r) return child.shields ? `<span>🛡️ Streak shields <strong>${Math.min(child.shields, 2)}</strong></span>` : '';
+            return (r.done || r.progress.done) ? `<span>🦸 <strong>Streak won back today</strong></span>` : `<span>🔥 Winning back streak <strong>${r.progress.mins}/${REPAIR.MINUTES} min</strong></span>`; })()}
+        </div>
+      </div>
+      <div class="child-card-actions">
+        <button class="child-action-btn" onclick="openProgressModal('${uid}')"><i data-icon="chart-column"></i> Progress</button>
+        <button class="child-action-btn" onclick="viewAs('${uid}')" title="Open ${esc(child.name.split(' ')[0])}'s hub in a new window"><i data-icon="eye"></i> View as</button>
+        <button class="child-action-btn" onclick="openNotifyModal('${uid}')"><i data-icon="message-square"></i> Message</button>
+        <button class="child-action-btn" onclick="openManageModal('${uid}')"><i data-icon="settings"></i> Manage</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+/* ── Group checkbox helper ───────────────────────────────── */
+function renderGroupChecks(containerId, selectedIds = []) {
+  const wrap = document.getElementById(containerId);
+  const makeOwn = `<a class="group-check-make" href="admin.html?mine=parent"><i data-icon="plus"></i> Make your own pack</a>`;
+  if (!allGroups.length) {
+    wrap.innerHTML = `<div style="color:var(--color-text-muted);font-size:0.85rem;">No revision packs yet.</div>${makeOwn}`;
+    return;
+  }
+  const item = g => {
+    const checked = selectedIds.includes(g.id);
+    return `<label class="group-check-item${checked?' checked':''}" onclick="toggleGroupCheck(this)">
+      <input type="checkbox" value="${esc(g.id)}"${checked?' checked':''}>
+      <div class="group-check-label">${esc(g.name)}${g.mine ? '' : boardTagHtml(g)}</div>
+    </label>`;
+  };
+  // Packs this student has that I can't see (another parent's or a teacher's own)
+  // are kept when saving; say so, so it isn't a surprise
+  const hidden = selectedIds.filter(id => !allGroups.some(g => g.id === id)).length;
+  // Grouped by level and subject, with a filter bar when the list is long (pack-picker.js)
+  wrap.innerHTML = pickerHtml({ mine: allGroups.filter(g => g.mine), official: allGroups.filter(g => !g.mine), item })
+    + (hidden ? `<div class="group-check-desc">Also has ${hidden} pack${hidden > 1 ? 's' : ''} chosen by someone else, which stay${hidden > 1 ? '' : 's'} as ${hidden > 1 ? 'they are' : 'it is'}.</div>` : '')
+    + `<div class="group-check-desc">Can't find their exam board or subject? <a href="contact.html">Tell us</a> and we'll add it. Meanwhile you can make your own pack.</div>`
+    + makeOwn;
+  wirePicker(wrap);
+}
+
+window._toggleGroupCheck = function(label) {
+  label.classList.toggle('checked');
+};
+
+function getCheckedGroupIds(containerId) {
+  return [...document.querySelectorAll(`#${containerId} input[type="checkbox"]:checked`)].map(i => i.value);
+}
+
+/* ── Add child ───────────────────────────────────────────── */
+window._openAddModal = function() {
+  const lo = document.getElementById('link-offer'); if (lo) lo.innerHTML = '';
+  document.getElementById('child-name').value = '';
+  document.getElementById('child-email').value = '';
+  document.getElementById('child-password').value = '';
+  document.getElementById('pw-reveal').classList.remove('visible');
+  document.getElementById('add-error').classList.remove('visible');
+  selectedTheme = 'light';
+  renderThemeGrid('add-theme-grid', selectedTheme, t => { selectedTheme = t; });
+  renderGroupChecks('add-group-list', []);
+  document.getElementById('modal-add').classList.add('open');
+  setTimeout(() => document.getElementById('child-name').focus(), 100);
+};
+
+window._selectTheme = t => { selectedTheme = t; };
+
+window._generatePw = () => {
+  const pw = generatePassword();
+  document.getElementById('child-password').value = pw;
+  document.getElementById('pw-value').textContent = pw;
+  document.getElementById('pw-reveal').classList.add('visible');
+};
+
+window._addChild = async function() {
+  const name     = document.getElementById('child-name').value.trim();
+  const email    = document.getElementById('child-email').value.trim().toLowerCase();
+  const password = document.getElementById('child-password').value.trim();
+  const groupIds = getCheckedGroupIds('add-group-list');
+  if (!name)               { showErr('add-error', "Please enter the student's name."); return; }
+  if (!email)              { showErr('add-error', 'Please enter an email address.'); return; }
+  const btn = document.getElementById('btn-add-child');
+  document.getElementById('link-offer').innerHTML = '';
+  // Does this email already have an account? Then ask the student to link instead
+  btn.classList.add('loading');
+  const existing = await findByEmail(email).catch(() => null);
+  btn.classList.remove('loading');
+  if (existing) { offerLink(existing, name); return; }
+  // No password: make a random one and email them a link to choose their own
+  const ownPassword = !password;
+  if (!ownPassword && password.length < 8) { showErr('add-error', 'Password must be at least 8 characters, or leave it blank.'); return; }
+  const pw = ownPassword ? generatePassword() + generatePassword() : password;
+  btn.classList.add('loading');
+  try {
+    // Create via REST API to avoid displacing parent's auth session
+    const signupRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pw, returnSecureToken: true })
+    });
+    const signupData = await signupRes.json();
+    if (signupData.error) throw new Error(signupData.error.message);
+    const childUid = signupData.localId;
+    await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${API_KEY}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken: signupData.idToken, displayName: name, returnSecureToken: false })
+    });
+    // Write student profile
+    await setDoc(doc(db, 'users', childUid), {
+      name, email, role: 'student', parentUid,
+      theme: selectedTheme, createdAt: Date.now(),
+      xp: 0, level: 1, streak: 0, sessions: [], classes: {},
+      groupIds, // array of group IDs
+      packIds: groupIds, // every pack the student has (lets the security rules check access)
+      groupId: groupIds[0] || null // keep single groupId for backwards compat
+    });
+    await saveEmailIndex(childUid, email, name, ['student']);
+    logEvent('student.add', { target: name, targetId: childUid, detail: 'New student account' });
+    // Write to parent's children subcollection
+    await setDoc(doc(db, 'users', parentUid, 'children', childUid), {
+      name, email, theme: selectedTheme, createdAt: Date.now(), groupIds,
+      streak: 0, sessions: []
+    });
+    let emailed = false;
+    if (ownPassword) {
+      const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${API_KEY}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestType: 'PASSWORD_RESET', email, continueUrl: new URL('login.html', location.href).href })
+      }).catch(() => null);
+      emailed = !!r?.ok;
+    }
+    document.getElementById('modal-add').classList.remove('open');
+    showAddedDone(name, email, ownPassword ? (emailed ? 'emailed' : 'email-failed') : 'password');
+  } catch(e) {
+    showErr('add-error', friendlyError(e.code) || e.message);
+  } finally { btn.classList.remove('loading'); }
+};
+
+// After adding a student: what happens next, in plain words
+function showAddedDone(name, email, how) {
+  const first = name.split(' ')[0] || name;
+  const msg = how === 'emailed'
+    ? `<p>We've emailed <strong>${esc(email)}</strong> a link for ${esc(first)} to choose a password. The email may say "reset your password": that's the one. If it hasn't arrived in a few minutes, check the spam folder.</p>`
+    : how === 'email-failed'
+    ? `<p>The account is ready, but the email to <strong>${esc(email)}</strong> didn't send. ${esc(first)} can go to the sign-in page, tap "Forgot password?" and enter that email to choose a password.</p>`
+    : `<p>Give ${esc(first)} the password you set, with their email <strong>${esc(email)}</strong>.</p>`;
+  document.getElementById('added-done')?.remove();
+  document.body.insertAdjacentHTML('beforeend', `<div class="modal-overlay open" id="added-done"><div class="modal">
+    <div class="modal-header"><h2>${esc(first)}'s account is ready</h2>
+      <button class="modal-close" onclick="document.getElementById('added-done').remove()" aria-label="Close"><i data-icon="x"></i></button></div>
+    ${msg}
+    <p>Then ${esc(first)} signs in at <strong>lobelimpet.com</strong>. You'll see their progress here as they revise.</p>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="document.getElementById('added-done').remove()">Done</button></div>
+  </div></div>`);
+}
+
+/* ── Linking a student who already has an account ─────────── */
+let pendingLinks = [];
+function offerLink(other, typedName) {
+  const box = document.getElementById('link-offer');
+  document.getElementById('add-error').classList.remove('visible');
+  const roles = other.roles || [];
+  if (other.id === parentUid) { showErr('add-error', "That's your own email address."); return; }
+  if (childrenData[other.id]) { showErr('add-error', `${other.name || 'That student'} is already in your list.`); return; }
+  if (!roles.includes('student')) { showErr('add-error', 'That email belongs to a parent or teacher account, not a student. Use a different email for the student.'); return; }
+  const waiting = pendingLinks.find(l => l.studentUid === other.id && l.status === 'pending');
+  box.innerHTML = `<div class="link-offer">
+    <strong>${esc(other.name || typedName || 'This student')} already has a Lobe Limpet account.</strong>
+    <p>${waiting ? "You've already asked them. They'll appear in your list once they accept." : "Send them a request to link with you. Once they accept in their hub, you'll see their progress here and can set up packs and plans. They keep everything they've done so far."}</p>
+    ${waiting ? '' : '<button class="btn btn-primary" id="btn-send-link"><i data-icon="send"></i> Send link request</button>'}
+  </div>`;
+  const b = document.getElementById('btn-send-link');
+  if (b) b.onclick = async () => {
+    b.disabled = true;
+    try {
+      await sendLinkRequest({ parentUid, parentName: shellProfile?.name || '', parentEmail: shellProfile?.email || '', student: other, typedName: typedName || other.name });
+      document.getElementById('modal-add').classList.remove('open');
+      showToast(`Request sent. ${typedName || other.name || 'They'} will see it next time they open Lobe Limpet.`, 'success');
+      loadPendingLinks();
+    } catch (e) { b.disabled = false; showErr('add-error', 'Could not send the request: ' + e.message); }
+  };
+}
+async function loadPendingLinks() {
+  pendingLinks = (await myLinkRequests(parentUid)).filter(l => l.status === 'pending' || l.status === 'declined');
+  const box = document.getElementById('pending-links');
+  const shown = pendingLinks.filter(l => !childrenData[l.studentUid]);
+  box.innerHTML = shown.length ? `<div class="pending-links">${shown.map(l => `<div class="pending-link">
+      <span>${l.status === 'declined' ? '✋' : '⏳'}</span>
+      <div><strong>${esc(l.studentName || l.studentEmail)}</strong><small>${l.status === 'declined' ? 'Declined your link request' : `Link request sent ${agoText(l.at)}: waiting for them to accept in their hub`}</small></div>
+      <button class="btn btn-ghost" style="padding:6px 12px;font-size:0.8rem" data-cancel-link="${esc(l.id)}">${l.status === 'declined' ? 'Dismiss' : 'Cancel'}</button>
+    </div>`).join('')}</div>` : '';
+  box.querySelectorAll('[data-cancel-link]').forEach(b => b.onclick = async () => {
+    const l = pendingLinks.find(x => x.id === b.dataset.cancelLink); if (!l) return;
+    b.disabled = true;
+    try { await cancelLinkRequest(l); loadPendingLinks(); } catch (e) { b.disabled = false; showToast('Could not cancel: ' + e.message, 'error'); }
+  });
+  renderHome();
+}
+
+/* ── Day-by-day plan (parents can change any day) ─────────── */
+window.openPlanFor = (uid) => {
+  const child = childrenData[uid];
+  if (!child) return;
+  openPlanCalendar(child, { uid, name: (child.name || '').split(' ')[0], editable: true,
+    onChange: p => { childrenData[uid].plan = p.plan; liveStats[uid] = { ...(liveStats[uid] || {}), plan: p.plan }; renderChildren(); } });
+};
+
+/* ── Study plan week (in the Progress window) ─────────────── */
+function renderPlanWeek(profile) {
+  const box = document.getElementById('progress-plan');
+  if (!box) return;
+  const ps = planSummary(profile);
+  const days = planHistory(profile, 7);
+  const met = days.filter(d => d.done).length;
+  box.innerHTML = `<div class="plan-week-head"><span><strong>${esc(ps.text)}</strong></span><span>Target ${esc(targetText(ps.L))} · goal hit ${met} of the last 7 days</span>
+      <button class="btn btn-secondary" style="padding:5px 11px;font-size:0.78rem" onclick="openPlanFor('${esc(profile.__uid || '')}')"><i data-icon="calendar"></i> Plan to exams</button></div>
+    <div class="plan-days">${days.map(d => {
+      const h = Math.round(Math.min(1, d.mins / Math.max(1, d.L.mins)) * 100);
+      const wd = new Date(d.day + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short' });
+      return `<div class="plan-day${d.done ? ' met' : ''}" title="${wd}: ${d.mins} min, ${d.quizzes} quiz${d.quizzes === 1 ? '' : 'zes'} (target ${d.L.mins} min, ${d.L.label})">
+        <div class="bar"><i style="height:${h}%"></i></div><span class="mark">${d.done ? '✓' : d.mins ? d.mins + 'm' : '–'}</span><br>${d.today ? 'Today' : wd}</div>`;
+    }).join('')}</div>`;
+}
+
+/* ── Study plan editor (in Manage student) ────────────────── */
+let managePlan = { mode: 'auto', exams: [] };
+// Read the exam rows straight from the screen (each row carries its exam's id)
+function readPlanEditor() {
+  managePlan.mode = document.getElementById('manage-plan-mode').value;
+  const byId = Object.fromEntries((managePlan.exams || []).map(e => [e.id, e]));
+  managePlan.exams = [...document.querySelectorAll('#manage-exams .plan-exam-row')].map(row => ({
+    ...(byId[row.dataset.id] || {}),
+    id: row.dataset.id || ('e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5)),
+    name: row.querySelector('[data-f="name"]').value.trim(),
+    start: row.querySelector('[data-f="start"]').value,
+    end: row.querySelector('[data-f="end"]').value || null,
+  }));
+}
+function renderPlanEditor() {
+  const sel = document.getElementById('manage-plan-mode');
+  sel.innerHTML = MODES.map(m => `<option value="${m.id}"${m.id === managePlan.mode ? ' selected' : ''}>${m.label}</option>`).join('');
+  const hint = () => {
+    const mode = sel.value;
+    document.getElementById('manage-plan-hint').textContent = mode === 'auto'
+      ? `Steady most of the time, Exam push for the 2 weeks before an exam (${targetText(LEVELS.push)} a day), and Relaxed once exams are over.`
+      : `${LEVELS[mode].emoji} ${LEVELS[mode].label}: ${targetText(LEVELS[mode])} a day, ${LEVELS[mode].days} days a week.`;
+  };
+  sel.onchange = hint; hint();
+  const box = document.getElementById('manage-exams');
+  box.innerHTML = managePlan.exams.map((e, i) => `<div class="plan-exam-row" data-id="${esc(e.id || '')}">
+      <div><label>Exams</label><input data-f="name" value="${esc(e.name || '')}" placeholder="e.g. November progress exams"></div>
+      <div><label>First exam</label><input type="date" data-f="start" value="${esc(e.start || '')}"></div>
+      <div><label>Last exam (optional)</label><input type="date" data-f="end" value="${esc(e.end || '')}"></div>
+      <button type="button" class="btn btn-ghost" data-del-exam="${i}" aria-label="Remove these exams"><i data-icon="trash-2"></i></button>
+    </div>`).join('');
+  box.querySelectorAll('[data-del-exam]').forEach(b => b.onclick = () => { readPlanEditor(); managePlan.exams.splice(+b.dataset.delExam, 1); renderPlanEditor(); });
+  document.getElementById('btn-add-exam').onclick = () => {
+    readPlanEditor();
+    managePlan.exams.push({ id: 'e' + Date.now().toString(36), name: '', start: '', end: null });
+    renderPlanEditor();
+    box.querySelector('.plan-exam-row:last-child input')?.focus();
+  };
+}
+
+/* ── Manage child ────────────────────────────────────────── */
+window._openManageModal = function(uid) {
+  managingChildId = uid;
+  const child = childrenData[uid];
+  document.getElementById('manage-title').textContent = `Manage ${child.name}`;
+  document.getElementById('manage-name').value = child.name;
+  document.getElementById('manage-error').classList.remove('visible');
+  manageTheme = child.theme || 'edge';
+  renderThemeGrid('manage-theme-grid', manageTheme, t => { manageTheme = t; });
+  document.getElementById('manage-card-length').value = child.cardLength || 'full';
+  // child.plan should be { mode, exams, overrides }; anything else (an old Plus
+  // value saved in the same field) starts a fresh plan instead of breaking the window
+  const plan0 = child.plan && typeof child.plan === 'object' ? child.plan : { mode: 'auto', exams: [] };
+  managePlan = JSON.parse(JSON.stringify(plan0));
+  managePlan.exams = Array.isArray(managePlan.exams) ? managePlan.exams : [];
+  renderPlanEditor();
+  document.getElementById('btn-day-plan').onclick = () => openPlanFor(uid);
+  document.getElementById('share-email').value = '';
+  renderGuardians(uid);
+  const currentGroupIds = child.groupIds || (child.groupId ? [child.groupId] : []);
+  renderGroupChecks('manage-group-list', currentGroupIds);
+  document.getElementById('modal-manage').classList.add('open');
+};
+
+window._selectManageTheme = t => { manageTheme = t; };
+
+window._saveChild = async function() {
+  const name = document.getElementById('manage-name').value.trim();
+  if (!name) { showErr('manage-error', 'Please enter a name.'); return; }
+  const was0 = childrenData[managingChildId] || {};
+  const hiddenIds = (was0.groupIds || (was0.groupId ? [was0.groupId] : [])).filter(id => !allGroups.some(g => g.id === id));
+  const groupIds = [...new Set([...getCheckedGroupIds('manage-group-list'), ...hiddenIds])];
+  const packIds = flatPackIds({ groupIds, classPacks: was0.classPacks || {}, myPackId: was0.myPackId });
+  const btn = document.getElementById('btn-save-child');
+  btn.classList.add('loading');
+  try {
+    const cardLength = document.getElementById('manage-card-length').value;
+    readPlanEditor();
+    // An exam with a name or last date but no first date can't be planned: say so rather than dropping it
+    const rows = [...document.querySelectorAll('#manage-exams .plan-exam-row')];
+    rows.forEach(r => r.classList.remove('bad'));
+    const badIdx = managePlan.exams.findIndex(e => !e.start && (e.name || e.end));
+    if (badIdx >= 0) {
+      rows[badIdx]?.classList.add('bad'); rows[badIdx]?.scrollIntoView({ block: 'center' });
+      showErr('manage-error', `Add the first exam date for "${managePlan.exams[badIdx].name || 'these exams'}", or remove that row.`);
+      btn.classList.remove('loading'); return;
+    }
+    const plan = { mode: managePlan.mode || 'auto', exams: managePlan.exams.filter(e => e.start).map(e => ({ id: e.id, name: (e.name || 'Exams').trim(), start: e.start, end: e.end && e.end >= e.start ? e.end : null, packId: e.packId || null })) };
+    if (managePlan.overrides) plan.overrides = managePlan.overrides;   // keep day-by-day changes
+    const was = { ...(childrenData[managingChildId] || {}) };
+    await updateDoc(doc(db, 'users', managingChildId), {
+      name, theme: manageTheme, groupIds, packIds, cardLength, plan,
+      groupId: groupIds[0] || null
+    });
+    const planText = p => `${p?.mode || 'auto'}${(p?.exams || []).length ? ' · ' + p.exams.map(e => `${e.name} ${e.start}${e.end ? '–' + e.end : ''}`).join('; ') : ''}`;
+    if (planText(was.plan) !== planText(plan)) logEvent('plan.change', { target: name, targetId: managingChildId, detail: planText(plan) });
+    const changed = [was.name !== name && 'name', was.theme !== manageTheme && 'theme', JSON.stringify([...(was.groupIds || [])].sort()) !== JSON.stringify([...groupIds].sort()) && 'packs', (was.cardLength || 'full') !== cardLength && 'card length'].filter(Boolean);
+    if (changed.length) logEvent('student.edit', { target: name, targetId: managingChildId, detail: 'Changed ' + changed.join(', ') });
+    // Remember what was saved, so the list doesn't redraw from the copy read when the page opened
+    const saved = { name, theme: manageTheme, groupIds, cardLength, plan };
+    liveStats[managingChildId] = { ...(liveStats[managingChildId] || {}), ...saved };
+    Object.assign(childrenData[managingChildId], saved);
+    renderChildren();
+    await updateDoc(doc(db, 'users', parentUid, 'children', managingChildId), {
+      name, theme: manageTheme, groupIds
+    });
+    document.getElementById('modal-manage').classList.remove('open');
+    // Confirm from the server what the study plan now says
+    const check = (await getDoc(doc(db, 'users', managingChildId)).catch(() => null))?.data()?.plan;
+    const n = (check?.exams || []).length;
+    const first = n ? check.exams.map(e => e.start).sort()[0] : null;
+    showToast(`Saved. ${name.split(' ')[0]}'s plan: ${n ? `${n} set${n === 1 ? '' : 's'} of exams, the first on ${new Date(first + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'no exams set'}.`, 'success');
+  } catch(e) { showErr('manage-error', 'Failed to save. Please try again.'); }
+  finally { btn.classList.remove('loading'); }
+};
+
+/* ── Parents and guardians ───────────────────────────────── */
+function guardiansOf(child) {
+  return [...new Set([child.parentUid, ...(child.guardianIds || [])].filter(Boolean))];
+}
+async function renderGuardians(uid) {
+  const child = childrenData[uid];
+  const list = document.getElementById('guardian-list');
+  const ids = guardiansOf(child);
+  if (!ids.includes(parentUid)) ids.unshift(parentUid);
+  const people = await Promise.all(ids.map(id => getDoc(doc(db, 'users', id)).then(s => ({ id, ...(s.data() || {}) })).catch(() => ({ id }))));
+  list.innerHTML = people.map(p => `<div class="guardian-row"><i data-icon="user"></i>${esc(p.name || p.email || 'Unknown')}<small>${p.id === parentUid ? 'You' : esc(p.email || '')}</small></div>`).join('');
+  const shared = ids.length > 1;
+  document.getElementById('remove-note').textContent = shared
+    ? 'This student is shared with another parent. Removing takes them off your list only; their account and progress stay.'
+    : 'Removing a student will delete their account data. This cannot be undone.';
+  document.getElementById('btn-remove-student').textContent = shared ? 'Remove from my list' : 'Remove student';
+}
+
+window._shareStudent = async function() {
+  const typed = document.getElementById('share-email').value.trim();
+  const email = typed.toLowerCase();
+  const child = childrenData[managingChildId];
+  if (!email) { showErr('manage-error', 'Enter the other parent\'s email address.'); return; }
+  const btn = document.getElementById('btn-share'); btn.disabled = true;
+  try {
+    // Exact-email look-up (the security rules don't allow searching all users)
+    const other = await findByEmail(email);
+    if (!other) { showErr('manage-error', 'No Lobe Limpet account uses that email. Ask them to create a parent account first.'); return; }
+    if (other.id === parentUid) { showErr('manage-error', 'That\'s your own account.'); return; }
+    const theirRoles = other.roles || [];
+    if (!theirRoles.some(r => r === 'parent' || r === 'admin')) { showErr('manage-error', 'That account isn\'t a parent account. They need to sign up as a parent.'); return; }
+    // Link the student to them, and add the student to their list
+    await updateDoc(doc(db, 'users', managingChildId), { guardianIds: arrayUnion(other.id) });
+    await setDoc(doc(db, 'users', other.id, 'children', managingChildId), {
+      name: child.name, email: child.email, theme: child.theme || 'edge',
+      groupIds: child.groupIds || [], createdAt: Date.now(), sharedBy: parentUid
+    }, { merge: true });
+    child.guardianIds = [...new Set([...(child.guardianIds || []), other.id])];
+    logEvent('student.share', { target: child.name, targetId: managingChildId, detail: `Shared with ${other.name || email}` });
+    document.getElementById('share-email').value = '';
+    document.getElementById('manage-error').classList.remove('visible');
+    showToast(`Shared with ${other.name || email}`, 'success');
+    renderGuardians(managingChildId);
+  } catch (e) {
+    showErr('manage-error', 'Could not share: ' + e.message);
+  } finally { btn.disabled = false; }
+};
+
+window._confirmRemoveChild = async function() {
+  const child = childrenData[managingChildId];
+  const others = guardiansOf(child).filter(id => id !== parentUid);
+  // A student who linked with you (their own account) is only ever unlinked
+  if (child.parentUid !== parentUid && !others.length) {
+    if (!confirm(`Remove ${child.name} from your list? Their account and progress stay with them; you just stop seeing it.`)) return;
+    await updateDoc(doc(db, 'users', managingChildId), { guardianIds: arrayRemove(parentUid) }).catch(() => {});
+    await deleteDoc(doc(db, 'users', parentUid, 'children', managingChildId));
+    const l = (await myLinkRequests(parentUid)).find(x => x.studentUid === managingChildId);
+    if (l) await cancelLinkRequest(l).catch(() => {});
+    logEvent('student.unlink', { target: child.name, targetId: managingChildId, detail: 'Removed a linked student from their list' });
+    document.getElementById('modal-manage').classList.remove('open');
+    showToast(`${child.name} removed from your list.`, 'info');
+    return;
+  }
+  if (others.length) {
+    // Shared: just unlink this parent; the account and progress stay
+    if (!confirm(`Remove ${child.name} from your list? The other parent keeps access and nothing is deleted.`)) return;
+    const changes = { guardianIds: arrayRemove(parentUid) };
+    if (child.parentUid === parentUid) changes.parentUid = others[0];
+    await updateDoc(doc(db, 'users', managingChildId), changes).catch(() => {});
+    if (child.parentUid === parentUid) await updateDoc(doc(db, 'users', managingChildId), { guardianIds: arrayRemove(others[0]) }).catch(() => {});
+    await deleteDoc(doc(db, 'users', parentUid, 'children', managingChildId));
+    logEvent('student.unlink', { target: child.name, targetId: managingChildId, detail: 'Removed from their list (shared)' });
+    document.getElementById('modal-manage').classList.remove('open');
+    showToast(`${child.name} removed from your list.`, 'info');
+    return;
+  }
+  // Only parent: delete the account properly (sign-in, record and links)
+  const id = managingChildId, name = child.name;
+  document.getElementById('modal-manage').classList.remove('open');
+  openDeleteAccount({ uid: id, name, onDone: () => {
+    logEvent('student.delete', { target: 'A deleted student', detail: 'Account deleted' });
+    delete childrenData[id];
+    renderChildren();
+    showToast(`${name}'s account has been deleted.`, 'info');
+  } });
+};
+
+/* ── Reset progress ──────────────────────────────────────── */
+window._resetProgress = async function() {
+  const child = childrenData[managingChildId];
+  if (!child) return;
+  const first = child.name.split(' ')[0];
+  if (!confirm(`Reset ${first}'s progress?\n\nThis clears XP, level, badges, streak and all quiz history. Their login, groups and theme stay the same.\n\nThis cannot be undone.`)) return;
+  const btn = document.getElementById('btn-reset-progress');
+  btn.classList.add('loading');
+  try {
+    // Student's own record (what hub, profile and gamification read)
+    await updateDoc(doc(db, 'users', managingChildId), {
+      xp: 0, level: 1, streak: 0,
+      badges: [], sessions: [],
+      mindmapsViewed: 0,
+      lastRevisionDate: deleteField()
+    });
+    // Parent's mirror (what the child cards and progress modal read)
+    await updateDoc(doc(db, 'users', parentUid, 'children', managingChildId), {
+      sessions: [], streak: 0
+    });
+    logEvent('student.reset', { target: child.name, targetId: managingChildId, detail: 'XP, badges, streak and quiz history cleared' });
+    document.getElementById('modal-manage').classList.remove('open');
+    showToast(`${first}'s progress has been reset.`, 'success');
+  } catch(e) {
+    showErr('manage-error', 'Reset failed. Please try again.');
+  } finally { btn.classList.remove('loading'); }
+};
+
+/* ── Progress modal ──────────────────────────────────────── */
+window._openProgressModal = async function(uid) {
+  const child = childrenData[uid];
+  const avatarBg = themeColour(child.theme);
+  const initials = (child.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+
+  document.getElementById('progress-title').textContent = `${child.name}'s progress`;
+  document.getElementById('progress-name').textContent = child.name;
+  document.getElementById('progress-avatar').textContent = initials;
+  document.getElementById('progress-avatar').style.cssText = `background:${avatarBg}22;color:${avatarBg};width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;flex-shrink:0;`;
+
+  const groupIds = child.groupIds || (child.groupId ? [child.groupId] : []);
+  const groupNames = groupIds.map(packName);
+  document.getElementById('progress-groups').textContent = groupNames.length ? groupNames.join(', ') : 'No packs assigned';
+
+  // Load the child's full record (sessions, XP, badges, streak)
+  const snap = await getDoc(doc(db, 'users', uid)).catch(() => null);
+  const profile = snap?.data() || {};
+  if (!profile.sessions && child.sessions) profile.sessions = child.sessions;
+  const sessions = (profile.sessions || []).slice().reverse();
+
+  const quizCount = sessions.length;
+  const avgScore  = quizCount ? Math.round(sessions.reduce((a,s)=>a+(s.pct||0),0)/quizCount) : null;
+  const { current, next, xpIntoLevel, xpNeeded } = getLevelInfo(profile.xp || 0);
+
+  document.getElementById('stat-level').textContent   = `${current.icon} ${current.level}`;
+  document.getElementById('stat-quizzes').textContent = quizCount;
+  document.getElementById('stat-avg').textContent     = avgScore !== null ? avgScore+'%' : '—';
+  const liveStreak = currentStreak(profile);
+  document.getElementById('stat-streak').textContent  = liveStreak + (liveStreak === 1 ? ' day' : ' days');
+  const stp = streakStatus(profile);
+  document.getElementById('stat-streak-label').textContent = stp.lapsed
+    ? `Streak ended · best was ${stp.best} day${stp.best === 1 ? '' : 's'}`
+    : (stp.current >= 2 && stp.current >= stp.best ? 'Streak · 🏆 personal best!'
+    : stp.best ? `Streak · best ${stp.best} day${stp.best === 1 ? '' : 's'}` : 'Streak');
+  document.getElementById('progress-xp').innerHTML =
+    `<strong>${current.name} · ${profile.xp || 0} XP</strong>${next ? `${xpIntoLevel} / ${xpNeeded} to ${next.name}` : 'Top level'}`;
+
+  // Study plan: this week, target vs what they did
+  profile.__uid = uid;
+  renderPlanWeek(profile);
+
+  // Same goals, time, subject and badge views the child sees on their hub
+  document.getElementById('progress-stats-root').innerHTML = statsSectionsHtml();
+  renderStats(profile, { goalLimit: 4 });
+
+  const typeNames = { mcq:'Multiple choice', tf:'True/false', fill:'Fill blank', match:'Match pairs', short:'Written' };
+  const list = document.getElementById('sessions-list');
+  if (!sessions.length) {
+    list.innerHTML = `<div class="no-sessions">No quiz sessions yet. Encourage ${esc(child.name.split(' ')[0])} to try a quiz!</div>`;
+  } else {
+    list.innerHTML = sessions.slice(0,30).map(s => {
+      const pct = s.pct || 0;
+      const cls = pct >= 80 ? 'score-good' : pct >= 50 ? 'score-mid' : 'score-low';
+      const date = s.date ? new Date(s.date).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}) : '';
+      const secs = typeof s.secondsSpent === 'number' ? s.secondsSpent : (s.minutesSpent || 0) * 60;
+      const meta = [date, s.subject && s.topic && s.subject !== s.topic ? s.subject : '', secs ? fmtTime(secs) : '', `${s.score ?? '?'}/${s.total ?? '?'} correct`].filter(Boolean).join(' · ');
+      const types = (s.types || []).map(t => typeNames[t] || t).join(', ');
+      return `<div class="session-row">
+        <div>
+          <div class="session-topic">${esc(s.topic||s.subject||'Quiz')}</div>
+          <div class="session-meta">${esc(meta)}</div>
+          ${types ? `<div class="session-types">${esc(types)}</div>` : ''}
+        </div>
+        <div class="session-score ${cls}">${pct}%</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Jump buttons scroll within the modal
+  const modalEl = document.querySelector('#modal-progress .modal');
+  document.querySelectorAll('#modal-progress .progress-tab').forEach(btn => {
+    btn.onclick = () => {
+      const target = document.getElementById(btn.dataset.jump);
+      if (target) modalEl.scrollTo({ top: modalEl.scrollTop + target.getBoundingClientRect().top - modalEl.getBoundingClientRect().top - 12, behavior: 'smooth' });
+    };
+  });
+  modalEl.scrollTop = 0;
+  document.getElementById('modal-progress').classList.add('open');
+};
+
+/* ── Notify modal ────────────────────────────────────────── */
+window._openNotifyModal = function(uid) {
+  notifyingChildId = uid;
+  const child = childrenData[uid];
+  document.getElementById('notify-title').textContent = `Message ${child.name}`;
+  document.getElementById('notify-message').value = '';
+  document.getElementById('notify-preview').style.display = 'none';
+  document.getElementById('modal-notify').classList.add('open');
+  setTimeout(() => document.getElementById('notify-message').focus(), 100);
+};
+
+window._updateNotifyPreview = function() {
+  const msg = document.getElementById('notify-message').value.trim();
+  const preview = document.getElementById('notify-preview');
+  if (msg) {
+    preview.style.display = 'block';
+    document.getElementById('notify-preview-text').textContent = msg;
+  } else {
+    preview.style.display = 'none';
+  }
+};
+
+window._sendNotification = async function() {
+  const msg = document.getElementById('notify-message').value.trim();
+  if (!msg) { showToast('Please write a message first', 'error'); return; }
+  const btn = document.getElementById('btn-send-notify');
+  btn.classList.add('loading');
+  try {
+    await updateDoc(doc(db, 'users', notifyingChildId), {
+      notification: { message: msg, from: 'parent', sentAt: Date.now(), read: false }
+    });
+    logEvent('student.message', { target: childrenData[notifyingChildId]?.name || '', targetId: notifyingChildId, detail: `${msg.length} characters` });
+    document.getElementById('modal-notify').classList.remove('open');
+    showToast('Message sent!', 'success');
+  } catch(e) { showToast('Failed to send: ' + e.message, 'error'); }
+  finally { btn.classList.remove('loading'); }
+};
+
+/* ── Utils ───────────────────────────────────────────────── */
+window._closeModal = id => document.getElementById(id).classList.remove('open');
+
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+});
+
+function showErr(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.classList.add('visible'); }
+
+function friendlyError(code) {
+  const map = {
+    'auth/email-already-in-use': 'An account with that email already exists.',
+    'auth/invalid-email': 'Please enter a valid email address.',
+    'auth/weak-password': 'Password must be at least 8 characters.'
+  };
+  return map[code];
+}
+
+function esc(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+<script>
+window.showToast = function(msg, type='info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`; t.textContent = msg;
+  c.appendChild(t); setTimeout(() => t.remove(), 3500);
+};
+</script>
+<script src="site.js?v=20261113d"></script>
+</body>
+</html>

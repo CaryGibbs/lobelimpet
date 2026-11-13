@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lobe Limpet — Learn</title>
+  <link rel="icon" type="image/svg+xml" href="assets/images/brand/favicon.svg?v=20261113d">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brand/favicon-32.png?v=20261113d">
+  <link rel="apple-touch-icon" href="assets/images/brand/apple-touch-icon.png?v=20261113d">
+  <link rel="manifest" href="manifest.webmanifest?v=20261113d">
+  <meta name="apple-mobile-web-app-title" content="Lobe Limpet">
+  <meta name="application-name" content="Lobe Limpet">
+  <link rel="stylesheet" href="theme.css?v=20261113d">
+  <script src="icons.js?v=20261113d"></script>
+  <style>
+    body { height: 100vh; height: 100dvh; background: var(--color-bg); overflow: hidden; display: flex; flex-direction: column; }
+
+    /* ── Top nav ─────────────────────────────────────────── */
+    .topnav {
+      background: var(--color-surface); border-bottom: 1px solid var(--color-border);
+      padding: 0 var(--space-xl); height: 64px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      z-index: 100; gap: var(--space-md);
+    }
+    .nav-back {
+      display: flex; align-items: center; gap: 8px;
+      font-family: var(--font-ui); font-size: 0.9rem; font-weight: 600;
+      color: var(--color-text-muted); text-decoration: none; flex-shrink: 0;
+      transition: color var(--transition-fast);
+    }
+    .nav-back:hover { color: var(--color-primary); }
+    .nav-title {
+      font-family: var(--font-heading); font-size: 1rem; font-weight: 700;
+      color: var(--color-text); flex: 1; text-align: center;
+    }
+    .view-toggle {
+      display: flex; gap: 4px; background: var(--color-surface-2);
+      border-radius: var(--radius-button); padding: 3px; flex-shrink: 0;
+    }
+    .view-btn {
+      padding: 6px 12px; border-radius: calc(var(--radius-button) - 2px);
+      background: transparent; color: var(--color-text-muted);
+      font-family: var(--font-ui); font-size: 0.8rem; font-weight: 600;
+      border: none; cursor: pointer; transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+    .view-btn.active {
+      background: var(--color-surface); color: var(--color-text);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+
+    /* Phones and narrow tablets: back + title on one row, the four
+       view buttons full width underneath, so nothing runs off the screen */
+    @media (max-width: 760px) {
+      .topnav { flex-wrap: wrap; height: auto !important; padding: 8px 12px 10px !important; row-gap: 8px; column-gap: 12px; }
+      .nav-title { text-align: left; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .view-toggle { flex: 1 1 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .view-btn { flex-direction: column; gap: 2px !important; padding: 6px 2px; font-size: 0.7rem; justify-content: center; }
+      .view-btn .icon { width: 18px !important; height: 18px !important; }
+      .spider-hint { max-width: calc(100% - 32px); white-space: normal; text-align: center; bottom: 12px; }
+    }
+    /* ── Loading ─────────────────────────────────────────── */
+    .loading-wrap {
+      display: flex; align-items: center; justify-content: center;
+      min-height: calc(100vh - 64px); flex-direction: column; gap: var(--space-md);
+    }
+    .loading-wrap p { color: var(--color-text-muted); font-family: var(--font-ui); }
+
+    /* ── View panels ─────────────────────────────────────── */
+    /* All panels are absolutely positioned and fill the space below nav */
+    .panels-container {
+      position: relative; flex: 1; overflow: hidden;
+    }
+    .view-panel {
+      display: none !important;
+      position: absolute; inset: 0;
+      overflow-y: auto;
+    }
+    .view-panel.active { display: block !important; }
+    .view-panel.active#view-flashcards { display: flex !important; }
+    #view-spider { display: block !important; visibility: hidden; pointer-events: none; overflow: hidden; }
+    #view-spider.active { visibility: visible !important; pointer-events: all; }
+
+    /* ══════════════════════════════════════════════════════
+       VIEW 1: SPIDER DIAGRAM (SVG canvas)
+    ══════════════════════════════════════════════════════ */
+    #view-spider {
+      width: 100%; overflow: hidden; cursor: grab;
+    }
+    #view-spider:active { cursor: grabbing; }
+    .spider-zoom-btn {
+      width: 34px; height: 34px; border-radius: 50%; background: var(--color-surface);
+      border: 1px solid var(--color-border); color: var(--color-text); font-size: 1.15rem; font-weight: 700;
+      line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    }
+    #spider-canvas {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+    .spider-hint {
+      position: absolute; bottom: var(--space-lg); left: 50%; transform: translateX(-50%);
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-pill); padding: 6px 16px;
+      font-family: var(--font-ui); font-size: 0.78rem; color: var(--color-text-muted);
+      pointer-events: none;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       VIEW 2: OUTLINE / ACCORDION
+    ══════════════════════════════════════════════════════ */
+    #view-outline { padding: var(--space-md) var(--space-lg) var(--space-xl); max-width: 760px; margin: 0 auto; box-sizing: border-box; overflow-y: auto; }
+    .outline-subject {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-card); margin-bottom: var(--space-md);
+      overflow: hidden;
+    }
+    .outline-subject-header {
+      display: flex; align-items: center; gap: var(--space-md);
+      padding: var(--space-md) var(--space-lg); cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+    .outline-subject-header:hover { background: var(--color-surface-2); }
+    .outline-subject-emoji { font-size: 1.4rem; }
+    .outline-subject-name { font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; flex: 1; }
+    .outline-chevron { color: var(--color-text-faint); transition: transform var(--transition-fast); font-size: 1.1rem; }
+    .outline-subject.open .outline-chevron { transform: rotate(90deg); }
+    .outline-topics { display: none; border-top: 1px solid var(--color-border); }
+    .outline-subject.open .outline-topics { display: block; }
+    .outline-topic {
+      border-bottom: 1px solid var(--color-border); overflow: hidden;
+    }
+    .outline-topic:last-child { border-bottom: none; }
+    .outline-topic-header {
+      display: flex; align-items: center; gap: var(--space-md);
+      padding: var(--space-sm) var(--space-lg) var(--space-sm) calc(var(--space-lg) + 24px);
+      cursor: pointer; transition: background var(--transition-fast);
+    }
+    .outline-topic-header:hover { background: var(--color-surface-2); }
+    .outline-topic-name {
+      font-family: var(--font-ui); font-size: 0.92rem; font-weight: 600; flex: 1;
+      color: var(--color-text);
+    }
+    .outline-topic-count {
+      font-size: 0.78rem; color: var(--color-text-muted); font-family: var(--font-ui);
+    }
+    .outline-topic-chevron { color: var(--color-text-faint); transition: transform var(--transition-fast); font-size: 0.9rem; }
+    .outline-topic.open .outline-topic-chevron { transform: rotate(90deg); }
+    .outline-keypoints { display: none; padding: var(--space-sm) var(--space-lg) var(--space-md) calc(var(--space-lg) + 24px); }
+    .outline-topic.open .outline-keypoints { display: block; }
+    .keypoint-item {
+      padding: var(--space-sm) 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .keypoint-item:last-child { border-bottom: none; }
+    .keypoint-term {
+      font-family: var(--font-ui); font-size: 0.82rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      color: var(--color-primary); margin-bottom: 3px;
+    }
+    .keypoint-explanation {
+      font-size: 0.9rem; color: var(--color-text); line-height: 1.6;
+    }
+
+    /* ── Spider detail panel ────────────────────────────── */
+    .spider-detail {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: var(--color-surface);
+      border-top: 2px solid var(--color-primary);
+      border-radius: var(--radius-card) var(--radius-card) 0 0;
+      padding: var(--space-lg) var(--space-xl);
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      z-index: 10; max-height: 50%;
+      overflow-y: auto;
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
+    }
+    .spider-detail.open { transform: translateY(0); }
+    .spider-detail-close {
+      position: absolute; top: var(--space-md); right: var(--space-md);
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--color-surface-2); border: none; cursor: pointer;
+      color: var(--color-text-muted); font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all var(--transition-fast);
+    }
+    .spider-detail-close:hover { background: var(--color-danger); color: #fff; }
+    .spider-detail-term {
+      font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700;
+      color: var(--color-primary); margin-bottom: var(--space-sm);
+      padding-right: 40px;
+    }
+    .spider-detail-explanation {
+      font-size: 0.95rem; color: var(--color-text); line-height: 1.7;
+    }
+    .spider-hint {
+      position: absolute; bottom: var(--space-lg); left: 50%;
+      transform: translateX(-50%);
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-pill); padding: 6px 16px;
+      font-family: var(--font-ui); font-size: 0.78rem; color: var(--color-text-muted);
+      pointer-events: none; transition: opacity 0.3s ease;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       VIEW 3: FLASHCARDS
+    ══════════════════════════════════════════════════════ */
+    #view-flashcards {
+      display: flex; flex-direction: column; align-items: center;
+      padding: var(--space-lg) var(--space-lg); box-sizing: border-box;
+      justify-content: center; overflow-y: auto;
+    }
+    .flashcard-meta {
+      font-family: var(--font-ui); font-size: 0.85rem; color: var(--color-text-muted);
+    }
+    .fc-toolbar { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: var(--space-lg); }
+    .fc-length { display: inline-flex; gap: 3px; padding: 3px; border-radius: 999px; background: var(--color-surface-2); border: 1px solid var(--color-border); }
+    .fc-length button { border: none; background: transparent; color: var(--color-text-muted); font-family: var(--font-ui); font-weight: 600;
+      font-size: 0.8rem; padding: 6px 14px; border-radius: 999px; cursor: pointer; }
+    .fc-length button.on { background: var(--color-surface); color: var(--color-text); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+    .fc-length-note { font-family: var(--font-ui); font-size: 0.75rem; color: var(--color-text-muted); min-height: 1em; }
+    .flashcard-wrap {
+      width: 100%; max-width: 560px; perspective: 1000px; margin-bottom: var(--space-xl);
+    }
+    .flashcard {
+      width: 100%; min-height: 260px;
+      position: relative; transform-style: preserve-3d;
+      transition: transform 0.5s ease; cursor: pointer;
+    }
+    .flashcard.flipped { transform: rotateY(180deg); }
+    .flashcard-face {
+      position: absolute; inset: 0;
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-card); padding: var(--space-xl);
+      backface-visibility: hidden;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center;
+      box-shadow: var(--shadow-card);
+    }
+    .flashcard-back {
+      transform: rotateY(180deg);
+      background: var(--color-primary-glow);
+      border-color: var(--color-primary);
+    }
+    .flashcard-label {
+      font-family: var(--font-ui); font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--color-text-faint); margin-bottom: var(--space-md);
+    }
+    .flashcard-back .flashcard-label { color: var(--color-primary); }
+    .flashcard-content {
+      font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700;
+      color: var(--color-text); line-height: 1.4;
+    }
+    .flashcard-back .flashcard-content { color: var(--color-text); font-size: 1rem; font-weight: 400; font-family: var(--font-body); }
+    .fc-context { display: block; font-family: var(--font-ui); font-size: 0.78rem; font-weight: 600; color: var(--color-text-muted); margin-bottom: 6px; }
+    .flashcard-hint {
+      font-size: 0.78rem; color: var(--color-text-faint); margin-top: var(--space-md);
+      font-family: var(--font-ui);
+    }
+    .flashcard-type {
+      position: absolute; top: var(--space-md); right: var(--space-md); max-width: 60%; text-align: right; line-height: 1.3;
+      font-size: 0.7rem; font-family: var(--font-ui); font-weight: 700;
+      text-transform: uppercase; color: var(--color-text-faint);
+    }
+
+    .flashcard-nav {
+      display: flex; align-items: center; gap: var(--space-lg);
+    }
+    .fc-nav-btn {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all var(--transition-fast); color: var(--color-text);
+    }
+    .fc-nav-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .fc-nav-btn:disabled { opacity: 0.3; cursor: default; }
+    .fc-counter {
+      font-family: var(--font-ui); font-size: 0.9rem; color: var(--color-text-muted);
+      min-width: 70px; text-align: center;
+    }
+    .fc-controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .fc-mark { display: flex; gap: 12px; justify-content: center; margin: calc(var(--space-xl) * -0.5) 0 var(--space-lg); min-height: 46px; }
+    .fc-mark-btn { display: inline-flex; align-items: center; gap: 6px; padding: 11px 22px; border-radius: 999px; font-family: var(--font-ui);
+      font-weight: 700; font-size: 0.92rem; cursor: pointer; border: 2px solid; background: var(--color-surface); transition: transform .1s ease; }
+    .fc-mark-btn:active { transform: scale(0.97); }
+    .fc-mark-btn.wrong { color: var(--color-danger); border-color: color-mix(in srgb, var(--color-danger) 45%, transparent); }
+    .fc-mark-btn.right { color: var(--color-success); border-color: color-mix(in srgb, var(--color-success) 45%, transparent); }
+    .fc-mark-btn.picked.wrong { background: color-mix(in srgb, var(--color-danger) 14%, var(--color-surface)); }
+    .fc-mark-btn.picked.right { background: color-mix(in srgb, var(--color-success) 14%, var(--color-surface)); }
+    .fc-mark.waiting .fc-mark-btn { visibility: hidden; }
+    .fc-counter b.ok { color: var(--color-success); } .fc-counter b.no { color: var(--color-danger); }
+    .fc-summary { width: 100%; max-width: 560px; text-align: center; background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-card); padding: var(--space-xl) var(--space-lg); box-shadow: var(--shadow-card); margin-bottom: var(--space-lg); }
+    .fc-summary h3 { font-family: var(--font-heading); font-size: 1.3rem; margin-bottom: 6px; }
+    .fc-summary p { color: var(--color-text-muted); margin-bottom: var(--space-lg); }
+    .fc-summary .fc-sum-stats { display: flex; justify-content: center; gap: var(--space-lg); margin-bottom: var(--space-lg); font-family: var(--font-ui); }
+    .fc-summary .fc-sum-stats b { display: block; font-family: var(--font-heading); font-size: 1.8rem; }
+    .fc-summary .actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .fc-topic-label {
+      font-family: var(--font-ui); font-size: 0.82rem; color: var(--color-text-muted);
+      margin-top: var(--space-md); text-align: center;
+    }
+
+    /* ── Empty state ─────────────────────────────────────── */
+    .empty-state {
+      text-align: center; padding: var(--space-2xl); color: var(--color-text-muted);
+    }
+    .empty-state h3 { font-family: var(--font-heading); margin-bottom: var(--space-sm); }
+  </style>
+  <link rel="stylesheet" href="learn.css?v=20261113d">
+  <link rel="stylesheet" href="ui.css?v=20261113d">
+</head>
+<body>
+<div id="toast-container"></div>
+
+<nav class="topnav">
+  <a id="nav-back-link" href="hub.html" class="nav-back">← Back</a>
+  <div class="nav-title" id="nav-title">Learn</div>
+  <a class="help-btn help-compact" href="help.html#learn" target="_blank" rel="noopener" aria-label="Help" title="Help"><i data-icon="circle-help"></i><span>Help</span></a>
+  <div class="view-toggle">
+    <button class="view-btn active" data-view="spider" onclick="switchView('spider')"><i data-icon="network"></i> Spider</button>
+    <button class="view-btn" data-view="outline" onclick="switchView('outline')"><i data-icon="list"></i> Outline</button>
+    <button class="view-btn" data-view="flashcards" onclick="switchView('flashcards')"><i data-icon="layers"></i> Cards</button>
+    <button class="view-btn" data-view="cheatsheet" onclick="switchView('cheatsheet')"><i data-icon="file-text"></i> Cheat sheet</button>
+  </div>
+</nav>
+<div id="watch-strip" hidden></div>
+
+<!-- Loading -->
+<div id="loading-wrap" class="loading-wrap" style="flex:1;">
+  <div class="spinner" style="width:48px;height:48px;"></div>
+  <p>Loading content…</p>
+</div>
+
+<div class="panels-container">
+<!-- Spider view -->
+<div class="view-panel" id="view-spider" style="width:100%;overflow:hidden;">
+  <canvas id="spider-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
+  <div class="spider-hint" id="spider-hint">Tap a key point to learn · Pinch or + to zoom</div>
+  <div style="position:absolute;top:var(--space-md);right:var(--space-md);display:flex;gap:6px;z-index:5;">
+    <button id="btn-spider-back" onclick="spiderBack()" style="display:none;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-pill);padding:6px 14px;font-family:var(--font-ui);font-size:0.78rem;font-weight:600;color:var(--color-text-muted);cursor:pointer;">← Back</button>
+    <button class="spider-zoom-btn" onclick="spiderZoom(1/1.4)" aria-label="Zoom out">−</button>
+    <button class="spider-zoom-btn" onclick="spiderZoom(1.4)" aria-label="Zoom in">+</button>
+    <button onclick="resetSpiderView()" style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-pill);padding:6px 14px;font-family:var(--font-ui);font-size:0.78rem;font-weight:600;color:var(--color-text-muted);cursor:pointer;">⊙ Fit</button>
+  </div>
+  <div class="spider-detail" id="spider-detail">
+    <button class="spider-detail-close" onclick="closeSpiderDetail()" aria-label="Close"><i data-icon="x"></i></button>
+    <div class="spider-detail-term" id="spider-detail-term"></div>
+    <div class="spider-detail-explanation" id="spider-detail-explanation"></div>
+  </div>
+</div>
+
+<!-- Outline view -->
+<div class="view-panel" id="view-outline"></div>
+
+<!-- Cheat sheet view -->
+<div class="view-panel" id="view-cheatsheet"><div class="cs-wrap" id="cs-wrap"></div></div>
+
+<!-- Flashcards view -->
+<div class="view-panel" id="view-flashcards">
+  <div class="fc-toolbar">
+    <div class="flashcard-meta" id="fc-meta"></div>
+    <div class="fc-controls">
+      <div class="fc-length" role="group" aria-label="Answer length" id="fc-length"></div>
+      <div class="fc-length" role="group" aria-label="Cards per round" id="fc-size"></div>
+    </div>
+    <div class="fc-length-note" id="fc-length-note"></div>
+  </div>
+  <div class="fc-summary" id="fc-summary" hidden></div>
+  <div class="flashcard-wrap" id="fc-card-wrap">
+    <div class="flashcard" id="flashcard" onclick="flipCard()">
+      <div class="flashcard-face flashcard-front">
+        <div class="flashcard-label">Question</div>
+        <div class="flashcard-content" id="fc-front"></div>
+        <div class="flashcard-hint" id="fc-hint" style="display:none;">Tap to reveal answer</div>
+        <div class="flashcard-type" id="fc-type"></div>
+      </div>
+      <div class="flashcard-face flashcard-back">
+        <div class="flashcard-label">Answer</div>
+        <div class="flashcard-content" id="fc-back"></div>
+      </div>
+    </div>
+  </div>
+  <div class="fc-mark" id="fc-mark">
+    <button type="button" class="fc-mark-btn wrong" id="fc-wrong"><i data-icon="x"></i> Not yet</button>
+    <button type="button" class="fc-mark-btn right" id="fc-right"><i data-icon="check"></i> Got it</button>
+  </div>
+  <div class="flashcard-nav" id="fc-nav">
+    <button class="fc-nav-btn" id="fc-prev" onclick="prevCard()" disabled aria-label="Previous card">‹</button>
+    <div class="fc-counter" id="fc-counter">1 / 1</div>
+    <button class="fc-nav-btn" id="fc-next" onclick="nextCard()" aria-label="Next card">›</button>
+  </div>
+  <div class="fc-topic-label" id="fc-topic-label"></div>
+</div>
+
+</div><!-- /panels-container -->
+
+<script>
+  function switchView(v) { window._switchView && window._switchView(v); }
+  function closeSpiderDetail() { window._closeSpiderDetail && window._closeSpiderDetail(); }
+  function resetSpiderView() { window._resetSpiderView && window._resetSpiderView(); }
+  function spiderZoom(f) { window._spiderZoom && window._spiderZoom(f); }
+  function spiderBack() { window._spiderBack && window._spiderBack(); }
+  function flipCard() { window._flipCard && window._flipCard(); }
+  function prevCard() { window._prevCard && window._prevCard(); }
+  function nextCard() { window._nextCard && window._nextCard(); }
+</script>
+
+<script type="module">
+import { auth, db } from './firebase-config.js?v=20261113d';
+import { topicLocked, showTopicLocked } from './access.js?v=20261113d';
+import { requireAuth, showToast, isPreview, isStudent, hasRole, viewsOf } from './auth.js?v=20261113d';
+import { awardXp } from './gamification.js?v=20261113d';
+import { initLearn, openPoint, renderCheatSheet, flatPoints, isLearned, learnedCount, noteId, celebrate } from './learn.js?v=20261113d';
+import { startStudyTimer } from './study-timer.js?v=20261113d';
+import { inOrder } from './order.js?v=20261113d';
+import { videosOf, watchStripHtml, WATCH_CSS, readsOf, readStripHtml, readLinksHtml } from './videos.js?v=20261113d';
+import { LENGTHS, lengthOf, displayAnswer, ensureShortAnswers, cardQuestion, ensureCardQuestions } from './card-length.js?v=20261113d';
+import {
+  collection, getDocs, doc, getDoc, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const params    = new URLSearchParams(location.search);
+const groupId   = params.get('groupId');
+const subjectId = params.get('subjectId');
+const topicId   = params.get('topicId');
+const subjectName = params.get('subjectName') || 'Subject';
+const topicName   = params.get('topicName') || '';
+
+/* ── Data model ──────────────────────────────────────────── */
+// subjects = [{ id, name, emoji, topics: [{ id, name, questions: [...] }] }]
+let subjects = [];
+let allFlashcards = []; // flat list for flashcard view
+let currentView = 'spider';
+let fcIdx = 0;
+let fcFlipped = false;
+
+/* ── Spider canvas state ─────────────────────────────────── */
+let spiderNodes = [];
+let selectedLeaf = null;
+let focusedGroupIdx = null; // index into spiderNodes for focused group
+let spiderEdges = [];
+let panX = 0, panY = 0, zoom = 1;
+// The map is laid out on a "virtual" sheet at least 900px across, so on a
+// phone nothing has to be squashed together. It then starts zoomed to fit
+// the screen (fitZoom); pinch or the + button zooms in up to MAX_ZOOM.
+let fitZoom = 1;
+const MAX_ZOOM = 5;
+function minZoom() { return fitZoom * 0.6; }
+function clampZoom(z) { return Math.max(minZoom(), Math.min(MAX_ZOOM, z)); }
+// Zoom keeping the point under the finger/mouse (sx, sy in canvas px) still
+// Place labels round a ring of the smallest radius (at least minR) where
+// none of them touch. A label's room along the ring depends on its angle:
+// its full width at the top and bottom, only its height at the sides.
+// extraGap(i) adds space before label i (e.g. between groups).
+function ringLayout(labels, minR, extraGap = () => 0) {
+  const mctx = document.createElement('canvas').getContext('2d');
+  mctx.font = '12px sans-serif';
+  const half = labels.map(l => ({ hw: Math.max(mctx.measureText(l.term || l.label || '').width + 20, 60) / 2 + 6, hh: 14 + 6 }));
+  const n = labels.length;
+  if (!n) return { R: minR, angles: [] };
+  const need = (i, t) => half[i].hw * Math.abs(Math.sin(t)) + half[i].hh * Math.abs(Math.cos(t));
+  let R = minR, angles = [];
+  for (let pass = 0; pass < 8; pass++) {
+    angles = []; let t = -Math.PI / 2, total = 0;
+    for (let i = 0; i < n; i++) {
+      if (i > 0) { const step = (need(i - 1, t) + need(i, t) + extraGap(i)) / R; t += step; total += step; }
+      angles.push(t);
+    }
+    // close the loop: room between the last label and the first
+    total += (need(n - 1, t) + need(0, -Math.PI / 2) + extraGap(0)) / R;
+    if (total <= Math.PI * 2 + 1e-6 && pass > 0) {
+      // spread any spare angle evenly so the ring looks balanced
+      const spare = (Math.PI * 2 - total) / n;
+      angles = angles.map((a, i) => a + spare * i);
+      break;
+    }
+    R = Math.max(minR, R * total / (Math.PI * 2) * 1.02);
+  }
+  return { R, angles };
+}
+
+// Push apart anything that overlaps: label pills are rectangles, topic and
+// group nodes are circles; the centre node stays put. Runs once after layout.
+function spreadOverlaps() {
+  const mctx = document.createElement('canvas').getContext('2d');
+  mctx.font = '12px sans-serif';
+  const PAD = 8;
+  const items = spiderNodes.map((n, i) => {
+    if (n.type === 'leaf') {
+      const sf = n.scaleFactor || 1;
+      const pw = Math.max(mctx.measureText(n.label || '').width + 20, 60) * sf;
+      const ph = Math.max(28 * sf, 20);
+      n._hw = pw / 2; n._hh = ph / 2;
+      return { n, rect: true, hw: pw / 2 + PAD / 2, hh: ph / 2 + PAD / 2, fixed: false };
+    }
+    return { n, rect: false, r: (n.r || 30) + PAD, fixed: n.type === 'root' };
+  });
+  for (let iter = 0; iter < 400; iter++) {
+    let moved = false;
+    for (let i = 0; i < items.length; i++) {
+      for (let j = i + 1; j < items.length; j++) {
+        const A = items[i], B = items[j];
+        if (A.fixed && B.fixed) continue;
+        let dx = B.n.x - A.n.x, dy = B.n.y - A.n.y;
+        if (dx === 0 && dy === 0) { dx = (j % 2 ? 1 : -1) * 0.5; dy = 0.5; }
+        let px = 0, py = 0;
+        if (A.rect && B.rect) {
+          const ox = A.hw + B.hw - Math.abs(dx), oy = A.hh + B.hh - Math.abs(dy);
+          if (ox <= 0 || oy <= 0) continue;
+          // separate along the shorter overlap (pills mostly stack vertically)
+          if (ox < oy * 2.5) px = Math.sign(dx) * ox; else py = Math.sign(dy) * oy;
+        } else {
+          const ra = A.rect ? Math.max(A.hw, A.hh) * 0.75 : A.r;
+          const rb = B.rect ? Math.max(B.hw, B.hh) * 0.75 : B.r;
+          const d = Math.hypot(dx, dy), need = ra + rb;
+          if (d >= need) continue;
+          px = dx / d * (need - d); py = dy / d * (need - d);
+        }
+        const wa = A.fixed ? 0 : (B.fixed ? 1 : 0.5), wb = 1 - wa;
+        A.n.x -= px * wa * 0.6; A.n.y -= py * wa * 0.6;
+        B.n.x += px * wb * 0.6; B.n.y += py * wb * 0.6;
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
+}
+
+// Start zoomed so the whole map just fits the screen, centred
+function fitToContent(canvas) {
+  const W = canvas._w || canvas.width, H = canvas._h || canvas.height;
+  if (!spiderNodes.length) { zoom = fitZoom; panX = panY = 0; return; }
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  spiderNodes.forEach(n => {
+    const rx = n.r || n._hw || 70, ry = n.r || n._hh || 16;     // circles, or label pills
+    x0 = Math.min(x0, n.x - rx); x1 = Math.max(x1, n.x + rx);
+    y0 = Math.min(y0, n.y - ry); y1 = Math.max(y1, n.y + ry);
+  });
+  const pad = 24;
+  const z = Math.min((W - pad * 2) / (x1 - x0), (H - pad * 2 - 40) / (y1 - y0), 1.4);
+  fitZoom = z;
+  zoom = z;
+  panX = W / 2 - ((x0 + x1) / 2) * z;
+  panY = H / 2 - ((y0 + y1) / 2) * z;
+}
+function zoomAt(newZoom, sx, sy) {
+  newZoom = clampZoom(newZoom);
+  const wx = (sx - panX) / zoom, wy = (sy - panY) / zoom;
+  zoom = newZoom;
+  panX = sx - wx * zoom; panY = sy - wy * zoom;
+}
+let dragging = false, dragStartX = 0, dragStartY = 0, panStartX = 0, panStartY = 0;
+
+let _currentUser = null;
+let _currentProfile = null;
+
+requireAuth(async (user, profile) => {
+  if (!isStudent(profile) && !viewsOf(profile).length) { location.href = 'hub.html'; return; }
+  _currentUser = user;
+  _currentProfile = profile;
+  // Set smart back link
+  if (!isStudent(profile)) {
+    // An adult looking at content: "Back" returns to their dashboard
+    const bl = document.getElementById('nav-back-link');
+    const home = hasRole(profile, 'admin') ? ['admin.html', 'Admin'] : hasRole(profile, 'teacher') ? ['teacher-dashboard.html', 'Classes'] : ['parent.html', 'Students'];
+    if (bl) { bl.href = home[0]; bl.textContent = '← ' + home[1]; }
+  }
+  if (!groupId || !subjectId) { location.href = 'hub.html'; return; }
+  document.getElementById('nav-title').textContent = topicName || subjectName;
+  await loadData();
+});
+
+async function loadData() {
+  try {
+    if (topicId) {
+      // Single topic mode
+      const subSnap = await getDoc(doc(db, `content/${groupId}/subjects/${subjectId}`));
+      const topSnap = await getDoc(doc(db, `content/${groupId}/subjects/${subjectId}/topics/${topicId}`));
+      const topData = topSnap.exists() ? topSnap.data() : {};
+      // A Plus only topic in a Lobe Limpet pack needs Plus
+      if (topicLocked(topData, _currentProfile)) {
+        document.getElementById('loading-wrap').innerHTML = `<div style="text-align:center;padding:40px 16px;max-width:420px;margin:0 auto;">
+          <h2 style="font-family:var(--font-heading);margin-bottom:8px;">This topic is part of Plus</h2>
+          <p style="color:var(--color-text-muted);margin-bottom:16px;">The free topics in this subject are ready to learn, or upgrade to unlock every topic.</p>
+          <a class="btn btn-primary" href="plus.html">See Plus</a> <a class="btn btn-secondary" href="hub.html">Back to my subjects</a></div>`;
+        showTopicLocked(topData.name || topicName);
+        return;
+      }
+      // Questions are only used when a topic has no key points (saves reads)
+      const qs = [];
+      if (!(topData.keyPoints || []).length) {
+        const qSnap = await getDocs(collection(db, `content/${groupId}/subjects/${subjectId}/topics/${topicId}/questions`)).catch(() => null);
+        qSnap?.forEach(d => qs.push({ id: d.id, ...d.data() }));
+      }
+      subjects = [{
+        id: subjectId,
+        name: subSnap.exists() ? subSnap.data().name : subjectName,
+        emoji: subSnap.exists() ? subSnap.data().emoji || '📚' : '📚',
+        topics: [{ id: topicId, name: topData.name || topicName, keyPoints: topData.keyPoints || [], questions: qs, shortAnswers: topData.shortAnswers || {}, videos: videosOf(topData), reads: readsOf(topData) }]
+      }];
+    } else {
+      // Whole subject mode
+      const subSnap  = await getDoc(doc(db, `content/${groupId}/subjects/${subjectId}`));
+      const topSnap  = await getDocs(collection(db, `content/${groupId}/subjects/${subjectId}/topics`));
+      // Plus only topics are left out for people without Plus
+      const topicList = inOrder(topSnap).filter(t => !topicLocked(t, _currentProfile));
+
+      const topicsWithQ = await Promise.all(topicList.map(async t => {
+        // Questions are only used when a topic has no key points (saves reads)
+        if ((t.keyPoints || []).length) return { ...t, keyPoints: t.keyPoints, questions: [] };
+        const qSnap = await getDocs(collection(db,
+          `content/${groupId}/subjects/${subjectId}/topics/${t.id}/questions`)).catch(() => null);
+        const qs = [];
+        if (qSnap) qSnap.forEach(d => qs.push({ id: d.id, ...d.data() }));
+        return { ...t, keyPoints: t.keyPoints || [], questions: qs };
+      }));
+
+      subjects = [{
+        id: subjectId,
+        name: subSnap.exists() ? subSnap.data().name : subjectName,
+        emoji: subSnap.exists() ? subSnap.data().emoji || '📚' : '📚',
+        topics: topicsWithQ
+      }];
+    }
+
+    // "Watch first" links for a single topic (set in the builder)
+    if (topicId) {
+      const ws = document.getElementById('watch-strip');
+      const t0 = subjects[0].topics[0];
+      // Pages to read first (e.g. the BBC Bitesize page it was made from), then videos
+      const html = readStripHtml(t0.reads) + watchStripHtml(t0.videos);
+      if (html) {
+        if (!document.getElementById('watch-css')) document.head.insertAdjacentHTML('beforeend', `<style id="watch-css">${WATCH_CSS}</style>`);
+        ws.outerHTML = `<div id="watch-strip" style="flex-shrink:0">${html}</div>`;
+      }
+    }
+    buildFlashcards();
+    document.getElementById('loading-wrap').style.display = 'none';
+    initLearn({ groupId, subjectId, subjectName: subjects[0]?.name || subjectName, user: _currentUser, profile: _currentProfile });
+    // Count active study time on this page (students only, not in preview)
+    startStudyTimer({ user: _currentUser, profile: _currentProfile, subjectId, subjectName: subjects[0]?.name || subjectName,
+                      onBadges: ids => celebrate({ newlyEarned: ids }) });
+    showView('spider');
+    buildOutline();
+    if (params.get('view') === 'cheatsheet') window._switchView('cheatsheet');
+    else if (params.get('view') === 'outline') window._switchView('outline');
+    // Defer spider build until after layout
+    requestAnimationFrame(() => { requestAnimationFrame(() => buildSpider()); });
+    // Award mindmap XP (students only)
+    if (_currentUser && isStudent(_currentProfile) && !isPreview()) {
+      awardXp(_currentUser.uid, 'mindmap').catch(() => {});
+    }
+  } catch(e) {
+    document.getElementById('loading-wrap').innerHTML =
+      `<div class="empty-state"><h3>Failed to load</h3><p>${e.message}</p></div>`;
+  }
+}
+
+/* ── Flashcard data ──────────────────────────────────────── */
+function buildFlashcards() {
+  allFlashcards = [];
+  subjects.forEach(s => {
+    s.topics.forEach(t => {
+      const kps = t.keyPoints || [];
+      if (kps.length) {
+        // Key points → flashcards (primary). The front is a clear question
+        // written by the AI (see card-length.js); the section is kept for context.
+        flatPoints(t).forEach(p => {
+          if (p.term || p.explanation) {
+            allFlashcards.push({ front: p.term || p.explanation, term: p.term, back: p.explanation || p.term, group: p.group || '', kp: true, type: 'Key point', topic: t.name, tref: t });
+          }
+        });
+      } else {
+        // Fallback to questions
+        (t.questions || []).forEach(q => {
+          const card = questionToFlashcard(q, t.name);
+          if (card) allFlashcards.push((Array.isArray(card) ? card : [card]).map(c => ({ ...c, tref: t })));
+        });
+      }
+    });
+  });
+  shuffle(allFlashcards);
+}
+
+function questionToFlashcard(q, topicName) {
+  if (q.type === 'mcq') {
+    const correct = (q.options||[]).find(o => o.correct);
+    return { front: q.question, back: correct?.text || '?', type: 'MCQ', topic: topicName };
+  }
+  if (q.type === 'tf') {
+    return { front: q.question, back: (q.answer === true || String(q.answer).toLowerCase() === 'true' ? 'True' : 'False') + (q.explanation ? '\n\n' + q.explanation : ''), type: 'T/F', topic: topicName };
+  }
+  if (q.type === 'fill') {
+    const front = (q.sentence||'').replace('_____', '_____');
+    return { front, back: q.answer, type: 'Fill', topic: topicName };
+  }
+  if (q.type === 'match') {
+    // One card per pair
+    return (q.pairs||[]).map(p => ({ front: p.left, back: p.right, type: 'Match', topic: topicName }));
+  }
+  if (q.type === 'short') {
+    return { front: q.question, back: q.markScheme, type: 'Short', topic: topicName };
+  }
+  return null;
+}
+
+/* ── View switching ──────────────────────────────────────── */
+window._spiderBack = async function() {
+  document.getElementById('btn-spider-back').style.display = 'none';
+  document.getElementById('spider-hint').textContent = 'Tap a topic to explore · Drag to pan · Pinch to zoom';
+  await loadData();
+  buildSpider();
+};
+
+window._resetSpiderView = function() {
+  // If drilled in, just re-centre without reloading
+  const canvas = document.getElementById('spider-canvas');
+  fitToContent(canvas);
+  drawSpider(canvas.getContext('2d'), canvas);
+};
+
+// read-only snapshot for troubleshooting from the browser console
+window.__spider = () => ({ zoom, fitZoom, panX, panY, nodes: spiderNodes });
+
+window._spiderZoom = function(f) {
+  const canvas = document.getElementById('spider-canvas');
+  zoomAt(zoom * f, (canvas._w || canvas.width) / 2, (canvas._h || canvas.height) / 2);
+  drawSpider(canvas.getContext('2d'), canvas);
+};
+
+window._closeSpiderDetail = function() {
+  document.getElementById('spider-detail').classList.remove('open');
+  document.getElementById('spider-hint').style.opacity = '1';
+  // Deselect node
+  selectedLeaf = null;
+  const canvas = document.getElementById('spider-canvas');
+  drawSpider(canvas.getContext('2d'), canvas);
+};
+
+// Outline accordion delegation
+document.addEventListener('click', e => {
+  const sh = e.target.closest('[data-action="toggle-subject"]');
+  if (sh) { sh.parentElement.classList.toggle('open'); return; }
+  const th = e.target.closest('[data-action="toggle-topic"]');
+  if (th) { th.parentElement.classList.toggle('open'); return; }
+});
+
+window._switchView = function(v) {
+  currentView = v;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  showView(v);
+  if (v === 'flashcards') { fcIdx = 0; fcFlipped = false; cardMode = lengthOf(_currentProfile); renderLengthPicker(); buildFlashcards(); startFlashcards(); prepareShortAnswers(); prepareCardQuestions(); }
+  if (v === 'spider') buildSpider();
+  if (v === 'cheatsheet') showCheatSheets();
+};
+
+/* ── Learning helpers ─────────────────────────────────────── */
+function allTopics() { return (subjects[0]?.topics) || []; }
+function topicForTerm(term) {
+  return allTopics().find(t => flatPoints(t).some(p => p.term === term)) || null;
+}
+let csTopicId = null;
+function showCheatSheets() {
+  const wrap = document.getElementById('cs-wrap');
+  const topics = allTopics().filter(t => (t.keyPoints || []).length || (t.questions || []).length);
+  if (!topics.length) { wrap.innerHTML = '<div class="cs-loading"><p>No content in this subject yet.</p></div>'; return; }
+  if (!csTopicId || !topics.some(t => t.id === csTopicId)) csTopicId = topics[0].id;
+  wrap.innerHTML = (topics.length > 1
+      ? `<div class="cs-topic-pick no-print">${topics.map(t => `<button data-cs-topic="${t.id}" class="${t.id === csTopicId ? 'on' : ''}">${esc(t.name)}</button>`).join('')}</div>`
+      : '') + '<div id="cs-sheet"></div>';
+  wrap.querySelectorAll('[data-cs-topic]').forEach(b => b.onclick = () => { csTopicId = b.dataset.csTopic; showCheatSheets(); });
+  renderCheatSheet(document.getElementById('cs-sheet'), topics.find(t => t.id === csTopicId));
+}
+// Outline: tap a point to learn about it
+document.addEventListener('click', e => {
+  const kp = e.target.closest('.keypoint-item.learnable');
+  if (!kp) return;
+  const t = allTopics().find(x => x.id === kp.dataset.topic);
+  if (t) openPoint(t, kp.dataset.term, kp.dataset.group ?? null);
+});
+// Keep the "learnt" ticks up to date
+document.addEventListener('learn:changed', () => updateLearnMarks());
+function updateLearnMarks() {
+  document.querySelectorAll('.keypoint-item.learnable').forEach(el => {
+    const done = isLearned(allTopics().find(x => x.id === el.dataset.topic) || el.dataset.topic, el.dataset.term, el.dataset.group ?? null);
+    const term = el.querySelector('.keypoint-term');
+    let tick = el.querySelector('.kp-done');
+    if (done && !tick) term.insertAdjacentHTML('beforeend', '<span class="kp-done" title="Learnt"><i data-icon="circle-check"></i></span>');
+    if (!done && tick) tick.remove();
+  });
+  document.querySelectorAll('[data-learn-progress]').forEach(el => {
+    const t = allTopics().find(x => x.id === el.dataset.learnProgress);
+    const n = t ? learnedCount(t) : 0, total = t ? flatPoints(t).length : 0;
+    el.textContent = `${n}/${total} learnt`;
+    el.style.display = n ? '' : 'none';
+  });
+}
+
+function showView(v) {
+  document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+}
+
+/* ══════════════════════════════════════════════════════════
+   SPIDER DIAGRAM
+   Layout: centre = topic/subject, branches = key points
+   Each key point is a rounded rectangle label on a branch
+══════════════════════════════════════════════════════════ */
+
+// Spider colours — read from CSS vars once
+function spiderColors() {
+  const s = getComputedStyle(document.body);
+  return {
+    primary:  s.getPropertyValue('--color-primary').trim()      || '#6c63ff',
+    surface:  s.getPropertyValue('--color-surface').trim()      || '#16162a',
+    surface2: s.getPropertyValue('--color-surface-2').trim()    || '#1e1e38',
+    border:   s.getPropertyValue('--color-border').trim()       || '#2a2a4a',
+    text:     s.getPropertyValue('--color-text').trim()         || '#f0f0ff',
+    muted:    s.getPropertyValue('--color-text-muted').trim()   || '#8888aa',
+    bg:       s.getPropertyValue('--color-bg').trim()           || '#0d0d1a',
+  };
+}
+
+function buildSpider() {
+  const canvas = document.getElementById('spider-canvas');
+  const wrap   = document.getElementById('view-spider');
+  const vw = wrap.offsetWidth  || window.innerWidth;
+  const vh = wrap.offsetHeight || (window.innerHeight - 64);
+  // Sharp on high-resolution (retina) screens
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  canvas.width  = Math.round(vw * dpr);
+  canvas.height = Math.round(vh * dpr);
+  canvas._w = vw; canvas._h = vh; canvas._dpr = dpr;
+  // Lay out on a virtual sheet at least 900px on its shorter side
+  const S = Math.max(1, 900 / Math.min(vw, vh));
+  const w = vw * S, h = vh * S;
+  fitZoom = 1 / S;
+
+  // Gather content — single topic or first topic of subject
+  const sub = subjects[0];
+  const allTopics = sub.topics || [];
+
+  // Build flat list of { topicName, items: [{term, explanation}] }
+  // If single topic: show topic at centre, key points as branches
+  // If multiple topics: show subject at centre, topics as mid-nodes, key points as leaves
+  spiderNodes = [];
+  spiderEdges = [];
+
+  const cx = w / 2, cy = h / 2;
+  const C = spiderColors();
+
+  if (allTopics.length === 1) {
+    // ── Single topic: centre = topic, branches = groups or key points ──
+    const t = allTopics[0];
+    const items = getTopicItems(t);
+    spiderNodes.push({ x: cx, y: cy, label: t.name, type: 'root', r: 56 });
+
+    if (items.length && items[0].isGroup) {
+      // Three-level: topic → groups → key points.
+      // Every key point sits on one outer ring round the centre, in group
+      // order, spaced by how much room its label actually needs at that
+      // angle (pills beside each other at the top/bottom, stacked at the
+      // sides). Each group's circle sits on an inner ring in the middle of
+      // its own points. spreadOverlaps() tidies anything left over.
+      const leaves = [];
+      items.forEach((grp, gi) => (grp.points || []).forEach(pt =>
+        leaves.push({ gi, term: pt.term, detail: pt.explanation || '' })));
+      const groupCount = items.length;
+      const groupNodeR = 38, rootR = 56;
+      const groupR = Math.max(rootR + groupNodeR + 70, (groupCount * groupNodeR * 2.6) / (Math.PI * 2));
+      const ring = ringLayout(leaves, groupR + 170, (i) => i > 0 && leaves[i].gi !== leaves[i - 1].gi ? 40 : 0);
+
+      items.forEach((grp, gi) => {
+        const mine = ring.angles.filter((_, i) => leaves[i].gi === gi);
+        // middle of this group's points (or an even share if it has none)
+        const mid = mine.length
+          ? Math.atan2(mine.reduce((a, t) => a + Math.sin(t), 0), mine.reduce((a, t) => a + Math.cos(t), 0))
+          : (gi / groupCount) * Math.PI * 2 - Math.PI / 2;
+        const grpIdx = spiderNodes.length;
+        spiderNodes.push({ x: cx + Math.cos(mid) * groupR, y: cy + Math.sin(mid) * groupR, label: grp.term, type: 'topic', r: groupNodeR });
+        spiderEdges.push({ from: 0, to: grpIdx });
+        leaves.forEach((lf, i) => {
+          if (lf.gi !== gi) return;
+          spiderNodes.push({
+            x: cx + Math.cos(ring.angles[i]) * ring.R,
+            y: cy + Math.sin(ring.angles[i]) * ring.R,
+            label: lf.term, detail: lf.detail, type: 'leaf', r: 0, scaleFactor: 1,
+            group: grp.term || '', topicId: t.id   // which section this point is in
+          });
+          spiderEdges.push({ from: grpIdx, to: spiderNodes.length - 1 });
+        });
+      });
+    } else {
+      layoutBranches(cx, cy, items, 0, C, w, h);
+    }
+  } else {
+    // ── Subject view: centre = subject, ring = topics, leaves per topic ──
+    spiderNodes.push({ x: cx, y: cy, label: (sub.emoji||'📚') + ' ' + sub.name, type: 'root', r: 56 });
+
+    // How many leaves per topic — limit to keep it readable (max 6 per topic)
+    const maxLeavesPerTopic = 6;
+    // Topic ring radius — push out further if many topics
+    const topicR = Math.min(w, h) * Math.max(0.22, Math.min(0.32, 0.18 + allTopics.length * 0.02));
+
+    allTopics.forEach((t, i) => {
+      const angle = (i / allTopics.length) * Math.PI * 2 - Math.PI / 2;
+      const tx = cx + Math.cos(angle) * topicR;
+      const ty = cy + Math.sin(angle) * topicR;
+      const topicIdx = spiderNodes.length;
+      // Store topic data for click navigation
+      spiderNodes.push({ x: tx, y: ty, label: t.name, type: 'topic', r: 42, topicData: t });
+      spiderEdges.push({ from: 0, to: topicIdx });
+
+      // Show key point count as a small label on the topic node
+      const kpCount = (t.keyPoints||[]).length || (t.questions||[]).length;
+      if (kpCount) {
+        spiderNodes[topicIdx].countLabel = kpCount + ' pts';
+      }
+    });
+  }
+
+  focusedGroupIdx = null;
+  spreadOverlaps();
+  fitToContent(canvas);
+  const ctx = canvas.getContext('2d');
+  drawSpider(ctx, canvas);
+  setupSpiderInteraction(canvas, ctx);
+  selectedLeaf = null;
+}
+
+function isGroupedKps(kps) {
+  if (!kps.length || typeof kps[0] !== 'object' || !('group' in kps[0])) return false;
+  // Must have more than 1 group, or 1 group with an actual name
+  // (single unnamed group = flat data wrapped in a group by AI mistake)
+  if (kps.length === 1 && !kps[0].group) return false;
+  return kps.length > 1 || (kps.length === 1 && !!kps[0].group);
+}
+
+function normaliseKps(kps) {
+  // Always returns a flat array of {term, explanation}
+  // Handles: flat [{term,explanation}], grouped [{group,points:[{term,explanation}]}],
+  // and the AI mistake of single unnamed group [{group:'',points:[...]}]
+  if (!kps || !kps.length) return [];
+  if ('group' in kps[0]) {
+    // Any grouped format — unwrap all points
+    return kps.flatMap(g => (g.points || []).map(p => ({ term: p.term, explanation: p.explanation })));
+  }
+  return kps;
+}
+
+function getTopicItems(t) {
+  const kps = t.keyPoints || [];
+  if (kps.length) {
+    if (isGroupedKps(kps)) {
+      // True grouped: return group nodes as intermediates
+      return kps.map(g => ({ term: g.group, detail: '', isGroup: true, points: g.points || [] }));
+    }
+    // Flat or single-unnamed-group — flatten and return as leaves
+    const flat = normaliseKps(kps);
+    return flat.map(kp => ({ term: kp.term, detail: kp.explanation }));
+  }
+  return (t.questions || []).map(q => {
+    const text = (q.question || q.sentence || q.instruction || '').substring(0, 40);
+    return { term: text, detail: '' };
+  });
+}
+
+function getFlatTopicItems(t) {
+  const kps = t.keyPoints || [];
+  if (!kps.length) return getTopicItems(t);
+  const flat = normaliseKps(kps);
+  return flat.map(kp => ({ term: kp.term, detail: kp.explanation }));
+}
+
+function layoutBranches(cx, cy, items, startIdx, C, w, h) {
+  const count = items.length;
+  if (!count) return;
+
+  // Pill dimensions — estimate average pill width
+  const pillW = 160; // approximate max pill width in px
+  const pillH = 32;
+  const rootR = 60; // centre node radius
+
+  // The circumference needed to fit all pills without overlap
+  // Each pill needs ~pillW + gap pixels of arc space
+  const gapBetween = 24;
+  const arcPerItem = pillW + gapBetween;
+  const minCircumference = count * arcPerItem;
+  const minRadius = minCircumference / (2 * Math.PI);
+
+  // Also must leave margin from edges
+  const margin = pillW / 2 + 16;
+  const maxRadius = Math.min(w / 2, h / 2) - margin;
+
+  // Use whichever is larger — fit all pills, but cap to canvas
+  const scaleFactor = 1;   // never shrink labels; zoom instead
+  const ring = ringLayout(items, rootR + 120);
+
+  items.forEach((item, i) => {
+    const angle = ring.angles[i];
+    const bx = cx + Math.cos(angle) * ring.R;
+    const by = cy + Math.sin(angle) * ring.R;
+    const nodeIdx = spiderNodes.length;
+    spiderNodes.push({
+      x: bx, y: by,
+      label: item.term || '',
+      detail: item.detail || '',
+      type: 'leaf', angle,
+      scaleFactor
+    });
+    spiderEdges.push({ from: startIdx, to: nodeIdx });
+  });
+}
+
+function drawSpider(ctx, canvas) {
+  try {
+  const C = spiderColors();
+  ctx.globalAlpha = 1.0; // always start clean
+  ctx.setTransform(canvas._dpr || 1, 0, 0, canvas._dpr || 1, 0, 0);
+  ctx.clearRect(0, 0, canvas._w || canvas.width, canvas._h || canvas.height);
+
+  // Background
+  ctx.fillStyle = C.bg;
+  ctx.fillRect(0, 0, canvas._w || canvas.width, canvas._h || canvas.height);
+
+  ctx.save();
+  ctx.translate(panX, panY);
+  ctx.scale(zoom, zoom);
+
+  // Build focus set BEFORE drawing anything
+  let focusedNodeSet = null;
+  if (focusedGroupIdx !== null) {
+    focusedNodeSet = new Set([0, focusedGroupIdx]);
+    spiderEdges.forEach(e => {
+      if (e.from === focusedGroupIdx) focusedNodeSet.add(e.to);
+    });
+  }
+
+  // Draw edges first
+  spiderEdges.forEach((e, ei) => {
+    const a = spiderNodes[e.from];
+    const b = spiderNodes[e.to];
+    const edgeDimmed = focusedNodeSet && (!focusedNodeSet.has(e.from) || !focusedNodeSet.has(e.to));
+    ctx.globalAlpha = edgeDimmed ? 0.08 : 1.0;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    // Curved line for leaves
+    if (b.type === 'leaf') {
+      const mx = (a.x + b.x) / 2;
+      const my = (a.y + b.y) / 2;
+      ctx.quadraticCurveTo(mx, my, b.x, b.y);
+    } else {
+      ctx.lineTo(b.x, b.y);
+    }
+    ctx.strokeStyle = b.type === 'leaf' ? C.primary + '60' : C.primary + '90';
+    ctx.lineWidth = b.type === 'leaf' ? 1.5 : 2.5;
+    ctx.setLineDash([]);
+    ctx.stroke();
+  });
+  ctx.globalAlpha = 1.0;
+
+  // Draw nodes
+  spiderNodes.forEach((n, ni) => {
+    // Apply dim if focus mode active and this node not in focus set
+    const dimmed = focusedNodeSet && !focusedNodeSet.has(ni);
+    ctx.globalAlpha = dimmed ? 0.15 : 1.0;
+
+    if (n.type === 'root') {
+      // Centre circle
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = C.primary;
+      ctx.fill();
+      // Glow
+      const grd = ctx.createRadialGradient(n.x, n.y, n.r * 0.5, n.x, n.y, n.r * 1.4);
+      grd.addColorStop(0, C.primary + '30');
+      grd.addColorStop(1, C.primary + '00');
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r * 1.4, 0, Math.PI * 2);
+      ctx.fillStyle = grd;
+      ctx.fill();
+      // Label
+      drawWrappedText(ctx, n.label, n.x, n.y, n.r * 1.5, '#ffffff', 'bold 14px sans-serif', 16);
+
+    } else if (n.type === 'topic') {
+      // Topic mid-node
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = C.surface2;
+      ctx.fill();
+      ctx.strokeStyle = C.primary;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      drawWrappedText(ctx, n.label, n.x, n.y, n.r * 1.6, C.text, '600 12px sans-serif', 14);
+      // Draw count badge and tap hint
+      if (n.countLabel) {
+        const badgeX = n.x + n.r * 0.6;
+        const badgeY = n.y - n.r * 0.6;
+        ctx.beginPath();
+        ctx.arc(badgeX, badgeY, 14, 0, Math.PI * 2);
+        ctx.fillStyle = C.primary;
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(n.countLabel, badgeX, badgeY);
+      }
+
+    } else if (n.type === 'leaf') {
+      // Key point label — pill/rounded rect
+      const label = n.label || '';
+      ctx.font = '12px sans-serif';
+      const tw = ctx.measureText(label).width;
+      const pw = Math.max(tw + 20, 60);
+      const ph = 28;
+      const rx = n.x - pw/2;
+      const ry = n.y - ph/2;
+
+      // Scale pill for dense diagrams
+      const sf = n.scaleFactor || 1;
+      const spw = pw * sf;
+      const sph = Math.max(ph * sf, 20);
+      const srx = n.x - spw/2;
+      const sry = n.y - sph/2;
+      const fontSize = Math.max(Math.round(12 * sf), 9);
+      const cornerR = Math.max(14 * sf, 8);
+
+      // Pill background
+      ctx.beginPath();
+      roundRect(ctx, srx, sry, spw, sph, cornerR);
+      ctx.fillStyle = C.surface2;
+      ctx.fill();
+      ctx.strokeStyle = C.primary + '80';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Term text — highlight if selected
+      const isSelected = selectedLeaf && selectedLeaf.label === n.label && selectedLeaf.x === n.x;
+      if (isSelected) {
+        ctx.beginPath();
+        roundRect(ctx, srx - 2, sry - 2, spw + 4, sph + 4, cornerR + 1);
+        ctx.fillStyle = C.primary;
+        ctx.fill();
+      }
+      ctx.fillStyle = isSelected ? '#fff' : C.text;
+      ctx.font = `600 ${fontSize}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const maxChars = Math.max(Math.floor(28 * sf), 10);
+      ctx.fillText(label.length > maxChars ? label.substring(0, maxChars - 2)+'…' : label, n.x, n.y);
+    }
+  });
+
+  ctx.globalAlpha = 1.0; // reset
+  ctx.restore();
+  } catch(err) {
+    console.error('drawSpider error:', err);
+    // Draw error indicator
+    ctx.globalAlpha = 1.0;
+    ctx.fillStyle = '#ff6b6b';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Spider error: ' + err.message, (canvas._w || canvas.width)/2, (canvas._h || canvas.height)/2);
+  }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function drawWrappedText(ctx, text, cx, cy, maxW, color, font, lineH) {
+  ctx.font = font;
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const words = text.split(' ');
+  const lines = [];
+  let cur = '';
+  words.forEach(w => {
+    const test = cur ? cur + ' ' + w : w;
+    if (ctx.measureText(test).width > maxW && cur) { lines.push(cur); cur = w; }
+    else cur = test;
+  });
+  if (cur) lines.push(cur);
+  const startY = cy - ((lines.length - 1) * lineH) / 2;
+  lines.forEach((l, i) => ctx.fillText(l, cx, startY + i * lineH));
+}
+
+function handleSpiderClick(clientX, clientY, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  // Convert screen coords to canvas/world coords
+  const cx = (clientX - rect.left - panX) / zoom;
+  const cy2 = (clientY - rect.top  - panY) / zoom;
+
+  // Find which leaf node was clicked
+  let hit = null;
+  for (const n of spiderNodes) {
+    if (n.type !== 'leaf') continue;
+    const label = n.label || '';
+    const ctx2 = canvas.getContext('2d');
+    const sf = n.scaleFactor || 1;
+    ctx2.font = '12px sans-serif';
+    const tw = ctx2.measureText(label).width;
+    const pw = Math.max(tw + 20, 60) * sf;
+    const ph = Math.max(28 * sf, 20);
+    if (cx >= n.x - pw/2 && cx <= n.x + pw/2 && cy2 >= n.y - ph/2 && cy2 <= n.y + ph/2) {
+      hit = n; break;
+    }
+  }
+
+  if (hit && hit.detail) {
+    selectedLeaf = hit;
+    // Open the full learn panel when we know which topic the point belongs to
+    const owner = (hit.topicId && allTopics().find(x => x.id === hit.topicId)) || topicForTerm(hit.label);
+    if (owner) {
+      openPoint(owner, hit.label, hit.group ?? null);
+      document.getElementById('spider-hint').style.opacity = '0';
+      drawSpider(canvas.getContext('2d'), canvas);
+      return;
+    }
+    document.getElementById('spider-detail-term').textContent = hit.label;
+    document.getElementById('spider-detail-explanation').textContent = hit.detail;
+    document.getElementById('spider-detail').classList.add('open');
+    document.getElementById('spider-hint').style.opacity = '0';
+    drawSpider(canvas.getContext('2d'), canvas);
+    return;
+  }
+
+  // Check for topic/group node click
+  for (let ni = 0; ni < spiderNodes.length; ni++) {
+    const n = spiderNodes[ni];
+    if (n.type !== 'topic') continue;
+    const dist = Math.hypot(cx - n.x, cy2 - n.y);
+    if (dist <= n.r) {
+      if (n.topicData) {
+        // Subject view: drill into topic
+        subjects[0] = { ...subjects[0], topics: [n.topicData] };
+        focusedGroupIdx = null;
+        buildSpider();
+        document.getElementById('btn-spider-back').style.display = 'block';
+        document.getElementById('spider-hint').style.opacity = '1';
+        document.getElementById('spider-hint').textContent = 'Tap a key point to see details · Drag to pan';
+      } else {
+        // Three-level grouped view: toggle focus on this group
+        const spiderCanvas = document.getElementById('spider-canvas');
+        if (focusedGroupIdx === ni) {
+          // Unfocus
+          focusedGroupIdx = null;
+          document.getElementById('spider-hint').textContent = 'Tap a group to focus · Tap a key point for details · Drag to pan';
+        } else {
+          // Focus this group — zoom in and centre on the group node
+          focusedGroupIdx = ni;
+          // Find bounding box of this group + its leaves
+          const groupNodeIndices = new Set([ni]);
+          spiderEdges.forEach(e => { if (e.from === ni) groupNodeIndices.add(e.to); });
+          const groupNodes = spiderNodes.filter((_, i) => groupNodeIndices.has(i));
+          const xs = groupNodes.map(gn => gn.x);
+          const ys = groupNodes.map(gn => gn.y);
+          const minX = Math.min(...xs) - 100;
+          const maxX = Math.max(...xs) + 100;
+          const minY = Math.min(...ys) - 60;
+          const maxY = Math.max(...ys) + 60;
+          const bboxW = maxX - minX;
+          const bboxH = maxY - minY;
+          // Zoom to fit bounding box with some padding
+          const targetZoom = Math.min(
+            (spiderCanvas._w * 0.85) / bboxW,
+            (spiderCanvas._h * 0.75) / bboxH,
+            MAX_ZOOM
+          );
+          zoom = clampZoom(targetZoom);
+          // Pan to centre the bounding box
+          const bboxCx = (minX + maxX) / 2;
+          const bboxCy = (minY + maxY) / 2;
+          panX = spiderCanvas._w / 2 - bboxCx * zoom;
+          panY = spiderCanvas._h / 2 - bboxCy * zoom;
+          document.getElementById('spider-hint').textContent = `${n.label} — tap group again to unfocus`;
+        }
+        drawSpider(spiderCanvas.getContext('2d'), spiderCanvas);
+      }
+      return;
+    }
+  }
+
+  // Click on empty space — close detail and reset focus
+  const spiderCanvas2 = document.getElementById('spider-canvas');
+  if (focusedGroupIdx !== null) {
+    focusedGroupIdx = null;
+    drawSpider(spiderCanvas2.getContext('2d'), spiderCanvas2);
+    document.getElementById('spider-hint').textContent = 'Tap a group to focus · Tap a key point for details · Drag to pan';
+  }
+  window._closeSpiderDetail && window._closeSpiderDetail();
+}
+
+function setupSpiderInteraction(canvas, ctx) {
+  const c = canvas;
+  // Always re-attach — canvas is reused, not cloned
+  c._spiderSetup = true;
+  const drawFn = () => drawSpider(c.getContext('2d'), c);
+
+  let clickStartX = 0, clickStartY = 0;
+  c.addEventListener('mousedown', e => { dragging = true; dragStartX = e.clientX; dragStartY = e.clientY; panStartX = panX; panStartY = panY; clickStartX = e.clientX; clickStartY = e.clientY; });
+  c.addEventListener('mousemove', e => { if (!dragging) return; panX = panStartX + (e.clientX - dragStartX); panY = panStartY + (e.clientY - dragStartY); drawFn(); });
+  c.addEventListener('mouseup', e => {
+    dragging = false;
+    // Only register as click if mouse didn't move much (not a drag)
+    const dist = Math.hypot(e.clientX - clickStartX, e.clientY - clickStartY);
+    if (dist < 6) handleSpiderClick(e.clientX, e.clientY, c);
+  });
+  c.addEventListener('mouseleave', () => dragging = false);
+  c.addEventListener('wheel', e => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const r = c.getBoundingClientRect();
+    zoomAt(zoom * delta, e.clientX - r.left, e.clientY - r.top);
+    drawFn();
+  }, { passive: false });
+
+  // Touch
+  let lastTouchDist = 0, lastMidX = 0, lastMidY = 0, pinched = false;
+  const startPan = t => { dragging = true; dragStartX = t.clientX; dragStartY = t.clientY; panStartX = panX; panStartY = panY; };
+  c.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) { pinched = false; startPan(e.touches[0]); }
+    if (e.touches.length === 2) {
+      dragging = false; pinched = true;
+      const r = c.getBoundingClientRect();
+      lastTouchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      lastMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left;
+      lastMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top;
+    }
+  });
+  c.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (e.touches.length === 1 && dragging) { panX = panStartX + (e.touches[0].clientX - dragStartX); panY = panStartY + (e.touches[0].clientY - dragStartY); drawFn(); }
+    if (e.touches.length === 2) {
+      const r = c.getBoundingClientRect();
+      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left;
+      const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top;
+      // pan with the two fingers, and zoom around the point between them
+      panX += midX - lastMidX; panY += midY - lastMidY;
+      if (lastTouchDist > 0) zoomAt(zoom * (dist / lastTouchDist), midX, midY);
+      lastTouchDist = dist; lastMidX = midX; lastMidY = midY;
+      drawFn();
+    }
+  }, { passive: false });
+  let touchStartX = 0, touchStartY = 0;
+  c.addEventListener('touchstart', e2 => {
+    if (e2.touches.length === 1) { touchStartX = e2.touches[0].clientX; touchStartY = e2.touches[0].clientY; }
+  }, { passive: true });
+  c.addEventListener('touchend', e => {
+    dragging = false;
+    // lifting one finger after a pinch: carry on panning with the other
+    if (e.touches.length === 1) { startPan(e.touches[0]); return; }
+    if (pinched) { if (!e.touches.length) pinched = false; return; }
+    if (e.changedTouches.length === 1) {
+      const dist = Math.hypot(e.changedTouches[0].clientX - touchStartX, e.changedTouches[0].clientY - touchStartY);
+      if (dist < 10) {
+        // stop the browser's follow-up "click", which would land on the
+        // learn panel's backdrop and close the panel straight away
+        e.preventDefault();
+        handleSpiderClick(e.changedTouches[0].clientX, e.changedTouches[0].clientY, c);
+      }
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    const wrap = document.getElementById('view-spider');
+    if (Math.abs(wrap.clientWidth - (c._w || 0)) < 2 && Math.abs(wrap.clientHeight - (c._h || 0)) < 2) return;
+    buildSpider();
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   OUTLINE VIEW
+══════════════════════════════════════════════════════════ */
+function buildOutline() {
+  const wrap = document.getElementById('view-outline');
+  wrap.innerHTML = '';
+
+  if (!subjects.length) {
+    wrap.innerHTML = `<div class="empty-state"><h3>No content</h3></div>`;
+    return;
+  }
+
+  subjects.forEach(s => {
+    const subEl = document.createElement('div');
+    subEl.className = 'outline-subject';
+
+    const topics = s.topics || [];
+    const totalQ = topics.reduce((acc, t) => acc + (t.questions||[]).length, 0);
+
+    const totalPts = topics.reduce((acc, t) => acc + (t.keyPoints||[]).length, 0);
+    const metaLabel = totalPts ? `${topics.length} topics · ${totalPts} key points` : `${topics.length} topics · ${totalQ} questions`;
+    subEl.innerHTML = `
+      <div class="outline-subject-header" data-action="toggle-subject">
+        <span class="outline-subject-emoji">${s.emoji || '📚'}</span>
+        <span class="outline-subject-name">${esc(s.name)}</span>
+        <span style="font-size:0.8rem;color:var(--color-text-muted);margin-right:8px;">${metaLabel}</span>
+        <span class="outline-chevron">›</span>
+      </div>
+      <div class="outline-topics" id="outline-topics-${s.id}"></div>`;
+    // Auto-open first subject always
+    subEl.classList.add('open');
+    wrap.appendChild(subEl);
+
+    const topicsWrap = subEl.querySelector('.outline-topics');
+    topics.forEach(t => {
+      const qs = t.questions || [];
+      const kps = t.keyPoints || [];
+      const topicEl = document.createElement('div');
+      topicEl.className = 'outline-topic';
+
+      // Use key points if available, otherwise fall back to questions
+      let pointsHtml = '';
+      if (kps.length) {
+        // Re-detect: might be single unnamed group (AI mistake)
+        const hasGroupKey = kps.length && 'group' in kps[0];
+        if (hasGroupKey && !isGroupedKps(kps)) {
+          // Single unnamed group — treat as flat
+          const flat = normaliseKps(kps);
+          pointsHtml = flat.map(kp => `
+            <div class="keypoint-item learnable" data-topic="${t.id}" data-term="${esc(kp.term||'')}">
+              <div class="keypoint-term">${esc(kp.term||'')}</div>
+              <div class="keypoint-explanation">${esc(kp.explanation||'')}</div>
+            </div>`).join('');
+        } else if (isGroupedKps(kps)) {
+          pointsHtml = kps.map(g => `
+            <div style="margin-bottom:var(--space-sm);">
+              <div style="font-family:var(--font-ui);font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-primary);padding:6px 0 4px;border-bottom:1px solid var(--color-border);margin-bottom:4px;"><i data-icon="folder-open"></i> ${esc(g.group)}</div>
+              ${(g.points||[]).map(kp => `
+                <div class="keypoint-item learnable" data-topic="${t.id}" data-group="${esc(g.group || '')}" data-term="${esc(kp.term)}">
+                  <div class="keypoint-term">${esc(kp.term)}</div>
+                  <div class="keypoint-explanation">${esc(kp.explanation)}</div>
+                </div>`).join('')}
+            </div>`).join('');
+        } else {
+          pointsHtml = kps.map(kp => `
+            <div class="keypoint-item learnable" data-topic="${t.id}" data-term="${esc(kp.term)}">
+              <div class="keypoint-term">${esc(kp.term)}</div>
+              <div class="keypoint-explanation">${esc(kp.explanation)}</div>
+            </div>`).join('');
+        }
+      } else {
+        const derived = qs.map(q => questionToKeypoint(q)).filter(Boolean);
+        pointsHtml = derived.length
+          ? derived.map(kp => `
+              <div class="keypoint-item">
+                <div class="keypoint-term">${kp.type}</div>
+                <div class="keypoint-explanation">${esc(kp.text)}</div>
+              </div>`).join('')
+          : '<div style="font-size:0.85rem;color:var(--color-text-muted);padding:8px 0;">No content yet</div>';
+      }
+
+      topicEl.innerHTML = `
+        <div class="outline-topic-header" data-action="toggle-topic">
+          <span class="outline-topic-name">${esc(t.name)}</span>
+          <span class="outline-learn-progress" data-learn-progress="${t.id}" style="display:none;"></span>
+          <span class="outline-topic-count">${kps.length ? (isGroupedKps(kps) ? kps.reduce((a,g)=>a+(g.points||[]).length,0)+' pts' : kps.length+' pts') : qs.length+' Q'}</span>
+          <span class="outline-topic-chevron">›</span>
+        </div>
+        <div class="outline-keypoints">${outlineWatch(t)}${pointsHtml}</div>`;
+      // Auto-open topic if single topic view
+      if (topics.length === 1) topicEl.classList.add('open');
+      topicsWrap.appendChild(topicEl);
+    });
+  });
+  updateLearnMarks();
+}
+
+function questionToKeypoint(q) {
+  if (q.type === 'mcq')   return { type: 'MCQ', text: q.question };
+  if (q.type === 'tf')    return { type: 'T/F', text: q.question + ' → ' + (q.answer ? 'True' : 'False') };
+  if (q.type === 'fill')  return { type: 'Fill', text: (q.sentence||'').replace('_____', `[${q.answer}]`) };
+  if (q.type === 'match') return { type: 'Match', text: (q.pairs||[]).map(p => `${p.left} → ${p.right}`).join(' | ') };
+  if (q.type === 'short') return { type: 'Short', text: q.question };
+  return null;
+}
+
+/* ══════════════════════════════════════════════════════════
+   FLASHCARDS
+══════════════════════════════════════════════════════════ */
+// Answer length: Full / Short / Key words (saved on the student's record)
+let cardMode = 'full';
+function renderLengthPicker() {
+  const box = document.getElementById('fc-length');
+  if (!box) return;
+  box.innerHTML = LENGTHS.map(l => `<button type="button" class="${l.id === cardMode ? 'on' : ''}" data-len="${l.id}" title="${l.desc}" aria-pressed="${l.id === cardMode}">${l.label}</button>`).join('');
+  box.querySelectorAll('[data-len]').forEach(b => b.onclick = () => setCardMode(b.dataset.len));
+}
+async function setCardMode(mode) {
+  cardMode = mode;
+  try { localStorage.setItem('bonce_cardLength', mode); } catch (e) {}
+  renderLengthPicker();
+  renderFlashcard(true);
+  if (_currentProfile) _currentProfile.cardLength = mode;
+  if (_currentUser && isStudent(_currentProfile) && !isPreview()) {
+    updateDoc(doc(db, 'users', _currentUser.uid), { cardLength: mode }).catch(() => {});
+  }
+  prepareShortAnswers();
+}
+// Ask the AI for clear front-of-card questions for key points (once per topic, shared)
+async function prepareCardQuestions() {
+  const byTopic = new Map();
+  allFlashcards.forEach(c => { if (c.kp && c.tref) (byTopic.get(c.tref) || byTopic.set(c.tref, []).get(c.tref)).push(c); });
+  const jobs = [...byTopic].map(([t, cards]) => ensureCardQuestions({ p: groupId, s: subjectId }, t, cards, { subjectName }));
+  if (!jobs.length) return;
+  const results = await Promise.allSettled(jobs);
+  if (results.some(r => r.value)) renderFlashcard(true);
+}
+// Ask the AI for short versions of any long answers (once per topic, shared)
+async function prepareShortAnswers() {
+  if (cardMode === 'full') { document.getElementById('fc-length-note').textContent = ''; return; }
+  const note = document.getElementById('fc-length-note');
+  const byTopic = new Map();
+  flattenFlashcards().forEach(c => { if (c.tref) (byTopic.get(c.tref) || byTopic.set(c.tref, []).get(c.tref)).push(c); });
+  const jobs = [...byTopic].map(([t, cards]) => ensureShortAnswers({ p: groupId, s: subjectId }, t, cards, { subjectName }));
+  if (!jobs.length) return;
+  note.textContent = 'Making shorter answers…';
+  const results = await Promise.allSettled(jobs);
+  note.textContent = results.some(r => r.status === 'rejected') ? 'Some answers are shortened roughly for now.' : '';
+  if (results.some(r => r.value)) renderFlashcard(true);
+}
+
+/* Rounds: a round is 10 cards (or all of them). Each card is marked
+   "Got it" or "Not yet"; at the end, redo the ones not yet known until
+   they're all right, then move on to the next 10. */
+let fcRound = [];        // cards in this round
+let fcMarks = [];        // true / false / undefined per card in the round
+let fcPool = [];         // cards not yet dealt this sitting
+let fcSize = 'ten';      // 'ten' | 'all'
+let fcRoundNo = 0;       // 1st go or a redo
+const FC_SIZE_KEY = 'bonce_cardRound';
+
+function renderSizePicker() {
+  const box = document.getElementById('fc-size');
+  if (!box) return;
+  box.innerHTML = [['ten', '10 at a time'], ['all', 'All']].map(([id, l]) =>
+    `<button type="button" class="${id === fcSize ? 'on' : ''}" data-size="${id}" aria-pressed="${id === fcSize}">${l}</button>`).join('');
+  box.querySelectorAll('[data-size]').forEach(b => b.onclick = () => {
+    fcSize = b.dataset.size;
+    try { localStorage.setItem(FC_SIZE_KEY, fcSize); } catch (e) {}
+    if (_currentProfile) _currentProfile.cardRound = fcSize;
+    if (_currentUser && isStudent(_currentProfile) && !isPreview()) updateDoc(doc(db, 'users', _currentUser.uid), { cardRound: fcSize }).catch(() => {});
+    renderSizePicker();
+    startFlashcards();
+  });
+}
+
+// A fresh sitting: shuffle everything, deal the first round
+function startFlashcards() {
+  let saved = _currentProfile?.cardRound;
+  if (!saved) { try { saved = localStorage.getItem(FC_SIZE_KEY); } catch (e) {} }
+  if (saved === 'all' || saved === 'ten') fcSize = saved;
+  renderSizePicker();
+  fcPool = shuffle(flattenFlashcards().slice());
+  dealRound();
+}
+function dealRound() {
+  const n = fcSize === 'ten' ? 10 : fcPool.length;
+  fcRound = fcPool.splice(0, n);
+  fcMarks = []; fcIdx = 0; fcRoundNo = 1;
+  showCards();
+}
+function redoWrong() {
+  fcRound = fcRound.filter((_, i) => fcMarks[i] !== true);
+  fcRound = shuffle(fcRound);
+  fcMarks = []; fcIdx = 0; fcRoundNo++;
+  showCards();
+}
+function showCards() {
+  document.getElementById('fc-summary').hidden = true;
+  ['fc-card-wrap', 'fc-mark', 'fc-nav', 'fc-topic-label'].forEach(id => { document.getElementById(id).style.display = ''; });
+  renderFlashcard();
+}
+
+function renderFlashcard(keepFlip = false) {
+  const all = flattenFlashcards();
+  if (!all.length) {
+    document.getElementById('fc-front').textContent = 'No cards available';
+    document.getElementById('fc-back').textContent = 'Add key points to this topic first';
+    document.getElementById('fc-counter').textContent = '0 / 0';
+    document.getElementById('fc-mark').style.display = 'none';
+    return;
+  }
+  if (!fcRound.length) return;
+  const cards = fcRound;
+  const right = fcMarks.filter(m => m === true).length, wrong = fcMarks.filter(m => m === false).length;
+  document.getElementById('fc-meta').textContent = fcRoundNo > 1
+    ? `Redo: ${cards.length} card${cards.length === 1 ? '' : 's'} you didn't know yet`
+    : `${all.length} cards${fcSize === 'ten' ? ` · ${fcPool.length} still to come after these` : ''}`;
+  const card = cards[fcIdx];
+  document.getElementById('fc-hint').style.display = 'block';
+  // Key points: the clear question, or (until it's written) the point with its section
+  const q = cardQuestion(card.tref, card);
+  const front = document.getElementById('fc-front');
+  if (card.kp && !q) front.innerHTML = `${card.group ? `<span class="fc-context">${esc(card.group)}</span>` : ''}${esc(card.front)}`;
+  else front.textContent = q || card.front;
+  document.getElementById('fc-back').textContent = displayAnswer(card.tref, card.back, cardMode);
+  document.getElementById('fc-type').textContent = card.kp && card.group && q ? card.group : (card.type || '');
+  document.getElementById('fc-topic-label').textContent = card.topic || '';
+  document.getElementById('fc-counter').innerHTML = `${fcIdx + 1} / ${cards.length}` + (right || wrong ? ` · <b class="ok">✓ ${right}</b> <b class="no">✗ ${wrong}</b>` : '');
+  document.getElementById('fc-prev').disabled = fcIdx === 0;
+  document.getElementById('fc-next').disabled = fcIdx === cards.length - 1;
+  // Marking buttons: shown once the answer has been seen, highlighting any earlier choice
+  const mark = document.getElementById('fc-mark');
+  document.getElementById('fc-right').classList.toggle('picked', fcMarks[fcIdx] === true);
+  document.getElementById('fc-wrong').classList.toggle('picked', fcMarks[fcIdx] === false);
+
+  // Reset flip (unless just changing the answer length)
+  if (!keepFlip) {
+    document.getElementById('flashcard').classList.remove('flipped');
+    fcFlipped = false;
+  }
+  mark.classList.toggle('waiting', !fcFlipped && fcMarks[fcIdx] === undefined);
+}
+
+function markCard(ok) {
+  if (!fcRound.length) return;
+  fcMarks[fcIdx] = ok;
+  // next card not yet marked (after this one, then from the start)
+  const order = [...fcRound.keys()].slice(fcIdx + 1).concat([...fcRound.keys()].slice(0, fcIdx + 1));
+  const next = order.find(i => fcMarks[i] === undefined);
+  if (next === undefined) { showRoundSummary(); return; }
+  fcIdx = next; fcFlipped = false;
+  document.getElementById('flashcard').classList.remove('flipped');
+  renderFlashcard();
+}
+
+function showRoundSummary() {
+  const right = fcMarks.filter(m => m === true).length;
+  const wrong = fcRound.length - right;
+  ['fc-card-wrap', 'fc-mark', 'fc-nav', 'fc-topic-label'].forEach(id => { document.getElementById(id).style.display = 'none'; });
+  const box = document.getElementById('fc-summary');
+  const more = fcPool.length;
+  const nextLabel = more ? `Next ${Math.min(10, more)} cards` : 'Start again';
+  box.innerHTML = wrong
+    ? `<h3>${right ? 'Good going!' : 'Keep at it!'}</h3>
+       <p>Go over the ones you didn't know yet: they stick better the second time.</p>
+       <div class="fc-sum-stats"><span><b style="color:var(--color-success)">${right}</b>got it</span><span><b style="color:var(--color-danger)">${wrong}</b>to redo</span></div>
+       <div class="actions"><button class="btn btn-primary" id="fc-redo"><i data-icon="repeat"></i> Redo the ${wrong} I didn't know</button>
+       <button class="btn btn-secondary" id="fc-next-round">${more ? 'Skip to next cards' : 'Start again'}</button></div>`
+    : `<h3>${fcRoundNo > 1 ? 'All sorted! 🎉' : 'All right first time! 🎉'}</h3>
+       <p>${more ? `${more} more card${more === 1 ? '' : 's'} to go in this ${subjects.length ? 'topic' : 'set'}.` : 'You\'ve been through every card.'}</p>
+       <div class="actions"><button class="btn btn-primary" id="fc-next-round"><i data-icon="${more ? 'arrow-right' : 'refresh-cw'}"></i> ${nextLabel}</button></div>`;
+  box.hidden = false;
+  document.getElementById('fc-meta').textContent = fcRoundNo > 1 ? `Redo round ${fcRoundNo - 1} done` : 'Round done';
+  document.getElementById('fc-redo')?.addEventListener('click', redoWrong);
+  document.getElementById('fc-next-round').addEventListener('click', () => { if (fcPool.length) dealRound(); else startFlashcards(); });
+}
+
+function flattenFlashcards() {
+  const cards = [];
+  allFlashcards.forEach(fc => {
+    if (Array.isArray(fc)) cards.push(...fc.filter(Boolean));
+    else if (fc) cards.push(fc);
+  });
+  return cards.filter(c => c && c.front);
+}
+
+window._flipCard  = () => {
+  fcFlipped = !fcFlipped;
+  document.getElementById('flashcard').classList.toggle('flipped', fcFlipped);
+  if (fcFlipped) document.getElementById('fc-mark').classList.remove('waiting');
+};
+window._prevCard  = () => { if (fcIdx > 0) { fcIdx--; fcFlipped = false; document.getElementById('flashcard').classList.remove('flipped'); renderFlashcard(); } };
+window._nextCard  = () => { if (fcIdx < fcRound.length - 1) { fcIdx++; fcFlipped = false; document.getElementById('flashcard').classList.remove('flipped'); renderFlashcard(); } };
+document.getElementById('fc-right').addEventListener('click', () => markCard(true));
+document.getElementById('fc-wrong').addEventListener('click', () => markCard(false));
+
+/* ── Utils ───────────────────────────────────────────────── */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Video links inside a topic in Outline (whole-subject view; the strip covers single topics)
+function outlineWatch(t) {
+  if (topicId) return '';
+  const vids = videosOf(t);
+  const reads = readsOf(t);
+  if (!vids.length && !reads.length) return '';
+  if (!document.getElementById('watch-css')) document.head.insertAdjacentHTML('beforeend', `<style id="watch-css">${WATCH_CSS}</style>`);
+  return `<div class="outline-watch">${readLinksHtml(reads)}${vids.map(v => `<a class="watch-link" href="${esc(v.url)}" target="_blank" rel="noopener">▶ ${esc(v.label)} ↗</a>`).join('')}</div>`;
+}
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+<script>
+window.showToast = function(msg, type='info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`; t.textContent = msg;
+  c.appendChild(t); setTimeout(() => t.remove(), 3500);
+};
+</script>
+</body>
+</html>

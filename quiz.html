@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lobe Limpet — Quiz</title>
+  <link rel="icon" type="image/svg+xml" href="assets/images/brand/favicon.svg?v=20261113d">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brand/favicon-32.png?v=20261113d">
+  <link rel="apple-touch-icon" href="assets/images/brand/apple-touch-icon.png?v=20261113d">
+  <link rel="manifest" href="manifest.webmanifest?v=20261113d">
+  <meta name="apple-mobile-web-app-title" content="Lobe Limpet">
+  <meta name="application-name" content="Lobe Limpet">
+  <link rel="stylesheet" href="theme.css?v=20261113d">
+  <script src="icons.js?v=20261113d"></script>
+  <style>
+    body { min-height: 100vh; background: var(--color-bg); }
+
+    /* ── Top nav ─────────────────────────────────────────── */
+    .topnav {
+      background: var(--color-surface); border-bottom: 1px solid var(--color-border);
+      padding: 0 var(--space-xl); height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-back {
+      display: flex; align-items: center; gap: 8px;
+      font-family: var(--font-ui); font-size: 0.9rem; font-weight: 600;
+      color: var(--color-text-muted); text-decoration: none;
+      transition: color var(--transition-fast);
+    }
+    .nav-back:hover { color: var(--color-primary); }
+    .nav-title {
+      font-family: var(--font-heading); font-size: 1rem; font-weight: 700;
+      color: var(--color-text);
+    }
+    .nav-progress {
+      font-family: var(--font-ui); font-size: 0.85rem; color: var(--color-text-muted);
+    }
+
+    /* ── Progress bar ────────────────────────────────────── */
+    .progress-bar-wrap {
+      height: 4px; background: var(--color-surface-2);
+      position: sticky; top: 64px; z-index: 90;
+    }
+    .progress-bar-fill {
+      height: 100%; background: var(--color-primary);
+      transition: width 0.4s ease; border-radius: 0 2px 2px 0;
+    }
+
+    /* ── Main layout ─────────────────────────────────────── */
+    .page { max-width: 680px; margin: 0 auto; padding: var(--space-xl) var(--space-lg); }
+
+    /* ── Quiz screens ────────────────────────────────────── */
+    .screen { display: none; }
+    .screen.active { display: block; animation: fadeIn 0.3s ease both; }
+
+    /* ── Loading screen ──────────────────────────────────── */
+    .loading-screen {
+      text-align: center; padding: var(--space-2xl) 0;
+    }
+    .loading-screen h2 { font-family: var(--font-heading); font-size: 1.4rem; margin-bottom: var(--space-sm); }
+    .loading-screen p { color: var(--color-text-muted); }
+
+
+    /* ── Setup (question type picker) ────────────────────── */
+    .setup-screen h2 { font-family: var(--font-heading); font-size: 1.4rem; margin-bottom: var(--space-xs); text-align: center; }
+    .setup-sub { color: var(--color-text-muted); text-align: center; margin-bottom: var(--space-lg); font-size: 0.92rem; }
+    .setup-presets { display: flex; gap: var(--space-sm); justify-content: center; flex-wrap: wrap; margin-bottom: var(--space-md); }
+    .setup-presets .btn { padding: 8px 14px; font-size: 0.85rem; }
+    .type-list { display: flex; flex-direction: column; gap: var(--space-sm); margin-bottom: var(--space-lg); }
+    .type-opt {
+      display: flex; align-items: center; gap: var(--space-md); width: 100%; text-align: left;
+      background: var(--color-surface); border: 2px solid var(--color-border); border-radius: var(--radius-card);
+      padding: 12px 16px; cursor: pointer; font: inherit; color: var(--color-text); transition: border-color .15s, background .15s;
+    }
+    .type-opt:hover:not(:disabled) { border-color: var(--color-primary); }
+    .type-opt.on { border-color: var(--color-primary); background: var(--color-primary-glow); }
+    .type-opt:disabled { opacity: 0.4; cursor: not-allowed; }
+    .type-check {
+      width: 24px; height: 24px; border-radius: 6px; border: 2px solid var(--color-border); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 800; color: #fff;
+    }
+    .type-opt.on .type-check { background: var(--color-primary); border-color: var(--color-primary); }
+    .type-text { flex: 1; min-width: 0; }
+    .type-name { font-family: var(--font-ui); font-weight: 700; font-size: 0.95rem; }
+    .type-desc { font-size: 0.8rem; color: var(--color-text-muted); }
+    .type-level { font-family: var(--font-ui); font-size: 0.72rem; font-weight: 700; color: var(--color-text-muted); white-space: nowrap; }
+    .setup-start { width: 100%; padding: 14px; font-size: 1rem; }
+    .setup-note { text-align: center; font-size: 0.82rem; color: var(--color-text-muted); margin-top: var(--space-sm); min-height: 1.2em; }
+
+    /* ── Question card ───────────────────────────────────── */
+    .q-header { margin-bottom: var(--space-lg); }
+    .q-number {
+      font-family: var(--font-ui); font-size: 0.8rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--color-text-muted); margin-bottom: var(--space-sm);
+    }
+    .q-type-pill {
+      display: inline-block; padding: 3px 10px; border-radius: var(--radius-pill);
+      font-size: 0.72rem; font-family: var(--font-ui); font-weight: 700;
+      text-transform: uppercase; margin-left: var(--space-sm);
+    }
+    .q-type-mcq   { background: rgba(108,99,255,0.12); color: #6c63ff; }
+    .q-type-tf    { background: rgba(18,184,134,0.12); color: #12b886; }
+    .q-type-fill  { background: rgba(245,159,0,0.12);  color: #f59f00; }
+    .q-type-match { background: rgba(14,165,233,0.12); color: #0ea5e9; }
+    .q-type-short { background: rgba(250,82,82,0.12);  color: #fa5252; }
+
+    .q-text {
+      font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700;
+      line-height: 1.4; color: var(--color-text);
+    }
+    .q-image { max-width: 100%; border-radius: var(--radius-card); margin-top: var(--space-md); }
+
+    /* ── MCQ options ─────────────────────────────────────── */
+    .options-list { display: flex; flex-direction: column; gap: var(--space-sm); margin-top: var(--space-lg); }
+    .option-btn {
+      display: flex; align-items: center; gap: var(--space-md);
+      background: var(--color-surface); border: 2px solid var(--color-border);
+      border-radius: var(--radius-card); padding: var(--space-md);
+      cursor: pointer; transition: all var(--transition-fast);
+      font-family: var(--font-body); font-size: 0.95rem; text-align: left;
+      color: var(--color-text); width: 100%;
+    }
+    .option-btn:hover:not(:disabled) { border-color: var(--color-primary); background: var(--color-primary-glow); }
+    .option-btn.selected { border-color: var(--color-primary); background: var(--color-primary-glow); }
+    .option-btn.correct  { border-color: var(--color-success); background: rgba(107,203,119,0.1); }
+    .option-btn.wrong    { border-color: var(--color-danger);  background: rgba(255,107,107,0.1); }
+    .option-btn:disabled { cursor: default; }
+    .option-letter {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--color-surface-2); color: var(--color-text-muted);
+      font-family: var(--font-ui); font-weight: 700; font-size: 0.85rem;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: all var(--transition-fast);
+    }
+    .option-btn.selected .option-letter { background: var(--color-primary); color: var(--color-on-primary); }
+    .option-btn.correct  .option-letter { background: var(--color-success); color: #fff; }
+    .option-btn.wrong    .option-letter { background: var(--color-danger);  color: #fff; }
+
+    /* ── T/F buttons ─────────────────────────────────────── */
+    .tf-row { display: flex; gap: var(--space-md); margin-top: var(--space-lg); }
+    .tf-btn {
+      flex: 1; padding: var(--space-lg); border-radius: var(--radius-card);
+      background: var(--color-surface); border: 2px solid var(--color-border);
+      font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700;
+      cursor: pointer; transition: all var(--transition-fast); color: var(--color-text);
+    }
+    .tf-btn:hover:not(:disabled) { transform: translateY(-2px); }
+    .tf-btn.true-btn:hover:not(:disabled)  { border-color: var(--color-success); background: rgba(107,203,119,0.1); }
+    .tf-btn.false-btn:hover:not(:disabled) { border-color: var(--color-danger);  background: rgba(255,107,107,0.1); }
+    .tf-btn.correct  { border-color: var(--color-success); background: rgba(107,203,119,0.12); }
+    .tf-btn.wrong    { border-color: var(--color-danger);  background: rgba(255,107,107,0.12); }
+    .tf-btn.selected { border-color: var(--color-primary); background: var(--color-primary-glow); }
+    .tf-btn:disabled { cursor: default; transform: none; }
+
+    /* ── Fill blank ──────────────────────────────────────── */
+    .fill-wrap { margin-top: var(--space-lg); }
+    .fill-sentence {
+      font-size: 1.1rem; line-height: 1.8; color: var(--color-text);
+      margin-bottom: var(--space-md); font-family: var(--font-body);
+    }
+    .fill-blank {
+      display: inline-block; min-width: 120px;
+      border-bottom: 2px solid var(--color-primary);
+      padding: 0 var(--space-sm);
+      font-family: var(--font-ui); font-weight: 700;
+      color: var(--color-primary); vertical-align: bottom;
+    }
+    .fill-input {
+      width: 100%; padding: 12px var(--space-md);
+      border-radius: var(--radius-button); font-size: 1rem;
+      font-family: var(--font-ui);
+    }
+    .fill-input.correct { border-color: var(--color-success); background: rgba(107,203,119,0.08); }
+    .fill-input.wrong   { border-color: var(--color-danger);  background: rgba(255,107,107,0.08); }
+
+    /* ── Match pairs ─────────────────────────────────────── */
+    .match-wrap { margin-top: var(--space-lg); }
+    .match-cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+    .match-col-label {
+      font-family: var(--font-ui); font-size: 0.78rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--color-text-faint); margin-bottom: var(--space-sm);
+    }
+    .match-items { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .match-item {
+      background: var(--color-surface); border: 2px solid var(--color-border);
+      border-radius: var(--radius-button); padding: 10px var(--space-md);
+      font-family: var(--font-ui); font-size: 0.88rem; cursor: pointer;
+      transition: all var(--transition-fast); color: var(--color-text);
+      min-height: 44px; display: flex; align-items: center;
+    }
+    .match-item:hover:not(.matched):not(.used) { border-color: var(--color-primary); }
+    .match-item.selected { border-color: var(--color-primary); background: var(--color-primary-glow); }
+    .match-item.matched-correct { border-color: var(--color-success); background: rgba(107,203,119,0.1); color: var(--color-success); }
+    .match-item.matched-wrong   { border-color: var(--color-danger);  background: rgba(255,107,107,0.1); color: var(--color-danger); }
+    .match-item.used { opacity: 0.4; cursor: default; }
+    .match-item.paired { border-color: var(--color-primary); color: var(--color-primary); }
+    .match-item.paired.selected { background: var(--color-primary-glow); }
+    .match-lines { display: none; } /* visual lines — handled by colour */
+    .match-num {
+      flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; margin-right: 8px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.72rem; font-weight: 800; background: currentColor;
+    }
+    .match-num span { color: var(--color-surface); }
+    .match-review { margin-top: var(--space-md); display: flex; flex-direction: column; gap: var(--space-sm); }
+    .match-review-title { font-family: var(--font-ui); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-muted); }
+    .mr-row {
+      display: grid; grid-template-columns: 28px 1fr; gap: 4px var(--space-sm); align-items: start;
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-left: 4px solid var(--color-success); border-radius: var(--radius-button); padding: 10px var(--space-md);
+    }
+    .mr-row.wrong { border-left-color: var(--color-danger); }
+    .mr-icon { font-size: 1rem; line-height: 1.4; }
+    .mr-term { font-family: var(--font-ui); font-weight: 700; font-size: 0.9rem; color: var(--color-text); }
+    .mr-answer { grid-column: 2; font-size: 0.88rem; color: var(--color-success); }
+    .mr-answer::before { content: '→ '; }
+    .mr-yours { grid-column: 2; font-size: 0.8rem; color: var(--color-danger); text-decoration: line-through; opacity: 0.85; }
+    .mr-yours-label { text-decoration: none; display: inline-block; margin-right: 4px; }
+    .model-answer { margin-top: var(--space-md); padding-top: var(--space-sm); border-top: 1px solid var(--color-border); font-size: 0.86rem; color: var(--color-text-muted); line-height: 1.6; white-space: pre-line; }
+    .model-answer strong { color: var(--color-success); font-family: var(--font-ui); }
+    @media (max-width: 600px) { .match-item { font-size: 0.82rem; padding: 8px 10px; } }
+
+    /* ── Short written ───────────────────────────────────── */
+    .short-wrap { margin-top: var(--space-lg); }
+    .short-textarea {
+      width: 100%; min-height: 140px; resize: vertical;
+      font-size: 0.95rem; line-height: 1.6; border-radius: var(--radius-button);
+      padding: var(--space-md);
+    }
+    .short-hint { font-size: 0.82rem; color: var(--color-text-muted); margin-top: 6px; }
+    .ai-marking-wrap {
+      margin-top: var(--space-md); background: var(--color-surface);
+      border: 1px solid var(--color-border); border-radius: var(--radius-card);
+      padding: var(--space-md); display: none;
+    }
+    .ai-marking-wrap.visible { display: block; }
+    .ai-score-row {
+      display: flex; align-items: center; gap: var(--space-md);
+      margin-bottom: var(--space-sm);
+    }
+    .ai-score-badge {
+      font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800;
+      color: var(--color-primary);
+    }
+    .ai-score-label { font-family: var(--font-ui); font-size: 0.85rem; color: var(--color-text-muted); }
+    .ai-feedback { font-size: 0.9rem; color: var(--color-text); line-height: 1.6; }
+    .ai-thinking {
+      display: flex; align-items: center; gap: var(--space-sm);
+      color: var(--color-text-muted); font-family: var(--font-ui); font-size: 0.88rem;
+    }
+
+    /* ── Feedback banner ─────────────────────────────────── */
+    .feedback-banner {
+      margin-top: var(--space-lg); border-radius: var(--radius-card);
+      padding: var(--space-md) var(--space-lg); display: none;
+      animation: fadeIn 0.3s ease both;
+    }
+    .feedback-banner.correct { background: rgba(107,203,119,0.1); border: 1px solid rgba(107,203,119,0.3); }
+    .feedback-banner.wrong   { background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.3); }
+    .feedback-banner.visible { display: block; }
+    .feedback-result {
+      font-family: var(--font-heading); font-size: 1rem; font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .feedback-result.correct { color: var(--color-success); }
+    .feedback-result.wrong   { color: var(--color-danger); }
+    .feedback-explanation { font-size: 0.88rem; color: var(--color-text-muted); line-height: 1.5; }
+    .feedback-correct-answer { font-size: 0.88rem; color: var(--color-text); margin-top: 4px; }
+    .feedback-correct-answer strong { color: var(--color-success); }
+
+    /* ── Action footer ───────────────────────────────────── */
+    .q-footer {
+      margin-top: var(--space-xl); display: flex;
+      justify-content: flex-end; gap: var(--space-sm);
+    }
+    .btn-next { min-width: 140px; }
+
+    /* ── Results screen ──────────────────────────────────── */
+    .results-screen { text-align: center; padding: var(--space-xl) 0; }
+    .results-icon { font-size: 4rem; margin-bottom: var(--space-md); }
+    .results-title { font-family: var(--font-heading); font-size: 2rem; font-weight: 800; margin-bottom: var(--space-sm); }
+    .results-sub { color: var(--color-text-muted); margin-bottom: var(--space-xl); }
+    .score-ring-wrap { display: flex; justify-content: center; margin-bottom: var(--space-xl); }
+    .score-ring {
+      width: 140px; height: 140px; border-radius: 50%;
+      background: conic-gradient(var(--color-primary) calc(var(--pct) * 1%), var(--color-surface-2) 0);
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .score-ring::before {
+      content: ''; position: absolute;
+      width: 100px; height: 100px; border-radius: 50%;
+      background: var(--color-bg);
+    }
+    .score-ring-inner {
+      position: relative; z-index: 1; text-align: center;
+    }
+    .score-pct { font-family: var(--font-heading); font-size: 1.8rem; font-weight: 800; color: var(--color-text); }
+    .score-label { font-family: var(--font-ui); font-size: 0.78rem; color: var(--color-text-muted); }
+    .results-stats {
+      display: flex; gap: var(--space-md); justify-content: center;
+      margin-bottom: var(--space-xl); flex-wrap: wrap;
+    }
+    .result-stat {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-card); padding: var(--space-md) var(--space-lg);
+      text-align: center; min-width: 100px;
+    }
+    .result-stat-val { font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; }
+    .result-stat-label { font-size: 0.78rem; color: var(--color-text-muted); font-family: var(--font-ui); margin-top: 2px; }
+    .results-actions { display: flex; gap: var(--space-sm); justify-content: center; flex-wrap: wrap; }
+
+    /* ── No questions screen ─────────────────────────────── */
+    .no-q-screen { text-align: center; padding: var(--space-2xl) 0; }
+    .no-q-screen h2 { font-family: var(--font-heading); font-size: 1.4rem; margin-bottom: var(--space-sm); }
+    .no-q-screen p { color: var(--color-text-muted); margin-bottom: var(--space-lg); }
+  </style>
+  <link rel="stylesheet" href="ui.css?v=20261113d">
+</head>
+<body>
+<div id="toast-container"></div>
+
+<nav class="topnav">
+  <a id="nav-back-link" href="hub.html" class="nav-back">← Back</a>
+  <div class="nav-title" id="nav-title">Quiz</div>
+  <div style="display:flex;align-items:center;gap:8px;"><div class="nav-progress" id="nav-progress"></div><a class="help-btn help-compact" href="help.html" target="_blank" rel="noopener" aria-label="Help" title="Help"><i data-icon="circle-help"></i><span>Help</span></a></div>
+</nav>
+<div class="progress-bar-wrap">
+  <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+</div>
+
+<div class="page">
+
+  <!-- Loading -->
+  <div class="screen active" id="screen-loading">
+    <div class="loading-screen">
+      <div class="spinner" style="margin:0 auto var(--space-lg);width:48px;height:48px;"></div>
+      <h2>Loading questions…</h2>
+      <p>Picking 10 questions for you</p>
+    </div>
+  </div>
+
+  <!-- Setup: choose question types -->
+  <div class="screen" id="screen-setup">
+    <div class="setup-screen">
+      <h2>Choose your question types</h2>
+      <p class="setup-sub">Start with the easier ones and add more as you get confident.</p>
+      <div class="setup-presets">
+        <button class="btn btn-secondary" onclick="presetTypes('easy')"><i data-icon="sprout"></i> Easier start</button>
+        <button class="btn btn-secondary" onclick="presetTypes('all')"><i data-icon="layers"></i> All types</button>
+      </div>
+      <div class="type-list" id="type-list"></div>
+      <button class="btn btn-primary setup-start" id="btn-start-quiz" onclick="startQuiz()">Start quiz</button>
+      <div class="setup-note" id="setup-note"></div>
+    </div>
+  </div>
+
+  <!-- No questions -->
+  <div class="screen" id="screen-no-questions">
+    <div class="no-q-screen">
+      <div class="results-icon"><i data-icon="inbox"></i></div>
+      <h2 id="noq-title">No questions yet</h2>
+      <p id="noq-text">This topic doesn't have any questions yet. Ask your admin to add some!</p>
+      <a href="hub.html" class="btn btn-primary">← Back to hub</a>
+    </div>
+  </div>
+
+  <!-- Question -->
+  <div class="screen" id="screen-question">
+    <div class="q-header">
+      <div class="q-number">
+        Question <span id="q-num">1</span> of <span id="q-total">10</span>
+        <span class="q-type-pill" id="q-type-pill"></span>
+      </div>
+      <div class="q-text" id="q-text"></div>
+      <img id="q-image" class="q-image" style="display:none;">
+    </div>
+
+    <!-- MCQ -->
+    <div id="input-mcq" class="q-input" style="display:none;">
+      <div class="options-list" id="mcq-options"></div>
+    </div>
+
+    <!-- T/F -->
+    <div id="input-tf" class="q-input" style="display:none;">
+      <div class="tf-row">
+        <button class="tf-btn true-btn" data-val="true" onclick="submitTF(this)"><i data-icon="check"></i> True</button>
+        <button class="tf-btn false-btn" data-val="false" onclick="submitTF(this)"><i data-icon="x"></i> False</button>
+      </div>
+    </div>
+
+    <!-- Fill blank -->
+    <div id="input-fill" class="q-input" style="display:none;">
+      <div class="fill-wrap">
+        <div class="fill-sentence" id="fill-sentence-display"></div>
+        <input type="text" class="fill-input" id="fill-input" placeholder="Type your answer…" autocomplete="off" autocorrect="off" spellcheck="false">
+      </div>
+    </div>
+
+    <!-- Match pairs -->
+    <div id="input-match" class="q-input" style="display:none;">
+      <div class="match-wrap">
+        <p style="font-size:0.88rem;color:var(--color-text-muted);margin-bottom:var(--space-md);">Tap an item on the left, then its match on the right. You can change any pair (tap it again) until you press Check answer.</p>
+        <div class="match-cols">
+          <div>
+            <div class="match-col-label">Terms</div>
+            <div class="match-items" id="match-left"></div>
+          </div>
+          <div>
+            <div class="match-col-label">Definitions</div>
+            <div class="match-items" id="match-right"></div>
+          </div>
+        </div>
+        <div class="match-review" id="match-review" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Short written -->
+    <div id="input-short" class="q-input" style="display:none;">
+      <div class="short-wrap">
+        <textarea class="short-textarea" id="short-input" placeholder="Write your answer here…"></textarea>
+        <p class="short-hint">Write as much detail as you can. AI will mark your answer.</p>
+        <div class="ai-marking-wrap" id="ai-marking-wrap">
+          <div class="ai-thinking" id="ai-thinking">
+            <div class="spinner" style="width:16px;height:16px;border-width:2px;"></div>
+            Marking your answer…
+          </div>
+          <div id="ai-result" style="display:none;">
+            <div class="ai-score-row">
+              <div class="ai-score-badge" id="ai-score-badge"></div>
+              <div class="ai-score-label" id="ai-score-label"></div>
+            </div>
+            <div class="ai-feedback" id="ai-feedback"></div>
+            <a class="help-inline" href="help.html#marking" target="_blank" rel="noopener">How are written answers marked?</a>
+            <div class="model-answer" id="model-answer" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feedback -->
+    <div class="feedback-banner" id="feedback-banner">
+      <div class="feedback-result" id="feedback-result"></div>
+      <div class="feedback-explanation" id="feedback-explanation"></div>
+      <div class="feedback-correct-answer" id="feedback-correct-answer"></div>
+    </div>
+
+    <div class="q-footer">
+      <button class="btn btn-primary btn-next" id="btn-submit" onclick="submitAnswer()">Check answer</button>
+      <button class="btn btn-primary btn-next" id="btn-next" style="display:none;" onclick="nextQuestion()">Next →</button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="screen" id="screen-results">
+    <div class="results-screen">
+      <div class="results-icon" id="results-icon"><i data-icon="party-popper"></i></div>
+      <div class="results-title" id="results-title">Quiz complete!</div>
+      <div class="results-sub" id="results-sub"></div>
+      <div class="score-ring-wrap">
+        <div class="score-ring" id="score-ring" style="--pct:0">
+          <div class="score-ring-inner">
+            <div class="score-pct" id="score-pct">0%</div>
+            <div class="score-label">score</div>
+          </div>
+        </div>
+      </div>
+      <div class="results-stats">
+        <div class="result-stat">
+          <div class="result-stat-val" id="stat-correct" style="color:var(--color-success);">0</div>
+          <div class="result-stat-label">Correct</div>
+        </div>
+        <div class="result-stat">
+          <div class="result-stat-val" id="stat-wrong" style="color:var(--color-danger);">0</div>
+          <div class="result-stat-label">Wrong</div>
+        </div>
+        <div class="result-stat">
+          <div class="result-stat-val" id="stat-total">10</div>
+          <div class="result-stat-label">Questions</div>
+        </div>
+      </div>
+      <!-- XP earned display -->
+      <div id="xp-earned-wrap" style="display:none;margin-bottom:var(--space-xl);">
+        <div id="xp-earned-banner" style="background:var(--color-primary-glow);border:1px solid var(--color-primary);border-radius:var(--radius-card);padding:var(--space-md) var(--space-lg);margin-bottom:var(--space-md);">
+          <div style="font-family:var(--font-heading);font-size:1.1rem;font-weight:800;color:var(--color-primary);margin-bottom:var(--space-sm);" id="xp-earned-text"></div>
+          <div style="background:var(--color-surface-2);border-radius:var(--radius-pill);height:8px;overflow:hidden;">
+            <div id="xp-progress-bar" style="height:100%;background:var(--color-primary);border-radius:var(--radius-pill);transition:width 1s ease;width:0%;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px;font-family:var(--font-ui);font-size:0.75rem;color:var(--color-text-muted);">
+            <span id="xp-level-label"></span>
+            <span id="xp-next-label"></span>
+          </div>
+        </div>
+        <!-- New badges -->
+        <div id="new-badges-wrap" style="display:none;">
+          <div style="font-family:var(--font-ui);font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-text-muted);margin-bottom:var(--space-sm);">Badges earned</div>
+          <div id="new-badges-list" style="display:flex;flex-wrap:wrap;gap:var(--space-sm);justify-content:center;"></div>
+        </div>
+      </div>
+
+      <div class="results-actions">
+        <button class="btn btn-primary" onclick="restartQuiz()"><i data-icon="refresh-cw"></i> Try again</button>
+        <button class="btn btn-secondary" onclick="changeTypes()"><i data-icon="sliders-horizontal"></i> Change question types</button>
+        <a href="profile.html" class="btn btn-secondary"><i data-icon="user"></i> My profile</a>
+        <a href="hub.html" class="btn btn-secondary">← Hub</a>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+  function submitAnswer() { window._submitAnswer && window._submitAnswer(); }
+  function nextQuestion() { window._nextQuestion && window._nextQuestion(); }
+  function restartQuiz() { window._restartQuiz && window._restartQuiz(); }
+  function startQuiz()   { window._startQuiz && window._startQuiz(); }
+  function changeTypes() { window._changeTypes && window._changeTypes(); }
+  function toggleType(t) { window._toggleType && window._toggleType(t); }
+  function presetTypes(p){ window._presetTypes && window._presetTypes(p); }
+  function submitTF(btn) { window._submitTF && window._submitTF(btn); }
+</script>
+
+<script type="module">
+import { auth, db } from './firebase-config.js?v=20261113d';
+import { requireAuth, showToast, isPreview, isStudent, hasRole, viewsOf } from './auth.js?v=20261113d';
+import { askClaude, jsonOf } from './ai.js?v=20261113d';
+import { awardXp, getLevelInfo, LEVELS, BADGES } from './gamification.js?v=20261113d';
+import { logEvent } from './log.js?v=20261113d';
+import { topicLocked, showTopicLocked } from './access.js?v=20261113d';
+import { dueEntries, recordAnswers, nextDueDay, whenText, REVIEW_SIZE } from './srs.js?v=20261113d';
+import {
+  collection, getDocs, getDoc, query, orderBy,
+  doc, updateDoc, arrayUnion
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const PROXY_URL = 'https://curly-recipe-8b84.clasp-hub-app.workers.dev';
+const QUIZ_SIZE = 10;
+
+/* ── URL params ──────────────────────────────────────────── */
+const params   = new URLSearchParams(location.search);
+const groupId  = params.get('groupId');
+const subjectId = params.get('subjectId');
+const topicId  = params.get('topicId');
+const subjectName = params.get('subjectName') || 'Quiz';
+const topicName   = params.get('topicName') || '';
+const reviewMode  = params.get('review') === '1';   // "Review today": questions that are due
+let reviewSubject = '';                                // subject name to file a review session under
+
+/* ── State ───────────────────────────────────────────────── */
+let questions    = [];
+let currentIdx   = 0;
+let score        = 0;
+let answered     = false;
+let matchState   = { selectedLeft: null, matched: [] }; // for match pairs
+let currentUser   = null;
+let currentProfile = null;
+let quizStartTime  = null;
+let questionPool   = [];   // every question for this topic/subject
+let selectedTypes  = new Set();
+let results        = [];   // per question in this quiz: true if answered correctly
+let scoreAtStart   = 0;    // score when the current question was shown
+let recentQuizIds  = [];   // ids served earlier in this visit (Try again)
+
+const TYPE_INFO = {
+  mcq:   { name: 'Multiple choice',   desc: 'Pick the right answer from a list', level: 'Easier' },
+  tf:    { name: 'True or false',     desc: 'Decide if a statement is right',    level: 'Easier' },
+  match: { name: 'Match the pairs',   desc: 'Link terms to their meanings',      level: 'Medium' },
+  fill:  { name: 'Fill in the blank', desc: 'Type the missing word',             level: 'Medium' },
+  short: { name: 'Written answer',    desc: 'Explain in your own words',         level: 'Harder' },
+};
+const TYPE_ORDER = ['mcq', 'tf', 'match', 'fill', 'short'];
+const EASY_TYPES = ['mcq', 'tf'];
+const TYPES_KEY  = () => 'clasp_qtypes_' + (currentUser?.uid || 'anon');
+
+/* ── Auth ────────────────────────────────────────────────── */
+requireAuth(async (user, profile) => {
+  if (!isStudent(profile) && !viewsOf(profile).length) { location.href = 'hub.html'; return; }
+  currentUser = user;
+  currentProfile = profile;
+  // Set smart back link
+  if (!isStudent(profile)) {
+    // An adult looking at content: "Back" returns to their dashboard
+    const bl = document.getElementById('nav-back-link');
+    const home = hasRole(profile, 'admin') ? ['admin.html', 'Admin'] : hasRole(profile, 'teacher') ? ['teacher-dashboard.html', 'Classes'] : ['parent.html', 'Students'];
+    if (bl) { bl.href = home[0]; bl.textContent = '← ' + home[1]; }
+  }
+  if (reviewMode && groupId) {
+    document.getElementById('nav-title').textContent = 'Review today';
+    const again = document.querySelector('[onclick="restartQuiz()"]');
+    if (again) again.innerHTML = '<i data-icon="refresh-cw"></i> Review more';
+    const types = document.querySelector('[onclick="changeTypes()"]');
+    if (types) types.style.display = 'none';
+    await loadReview();
+    return;
+  }
+  if (!groupId || !subjectId) { location.href = 'hub.html'; return; }
+  document.getElementById('nav-title').textContent =
+    topicName ? `${topicName}` : subjectName;
+  await loadQuestions();
+});
+
+/* ── Load & shuffle questions ────────────────────────────── */
+async function loadQuestions() {
+  try {
+    let allQs = [];
+
+    if (topicId) {
+      // Single topic (a Plus only topic in a Lobe Limpet pack needs Plus)
+      const tSnap = await getDoc(doc(db, `content/${groupId}/subjects/${subjectId}/topics/${topicId}`)).catch(() => null);
+      if (topicLocked(tSnap?.data?.(), currentProfile)) return showLockedTopic(tSnap.data().name);
+      const snap = await getDocs(collection(db,
+        `content/${groupId}/subjects/${subjectId}/topics/${topicId}/questions`));
+      snap.forEach(d => allQs.push({ id: d.id, ...d.data(), loc: { p: groupId, s: subjectId, t: topicId } }));
+    } else {
+      // Whole subject — gather from all topics
+      const topicsSnap = await getDocs(collection(db,
+        `content/${groupId}/subjects/${subjectId}/topics`));
+      // Plus only topics are left out for people without Plus
+      const topicIds = [];
+      topicsSnap.forEach(d => { if (!topicLocked(d.data(), currentProfile)) topicIds.push(d.id); });
+
+      await Promise.all(topicIds.map(async tid => {
+        const qSnap = await getDocs(collection(db,
+          `content/${groupId}/subjects/${subjectId}/topics/${tid}/questions`)).catch(() => null);
+        qSnap?.forEach(d => allQs.push({ id: d.id, topicId: tid, ...d.data(), loc: { p: groupId, s: subjectId, t: tid } }));
+      }));
+    }
+
+    if (allQs.length === 0) {
+      showScreen('no-questions'); return;
+    }
+
+    questionPool = allQs.filter(q => TYPE_INFO[q.type]);
+    if (questionPool.length === 0) { showScreen('no-questions'); return; }
+    initSelectedTypes();
+    renderTypeList();
+    showScreen('setup');
+  } catch(e) {
+    showToast('Failed to load questions: ' + e.message, 'error');
+    showScreen('no-questions');
+  }
+}
+
+/* ── Review today ─────────────────────────────────────────
+   Loads the questions that are due for review in this pack (oldest
+   first), fetching only the topics they live in, and starts straight
+   away: no question-type picker. */
+let reviewList = [];
+async function loadReview() {
+  try {
+    const due = dueEntries(currentProfile, groupId).slice(0, REVIEW_SIZE);
+    if (!due.length) return showCaughtUp();
+    const topics = {};
+    due.forEach(e => { (topics[e.s + '/' + e.t] = topics[e.s + '/' + e.t] || { s: e.s, t: e.t, ids: new Set() }).ids.add(e.id); });
+    const found = {};
+    const subjectNames = {};
+    await Promise.all(Object.values(topics).map(async tp => {
+      const [qSnap, sSnap] = await Promise.all([
+        // (a topic that has since become Plus only is skipped, not an error)
+        getDocs(collection(db, `content/${groupId}/subjects/${tp.s}/topics/${tp.t}/questions`)).catch(() => null),
+        subjectNames[tp.s] ? null : getDoc(doc(db, `content/${groupId}/subjects/${tp.s}`)).catch(() => null),
+      ]);
+      if (sSnap?.exists?.()) subjectNames[tp.s] = sSnap.data().name;
+      qSnap?.forEach(d => { if (tp.ids.has(d.id)) found[d.id] = { id: d.id, ...d.data(), loc: { p: groupId, s: tp.s, t: tp.t } }; });
+    }));
+    reviewList = due.map(e => found[e.id]).filter(q => q && TYPE_INFO[q.type]);
+    if (!reviewList.length) return showCaughtUp();
+    // File the session under the subject most of these questions come from
+    const count = {};
+    reviewList.forEach(q => { count[q.loc.s] = (count[q.loc.s] || 0) + 1; });
+    const topSubject = Object.keys(count).sort((a, b) => count[b] - count[a])[0];
+    reviewSubject = subjectNames[topSubject] || 'Review';
+    questionPool = reviewList;
+    beginQuestions();
+  } catch (e) {
+    showToast('Could not load your review: ' + e.message, 'error');
+    showCaughtUp();
+  }
+}
+
+function showLockedTopic(name) {
+  document.getElementById('noq-title').textContent = 'This topic is part of Plus';
+  document.getElementById('noq-text').textContent = `"${name || 'This topic'}" is in Lobe Limpet Plus. The free topics in this subject are ready for you, or upgrade to unlock every topic.`;
+  showScreen('no-questions');
+  showTopicLocked(name);
+}
+
+function showCaughtUp() {
+  const next = nextDueDay(currentProfile, groupId);
+  document.getElementById('noq-title').textContent = 'All caught up!';
+  document.getElementById('noq-text').textContent = next
+    ? `Nothing to review right now. Your next review is ${whenText(next)}.`
+    : 'Answer some quiz questions and they\'ll come back here for review at just the right time.';
+  showScreen('no-questions');
+}
+
+/* ── Question type picker ────────────────────────────────── */
+function countByType() {
+  const c = {};
+  questionPool.forEach(q => { c[q.type] = (c[q.type] || 0) + 1; });
+  return c;
+}
+
+function initSelectedTypes() {
+  const counts = countByType();
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(TYPES_KEY()) || 'null'); } catch(e) {}
+  const wanted = Array.isArray(saved) && saved.length ? saved : EASY_TYPES;
+  selectedTypes = new Set(wanted.filter(t => counts[t]));
+  // Nothing usable from the saved/easy set? Fall back to whatever this topic has
+  if (selectedTypes.size === 0) selectedTypes = new Set(Object.keys(counts));
+}
+
+function renderTypeList() {
+  const counts = countByType();
+  document.getElementById('type-list').innerHTML = TYPE_ORDER.map(t => {
+    const info = TYPE_INFO[t];
+    const n = counts[t] || 0;
+    const on = selectedTypes.has(t);
+    return `<button class="type-opt${on ? ' on' : ''}" ${n ? '' : 'disabled'} onclick="toggleType('${t}')">
+      <span class="type-check">${on ? '<i data-icon="check"></i>' : ''}</span>
+      <span class="type-text">
+        <span class="type-name">${info.name}</span><br>
+        <span class="type-desc">${n ? info.desc : 'None for this topic yet'}</span>
+      </span>
+      <span class="type-level">${info.level}</span>
+    </button>`;
+  }).join('');
+  const btn  = document.getElementById('btn-start-quiz');
+  const note = document.getElementById('setup-note');
+  const available = questionPool.filter(q => selectedTypes.has(q.type)).length;
+  btn.disabled = selectedTypes.size === 0;
+  if (selectedTypes.size === 0) note.textContent = 'Pick at least one question type.';
+  else if (selectedTypes.size === Object.keys(counts).length && selectedTypes.size >= 5) note.textContent = 'All five types: this one counts towards Mix Master!';
+  else if (available < QUIZ_SIZE) note.textContent = `${available} question${available !== 1 ? 's' : ''} available with these types.`;
+  else note.textContent = `${QUIZ_SIZE} questions, mixed from your chosen types.`;
+}
+
+window._toggleType = function(t) {
+  if (selectedTypes.has(t)) selectedTypes.delete(t); else selectedTypes.add(t);
+  renderTypeList();
+};
+
+window._presetTypes = function(p) {
+  const counts = countByType();
+  const list = p === 'easy' ? EASY_TYPES : TYPE_ORDER;
+  selectedTypes = new Set(list.filter(t => counts[t]));
+  renderTypeList();
+};
+
+/* ── Question selection ──────────────────────────────────
+   Uses the student's history so questions don't keep repeating:
+     1. never seen before
+     2. got wrong last time (worth another go)
+     3. got right before, the longest ago first
+   Each chosen type gets a share in proportion to how many questions
+   it has, so a type with only a few questions isn't drawn every time. */
+function questionHistory() {
+  const lastSeen = {}, lastOk = {};
+  const sessions = (currentProfile?.sessions || []).slice().sort((a, b) => (a.date || 0) - (b.date || 0));
+  sessions.forEach(s => (s.qs || []).forEach(x => {
+    if (!x || !x.id) return;
+    lastSeen[x.id] = s.date || 0;
+    lastOk[x.id] = !!x.ok;
+  }));
+  return { lastSeen, lastOk };
+}
+
+function rankQuestions(list, hist) {
+  const recent = new Set(recentQuizIds);
+  return shuffle(list)
+    .map(q => {
+      const seen = hist.lastSeen[q.id];
+      let tier = seen === undefined ? 0 : (hist.lastOk[q.id] ? 2 : 1);
+      if (recent.has(q.id)) tier = 3;                 // just had it in this visit
+      return { q, tier, seen: seen || 0 };
+    })
+    .sort((a, b) => a.tier - b.tier || a.seen - b.seen) // stable after shuffle: random within ties
+    .map(x => x.q);
+}
+
+function pickQuestions() {
+  if (reviewMode) return shuffle(reviewList.slice());
+  const pool = questionPool.filter(q => selectedTypes.has(q.type));
+  const hist = questionHistory();
+  const byType = {};
+  pool.forEach(q => (byType[q.type] = byType[q.type] || []).push(q));
+  const types = Object.keys(byType);
+  const size = Math.min(QUIZ_SIZE, pool.length);
+
+  // Proportional quota per type (at least 1 each, where there's room)
+  const quota = {};
+  types.forEach(t => { quota[t] = Math.max(1, Math.floor(size * byType[t].length / pool.length)); });
+  let total = types.reduce((a, t) => a + quota[t], 0);
+  const bySize = types.slice().sort((a, b) => byType[b].length - byType[a].length);
+  for (let i = 0; total < size; i = (i + 1) % bySize.length) {
+    const t = bySize[i]; if (quota[t] < byType[t].length) { quota[t]++; total++; }
+  }
+  for (let i = bySize.length - 1; total > size; i = (i - 1 + bySize.length) % bySize.length) {
+    const t = bySize[i]; if (quota[t] > 1) { quota[t]--; total--; }
+  }
+
+  const picked = [];
+  types.forEach(t => picked.push(...rankQuestions(byType[t], hist).slice(0, quota[t])));
+  return shuffle(picked);
+}
+
+function beginQuestions() {
+  currentIdx = 0; score = 0; selectedMCQIdx = null; results = [];
+  questions = pickQuestions();
+  recentQuizIds.push(...questions.map(q => q.id));
+  document.getElementById('q-total').textContent = questions.length;
+  document.getElementById('stat-total').textContent = questions.length;
+  document.getElementById('xp-earned-wrap').style.display = 'none';
+  document.getElementById('new-badges-wrap').style.display = 'none';
+  quizStartTime = Date.now();
+  showScreen('question');
+  renderQuestion();
+}
+
+window._startQuiz = function() {
+  if (selectedTypes.size === 0) return;
+  try { localStorage.setItem(TYPES_KEY(), JSON.stringify([...selectedTypes])); } catch(e) {}
+  beginQuestions();
+};
+
+window._changeTypes = function() {
+  document.getElementById('progress-bar').style.width = '0%';
+  renderTypeList();
+  showScreen('setup');
+};
+
+/* ── Render current question ─────────────────────────────── */
+function renderQuestion() {
+  scoreAtStart = score;
+  const q = questions[currentIdx];
+  answered = false;
+
+  // Progress
+  const pct = Math.round((currentIdx / questions.length) * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('nav-progress').textContent = `${currentIdx + 1} / ${questions.length}`;
+  document.getElementById('q-num').textContent = currentIdx + 1;
+
+  // Type pill
+  const typeLabels = { mcq:'MCQ', tf:'True/False', fill:'Fill blank', match:'Match pairs', short:'Short written' };
+  const typePill = document.getElementById('q-type-pill');
+  typePill.textContent = typeLabels[q.type] || q.type;
+  typePill.className = 'q-type-pill q-type-' + q.type;
+
+  // Question text
+  const questionText = q.question || q.sentence || q.instruction || '';
+  document.getElementById('q-text').textContent = questionText;
+
+  // Image
+  const imgEl = document.getElementById('q-image');
+  if (q.imageUrl) { imgEl.src = q.imageUrl; imgEl.style.display = 'block'; }
+  else imgEl.style.display = 'none';
+
+  // Hide all inputs
+  document.querySelectorAll('.q-input').forEach(el => el.style.display = 'none');
+  document.getElementById('feedback-banner').classList.remove('visible','correct','wrong');
+  document.getElementById('btn-submit').style.display = 'inline-flex';
+  document.getElementById('btn-next').style.display = 'none';
+
+  // Reset AI marking
+  document.getElementById('ai-marking-wrap').classList.remove('visible');
+  document.getElementById('model-answer').style.display = 'none';
+  document.getElementById('ai-thinking').style.display = 'flex';
+  document.getElementById('ai-result').style.display = 'none';
+
+  // Render type-specific input
+  if (q.type === 'mcq')   renderMCQ(q);
+  if (q.type === 'tf')    renderTF(q);
+  if (q.type === 'fill')  renderFill(q);
+  if (q.type === 'match') renderMatch(q);
+  if (q.type === 'short') renderShort(q);
+
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderMCQ(q) {
+  document.getElementById('input-mcq').style.display = 'block';
+  const list = document.getElementById('mcq-options');
+  list.innerHTML = '';
+  const letters = ['A','B','C','D','E','F'];
+  // Shuffle the options every time, so the right answer isn't always in the
+  // same slot. "All/None of the above" style options stay at the end.
+  // q.options is replaced, so marking (which reads q.options) still lines up.
+  const isTail = o => /^(all|none|both|neither) of (the )?(above|these)|^(both|neither) [a-z]+ (and|nor) /i.test((o.text || '').trim());
+  const opts = q.options || [];
+  q.options = [...shuffle(opts.filter(o => !isTail(o))), ...opts.filter(isTail)];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.dataset.idx = i;
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span>${esc(opt.text)}</span>`;
+    btn.addEventListener('click', () => selectMCQ(btn, i));
+    list.appendChild(btn);
+  });
+}
+
+function renderTF(q) {
+  document.getElementById('input-tf').style.display = 'block';
+  document.querySelectorAll('.tf-btn').forEach(b => {
+    b.className = 'tf-btn ' + (b.dataset.val === 'true' ? 'true-btn' : 'false-btn');
+    b.disabled = false;
+  });
+}
+
+function renderFill(q) {
+  document.getElementById('input-fill').style.display = 'block';
+  // Show sentence with blank highlighted
+  const parts = (q.sentence || '').split('_____');
+  const display = document.getElementById('fill-sentence-display');
+  display.innerHTML = parts.map((p, i) =>
+    i < parts.length - 1 ? esc(p) + '<span class="fill-blank">_____</span>' : esc(p)
+  ).join('');
+  const inp = document.getElementById('fill-input');
+  inp.value = '';
+  inp.className = 'fill-input';
+  inp.disabled = false;
+  inp.focus();
+}
+
+function renderMatch(q) {
+  document.getElementById('input-match').style.display = 'block';
+  matchState = { selectedLeft: null, matched: 0, wrongMatches: 0, total: (q.pairs||[]).length, pairs: q.pairs, picks: {} };
+  const review = document.getElementById('match-review');
+  review.style.display = 'none'; review.innerHTML = '';
+  document.querySelector('#input-match .match-cols').style.display = '';
+
+  const leftEl  = document.getElementById('match-left');
+  const rightEl = document.getElementById('match-right');
+  leftEl.innerHTML = ''; rightEl.innerHTML = '';
+
+  // Shuffle right side
+  const rightItems = shuffle([...(q.pairs||[]).map((p,i) => ({ text: p.right, pairIdx: i }))]);
+
+  (q.pairs||[]).forEach((pair, i) => {
+    const lItem = document.createElement('div');
+    lItem.className = 'match-item';
+    lItem.dataset.pairIdx = i;
+    lItem.dataset.side = 'left';
+    lItem.textContent = pair.left;
+    lItem.addEventListener('click', () => handleMatchClick(lItem, 'left'));
+    leftEl.appendChild(lItem);
+  });
+
+  rightItems.forEach(item => {
+    const rItem = document.createElement('div');
+    rItem.className = 'match-item';
+    rItem.dataset.pairIdx = item.pairIdx;
+    rItem.dataset.side = 'right';
+    rItem.textContent = item.text;
+    rItem.addEventListener('click', () => handleMatchClick(rItem, 'right'));
+    rightEl.appendChild(rItem);
+  });
+
+  // Hide submit until all matched
+  document.getElementById('btn-submit').style.display = 'none';
+}
+
+function renderShort(q) {
+  document.getElementById('input-short').style.display = 'block';
+  const inp = document.getElementById('short-input');
+  inp.value = '';
+  inp.disabled = false;
+  inp.focus();
+}
+
+/* ── MCQ selection ───────────────────────────────────────── */
+let selectedMCQIdx = null;
+function selectMCQ(btn, idx) {
+  if (answered) return;
+  document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedMCQIdx = idx;
+}
+
+/* ── T/F ─────────────────────────────────────────────────── */
+window._submitTF = function(btn) {
+  if (answered) return;
+  const q = questions[currentIdx];
+  const userVal = btn.dataset.val === 'true';
+  const answer  = q.answer === true || String(q.answer).trim().toLowerCase() === 'true';
+  const correct = userVal === answer;
+  answered = true;
+
+  document.querySelectorAll('.tf-btn').forEach(b => b.disabled = true);
+  btn.classList.add('selected');
+
+  if (correct) {
+    btn.classList.add('correct');
+    score++;
+    showFeedback(true, q.explanation || '');
+  } else {
+    btn.classList.add('wrong');
+    // Highlight correct
+    document.querySelectorAll('.tf-btn').forEach(b => {
+      if ((b.dataset.val === 'true') === answer) b.classList.add('correct');
+    });
+    showFeedback(false, q.explanation || '', `The correct answer is ${answer ? 'True' : 'False'}.`);
+  }
+  showNextBtn();
+};
+
+/* ── Match pairs interaction ─────────────────────────────── */
+// Pairs can be changed freely until "Check answer" is pressed:
+// tap a left item, then a right item to pair them (re-pairing replaces the
+// old pair; taking a right item already used frees its old partner).
+// Tap a paired right item with nothing selected to undo that pair.
+// picks: { leftIdx: rightPairIdx }
+const sameText = (a, b) => String(a ?? '').trim().toLowerCase() === String(b ?? '').trim().toLowerCase();
+function matchItems(side) { return [...document.querySelectorAll(`#match-${side} .match-item`)]; }
+function drawMatchPairs() {
+  const picks = matchState.picks;
+  const leftOf = {};   // right pairIdx -> left idx
+  Object.entries(picks).forEach(([l, r]) => { leftOf[r] = +l; });
+  matchItems('left').forEach(el => {
+    const i = +el.dataset.pairIdx;
+    el.querySelector('.match-num')?.remove();
+    el.classList.toggle('paired', picks[i] !== undefined);
+    el.classList.toggle('selected', matchState.selectedLeft === el);
+    if (picks[i] !== undefined) el.insertAdjacentHTML('afterbegin', `<span class="match-num"><span>${i + 1}</span></span>`);
+  });
+  matchItems('right').forEach(el => {
+    const r = +el.dataset.pairIdx;
+    el.querySelector('.match-num')?.remove();
+    const l = leftOf[r];
+    el.classList.toggle('paired', l !== undefined);
+    if (l !== undefined) el.insertAdjacentHTML('afterbegin', `<span class="match-num"><span>${l + 1}</span></span>`);
+  });
+  const all = Object.keys(picks).length >= matchState.total;
+  document.getElementById('btn-submit').style.display = all ? 'inline-flex' : 'none';
+}
+function handleMatchClick(item, side) {
+  if (answered) return;
+  const picks = matchState.picks;
+  if (side === 'left') {
+    // Tap the selected item again to deselect it
+    matchState.selectedLeft = matchState.selectedLeft === item ? null : item;
+  } else {
+    const r = +item.dataset.pairIdx;
+    const owner = Object.keys(picks).find(l => picks[l] === r);
+    if (!matchState.selectedLeft) {
+      // Nothing selected: tapping a paired right item undoes that pair
+      if (owner !== undefined) delete picks[owner];
+    } else {
+      const l = +matchState.selectedLeft.dataset.pairIdx;
+      if (owner !== undefined) delete picks[owner];
+      picks[l] = r;
+      matchState.selectedLeft = null;
+    }
+  }
+  drawMatchPairs();
+}
+function submitMatch() {
+  const picks = matchState.picks, pairs = matchState.pairs || [];
+  if (Object.keys(picks).length < matchState.total) { showToast('Match every item first', 'error'); return; }
+  answered = true;
+  matchState.selectedLeft = null;
+  let right = 0;
+  matchItems('left').forEach(el => {
+    const i = +el.dataset.pairIdx;
+    const ok = picks[i] === i || sameText(pairs[i]?.right, pairs[picks[i]]?.right);
+    if (ok) right++;
+    el.classList.remove('paired', 'selected');
+    el.classList.add(ok ? 'matched-correct' : 'matched-wrong');
+    const rEl = matchItems('right').find(x => +x.dataset.pairIdx === picks[i]);
+    if (rEl) { rEl.classList.remove('paired'); rEl.classList.add(ok ? 'matched-correct' : 'matched-wrong'); }
+  });
+  matchItems('left').concat(matchItems('right')).forEach(el => { el.style.pointerEvents = 'none'; });
+  matchState.matched = right;
+  document.getElementById('btn-submit').style.display = 'none';
+  const allCorrect = right === matchState.total;
+  if (allCorrect) score++;
+  else showMatchReview();
+  const summary = allCorrect
+    ? 'All pairs matched correctly!'
+    : `You got ${right} of ${matchState.total} pairs right. The correct pairs are shown above.`;
+  showFeedback(allCorrect, [summary, questions[currentIdx]?.explanation].filter(Boolean).join(' '));
+  showNextBtn();
+}
+
+// Replace the two columns with a clear list of the correct pairs
+function showMatchReview() {
+  const pairs = matchState.pairs || [];
+  const review = document.getElementById('match-review');
+  review.innerHTML = `<div class="match-review-title">Correct pairs</div>` + pairs.map((p, i) => {
+    const pick = matchState.picks[i];
+    const right = pick === i || (pick !== undefined && sameText(pairs[pick]?.right, p.right));
+    const yours = pick !== undefined && !right ? pairs[pick]?.right : '';
+    return `<div class="mr-row${right ? '' : ' wrong'}">
+      <div class="mr-icon">${right ? '<i data-icon="circle-check"></i>' : '<i data-icon="circle-x"></i>'}</div>
+      <div class="mr-term">${esc(p.left)}</div>
+      <div class="mr-answer">${esc(p.right)}</div>
+      ${yours ? `<div class="mr-yours"><span class="mr-yours-label">You picked:</span> ${esc(yours)}</div>` : ''}
+    </div>`;
+  }).join('');
+  document.querySelector('#input-match .match-cols').style.display = 'none';
+  review.style.display = 'flex';
+}
+
+/* ── Submit answer ───────────────────────────────────────── */
+window._submitAnswer = function() {
+  const q = questions[currentIdx];
+  if (answered) return;
+
+  if (q.type === 'mcq') {
+    if (selectedMCQIdx === null) { showToast('Select an answer first', 'error'); return; }
+    const opts = q.options || [];
+    const correct = opts[selectedMCQIdx]?.correct === true;
+    answered = true;
+
+    document.querySelectorAll('.option-btn').forEach((btn, i) => {
+      btn.disabled = true;
+      if (opts[i]?.correct) btn.classList.add('correct');
+      else if (i === selectedMCQIdx) btn.classList.add('wrong');
+    });
+
+    const correctOpt = opts.find(o => o.correct);
+    if (correct) { score++; showFeedback(true, q.explanation || ''); }
+    else showFeedback(false, q.explanation || '', `Correct answer: ${correctOpt?.text || ''}`);
+    showNextBtn();
+  }
+
+  else if (q.type === 'fill') {
+    const inp = document.getElementById('fill-input');
+    const userAns = inp.value.trim().toLowerCase();
+    if (!userAns) { showToast('Type your answer first', 'error'); return; }
+
+    const correctAns = (q.answer || '').toLowerCase();
+    const alts = (q.alternatives || []).map(a => a.toLowerCase());
+    const correct = userAns === correctAns || alts.includes(userAns);
+    answered = true;
+    inp.disabled = true;
+    inp.classList.add(correct ? 'correct' : 'wrong');
+
+    if (correct) { score++; showFeedback(true, q.explanation || ''); }
+    else showFeedback(false, q.explanation || '', `Correct answer: ${q.answer}`);
+    showNextBtn();
+  }
+
+  else if (q.type === 'short') {
+    const inp = document.getElementById('short-input');
+    const userAns = inp.value.trim();
+    if (!userAns) { showToast('Write your answer first', 'error'); return; }
+    inp.disabled = true;
+    answered = true;
+    document.getElementById('btn-submit').style.display = 'none';
+    markShortWritten(q, userAns);
+  }
+
+  else if (q.type === 'match') submitMatch();
+};
+
+/* ── AI marking for short written ───────────────────────── */
+async function markShortWritten(q, userAnswer) {
+  const wrap = document.getElementById('ai-marking-wrap');
+  wrap.classList.add('visible');
+  document.getElementById('ai-thinking').style.display = 'flex';
+  document.getElementById('ai-result').style.display = 'none';
+
+  const prompt = `You are marking a GCSE student's short answer question.
+
+Question: ${q.question}
+Mark scheme / model answer: ${q.markScheme}
+Student's answer: ${userAnswer}
+
+Score the student's answer out of 5 marks. Be fair but rigorous.
+
+Respond ONLY with a JSON object in this exact format (no markdown, no backticks):
+{"score":3,"outOf":5,"feedback":"Specific feedback in 2-3 sentences. What they got right. What was missing or could be improved."}`;
+
+  try {
+    // Model chosen in Admin → Settings (falls back automatically if it fails)
+    const result = jsonOf(await askClaude('marking', prompt, 300));
+
+    document.getElementById('ai-thinking').style.display = 'none';
+    document.getElementById('ai-result').style.display = 'block';
+    document.getElementById('ai-score-badge').textContent = `${result.score}/${result.outOf}`;
+    document.getElementById('ai-score-label').textContent = `marks`;
+    document.getElementById('ai-feedback').textContent = result.feedback;
+
+    // Count as correct if ≥ 60%
+    if (result.score / result.outOf >= 0.6) score++;
+    showModelAnswer(q);
+  } catch(e) {
+    document.getElementById('ai-thinking').style.display = 'none';
+    document.getElementById('ai-result').style.display = 'block';
+    document.getElementById('ai-score-badge').textContent = '?/5';
+    document.getElementById('ai-feedback').textContent = 'Could not mark automatically. Check with your teacher.';
+    showModelAnswer(q);
+  }
+  showNextBtn();
+}
+
+function showModelAnswer(q) {
+  const el = document.getElementById('model-answer');
+  const model = q.markScheme || q.modelAnswer || '';
+  if (!model) { el.style.display = 'none'; return; }
+  el.innerHTML = `<strong>What a full answer includes:</strong><br>${esc(model)}`;
+  el.style.display = 'block';
+}
+
+/* ── Feedback helpers ────────────────────────────────────── */
+function showFeedback(correct, explanation, correctAnswer) {
+  const banner = document.getElementById('feedback-banner');
+  banner.classList.add('visible', correct ? 'correct' : 'wrong');
+
+  const resultEl = document.getElementById('feedback-result');
+  resultEl.innerHTML = correct ? '<i data-icon="circle-check"></i> Correct!' : '<i data-icon="circle-x"></i> Not quite';
+  resultEl.className = 'feedback-result ' + (correct ? 'correct' : 'wrong');
+
+  document.getElementById('feedback-explanation').textContent = explanation || '';
+  const caEl = document.getElementById('feedback-correct-answer');
+  caEl.innerHTML = correctAnswer ? `<strong>Answer:</strong> ${esc(correctAnswer)}` : '';
+}
+
+function showNextBtn() {
+  document.getElementById('btn-submit').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'inline-flex';
+  document.getElementById('btn-next').textContent =
+    currentIdx < questions.length - 1 ? 'Next →' : 'See results';
+}
+
+/* ── Next question ───────────────────────────────────────── */
+window._nextQuestion = function() {
+  results[currentIdx] = score > scoreAtStart;
+  currentIdx++;
+  selectedMCQIdx = null;
+  if (currentIdx >= questions.length) {
+    showResults();
+  } else {
+    renderQuestion();
+    document.getElementById('screen-question').classList.remove('active');
+    void document.getElementById('screen-question').offsetWidth;
+    document.getElementById('screen-question').classList.add('active');
+  }
+};
+
+/* ── Results ─────────────────────────────────────────────── */
+async function showResults() {
+  showScreen('results');
+  const total = questions.length;
+  const pct   = Math.round((score / total) * 100);
+
+  document.getElementById('progress-bar').style.width = '100%';
+  document.getElementById('score-ring').style.setProperty('--pct', pct);
+  document.getElementById('score-pct').textContent = pct + '%';
+  document.getElementById('stat-correct').textContent = score;
+  document.getElementById('stat-wrong').textContent = total - score;
+  document.getElementById('stat-total').textContent = total;
+
+  const resultTitle = pct >= 80 ? 'Excellent work!' : pct >= 60 ? 'Good effort!' : pct >= 40 ? 'Keep practising' : 'Don\'t give up!';
+  document.getElementById('results-title').textContent = resultTitle;
+  document.getElementById('results-sub').textContent =
+    `You scored ${score} out of ${total} on ${reviewMode ? 'today\'s review' : (topicName || subjectName)}`;
+  document.getElementById('results-icon').innerHTML = `<i data-icon="${pct >= 80 ? 'party-popper' : pct >= 60 ? 'thumbs-up' : pct >= 40 ? 'book-open' : 'dumbbell'}"></i>`;
+  document.getElementById('results-icon').dataset.band = pct >= 80 ? 'great' : pct >= 60 ? 'good' : 'low';
+
+  // Preview: show the result but save nothing
+  if (isPreview()) {
+    const wrap = document.getElementById('xp-earned-wrap');
+    wrap.style.display = 'block';
+    document.getElementById('xp-earned-text').textContent = 'Preview: this quiz was not saved to their record';
+    document.getElementById('xp-progress-bar').parentElement.style.display = 'none';
+    document.getElementById('xp-level-label').textContent = '';
+    document.getElementById('xp-next-label').textContent = '';
+  }
+  // Save session + award XP (students only)
+  else if (currentUser && isStudent(currentProfile)) {
+    const secondsSpent = Math.round((Date.now() - (quizStartTime || Date.now())) / 1000);
+    const minutesSpent = Math.round(secondsSpent / 60);
+    const session = {
+      date: Date.now(),
+      subject: reviewMode ? reviewSubject : subjectName,
+      topic: reviewMode ? 'Review today' : (topicName || subjectName),
+      score, total, pct,
+      minutesSpent,
+      secondsSpent,
+      types: [...new Set(questions.map(q => q.type))],
+      qs: questions.map((q, i) => ({ id: q.id, ok: !!results[i] })),
+      groupId: groupId || null,
+      subjectId: subjectId || null,
+      topicId: topicId || null,
+    };
+    if (reviewMode) session.review = true;   // (Firestore won't store 'undefined')
+    try {
+      // Save session
+      await updateDoc(doc(db, 'users', currentUser.uid), {
+        sessions: arrayUnion(session)
+      });
+      currentProfile.sessions = [...(currentProfile.sessions || []), session];
+      logEvent(reviewMode ? 'study.review' : 'study.quiz', { target: reviewMode ? 'Review today' : [subjectName, topicName].filter(Boolean).join(' › '), detail: `${score}/${total} (${pct}%) · ${Math.round(secondsSpent / 60)} min` });
+      // Mirror to parent
+      if (currentProfile.parentUid) {
+        await updateDoc(
+          doc(db, 'users', currentProfile.parentUid, 'children', currentUser.uid),
+          { sessions: arrayUnion(session) }
+        ).catch(() => {});
+      }
+      // Schedule each question for review (and any answered before this
+      // feature existed, from the student's history)
+      try {
+        const hist = questionHistory();
+        const seed = reviewMode ? [] : questionPool
+          .filter(q => hist.lastSeen[q.id] !== undefined)
+          .map(q => ({ id: q.id, ok: hist.lastOk[q.id], when: hist.lastSeen[q.id], loc: q.loc }));
+        await recordAnswers(currentUser.uid, currentProfile,
+          questions.map((q, i) => ({ id: q.id, ok: !!results[i], loc: q.loc })), seed);
+      } catch (e) { console.warn('Review schedule not saved:', e.message); }
+      // Award XP
+      const result = await awardXp(currentUser.uid, 'quiz', { pct });
+      if (result) showXpEarned(result, minutesSpent);
+    } catch(e) {
+      console.warn('Session/XP save failed:', e.message);
+    }
+  }
+}
+
+function showXpEarned(result, minutes) {
+  const wrap = document.getElementById('xp-earned-wrap');
+  wrap.style.display = 'block';
+
+  // XP text
+  let xpText = `+${result.xpGained} XP earned`;
+  if (result.streakBonus > 0) xpText += ` (includes +${result.streakBonus} streak bonus)`;
+  if (result.levelledUp) xpText = `Level up! You're now ${result.newLevel.icon} ${result.newLevel.name}! ` + xpText;
+  document.getElementById('xp-earned-text').textContent = xpText;
+
+  // Progress bar
+  const { progress, xpIntoLevel, xpNeeded, current, next } = getLevelInfo(result.newXp);
+  setTimeout(() => {
+    document.getElementById('xp-progress-bar').style.width = progress + '%';
+  }, 100);
+  document.getElementById('xp-level-label').textContent = `${current.icon} ${current.name}`;
+  document.getElementById('xp-next-label').textContent = next ? `${result.newXp}/${next.xpRequired} XP` : 'Max level!';
+
+  // New badges
+  if (result.newlyEarned.length) {
+    const badgesWrap = document.getElementById('new-badges-wrap');
+    badgesWrap.style.display = 'block';
+    const list = document.getElementById('new-badges-list');
+    list.innerHTML = result.newlyEarned.map(id => {
+      const badge = BADGES.find(b => b.id === id);
+      if (!badge) return '';
+      return `<div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-card);padding:8px 14px;text-align:center;min-width:90px;">
+        <div style="font-size:1.5rem;">${badge.icon}</div>
+        <div style="font-family:var(--font-ui);font-size:0.75rem;font-weight:700;color:var(--color-text);margin-top:2px;">${badge.name}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+window._restartQuiz = function() {
+  if (reviewMode) { loadReview(); return; }   // whatever is still due
+  beginQuestions(); // fresh set of questions, same types
+};
+
+/* ── Screens ─────────────────────────────────────────────── */
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+/* ── Utils ───────────────────────────────────────────────── */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+<script>
+window.showToast = function(msg, type='info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`; t.textContent = msg;
+  c.appendChild(t); setTimeout(() => t.remove(), 3500);
+};
+</script>
+</body>
+</html>

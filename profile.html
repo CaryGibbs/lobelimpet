@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lobe Limpet — My Profile</title>
+  <link rel="icon" type="image/svg+xml" href="assets/images/brand/favicon.svg?v=20261113d">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brand/favicon-32.png?v=20261113d">
+  <link rel="apple-touch-icon" href="assets/images/brand/apple-touch-icon.png?v=20261113d">
+  <link rel="manifest" href="manifest.webmanifest?v=20261113d">
+  <meta name="apple-mobile-web-app-title" content="Lobe Limpet">
+  <meta name="application-name" content="Lobe Limpet">
+  <link rel="stylesheet" href="theme.css?v=20261113d">
+  <script src="icons.js?v=20261113d"></script>
+  <link rel="stylesheet" href="stats.css?v=20261113d">
+  <style>
+    body { min-height: 100vh; background: var(--color-bg); }
+
+    /* ── Nav ─────────────────────────────────────────────── */
+    .topnav {
+      background: var(--color-surface); border-bottom: 1px solid var(--color-border);
+      padding: 0 var(--space-xl); height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-back {
+      display: flex; align-items: center; gap: 8px;
+      font-family: var(--font-ui); font-size: 0.9rem; font-weight: 600;
+      color: var(--color-text-muted); text-decoration: none;
+      transition: color var(--transition-fast);
+    }
+    .nav-back:hover { color: var(--color-primary); }
+    .nav-title { font-family: var(--font-heading); font-size: 1rem; font-weight: 700; }
+
+    /* ── Layout ──────────────────────────────────────────── */
+    .page { max-width: 760px; margin: 0 auto; padding: var(--space-xl) var(--space-lg); }
+
+    /* ── Hero ────────────────────────────────────────────── */
+    .profile-hero {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-card); padding: var(--space-xl);
+      display: flex; align-items: center; gap: var(--space-xl);
+      margin-bottom: var(--space-xl); animation: fadeIn 0.4s ease both;
+    }
+    .profile-avatar {
+      width: 80px; height: 80px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 800; position: relative;
+    }
+    .profile-avatar-level {
+      position: absolute; bottom: -4px; right: -4px;
+      background: var(--color-primary); color: var(--color-on-primary);
+      border-radius: var(--radius-pill); padding: 2px 7px;
+      font-family: var(--font-ui); font-size: 0.68rem; font-weight: 800;
+      border: 2px solid var(--color-bg);
+    }
+    .profile-info { flex: 1; }
+    .profile-name { font-family: var(--font-heading); font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
+    .profile-level-row {
+      display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-md);
+    }
+    .profile-level-badge {
+      font-size: 1.1rem;
+    }
+    .profile-level-name {
+      font-family: var(--font-ui); font-size: 0.9rem; font-weight: 600; color: var(--color-text-muted);
+    }
+    .xp-bar-track {
+      background: var(--color-surface-2); border-radius: var(--radius-pill);
+      height: 10px; overflow: hidden; margin-bottom: 6px;
+    }
+    .xp-bar-fill {
+      height: 100%; background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+      border-radius: var(--radius-pill); transition: width 1.2s ease;
+    }
+    .xp-bar-label {
+      display: flex; justify-content: space-between;
+      font-family: var(--font-ui); font-size: 0.75rem; color: var(--color-text-muted);
+    }
+
+    /* ── Stats grid ──────────────────────────────────────── */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+    .stat-card {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-card); padding: var(--space-md);
+      text-align: center; animation: fadeIn 0.4s ease both;
+    }
+    .stat-val {
+      font-family: var(--font-heading); font-size: 1.8rem; font-weight: 800;
+      color: var(--color-primary); margin-bottom: 4px;
+    }
+    .stat-label {
+      font-family: var(--font-ui); font-size: 0.72rem; color: var(--color-text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+
+    /* ── Section ─────────────────────────────────────────── */
+    .section { margin-bottom: var(--space-xl); }
+    .section-title {
+      font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700;
+      margin-bottom: var(--space-md); display: flex; align-items: center; gap: var(--space-sm);
+    }
+
+    /* ── Level ladder ────────────────────────────────────── */
+    .level-ladder { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .level-row {
+      display: flex; align-items: center; gap: var(--space-md);
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-button); padding: var(--space-sm) var(--space-md);
+      transition: all var(--transition-fast);
+    }
+    .level-row.current { border-color: var(--color-primary); background: var(--color-primary-glow); }
+    .level-row.achieved { opacity: 0.6; }
+    .level-row-icon { font-size: 1.3rem; width: 32px; text-align: center; }
+    .level-row-info { flex: 1; }
+    .level-row-name { font-family: var(--font-ui); font-size: 0.88rem; font-weight: 700; color: var(--color-text); }
+    .level-row-xp { font-size: 0.75rem; color: var(--color-text-muted); }
+    .level-row-badge {
+      font-family: var(--font-ui); font-size: 0.72rem; font-weight: 700;
+      padding: 2px 8px; border-radius: var(--radius-pill);
+    }
+    .level-row-badge.current { background: var(--color-primary); color: var(--color-on-primary); }
+    .level-row-badge.achieved { background: var(--color-success); color: #fff; }
+
+    /* ── Sessions ────────────────────────────────────────── */
+    .sessions-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .session-row {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-button); padding: 10px var(--space-md);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .session-topic { font-family: var(--font-ui); font-size: 0.88rem; font-weight: 600; }
+    .session-meta { font-size: 0.78rem; color: var(--color-text-muted); margin-top: 2px; }
+    .session-score { font-family: var(--font-heading); font-size: 1rem; font-weight: 700; }
+    .score-good { color: var(--color-success); }
+    .score-mid  { color: var(--color-warning); }
+    .score-low  { color: var(--color-danger); }
+
+    .empty-state { text-align: center; padding: var(--space-xl); color: var(--color-text-muted); font-size: 0.9rem; }
+
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .profile-hero { flex-direction: column; text-align: center; gap: var(--space-lg); }
+      .topnav { padding: 0 var(--space-md); }
+      .page { padding: var(--space-lg) var(--space-md); }
+    }
+      .card-length-help { color: var(--color-text-muted); font-size: 0.88rem; margin-bottom: var(--space-md); }
+    .card-length-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+    .card-length-opt { display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 12px 14px; border-radius: var(--radius-card);
+      border: 2px solid var(--color-border); background: var(--color-surface); color: var(--color-text); cursor: pointer; font-family: var(--font-ui); }
+    .card-length-opt span { font-size: 0.78rem; color: var(--color-text-muted); }
+    .card-length-opt.on { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-glow); }
+</style>
+  <link rel="stylesheet" href="ui.css?v=20261113d">
+</head>
+<body>
+<div id="toast-container"></div>
+
+<nav class="topnav">
+  <a href="hub.html" class="nav-back">← Hub</a>
+  <div class="nav-title">My Profile</div>
+  <div style="display:flex;align-items:center;gap:6px;"><a class="help-btn help-compact" href="help.html#progress" aria-label="Help" title="Help"><i data-icon="circle-help"></i><span>Help</span></a><div id="plus-link" style="min-width:60px;text-align:right;"></div></div>
+</nav>
+
+<div class="page page-fade" id="page-content" style="display:none;">
+
+  <!-- Hero -->
+  <div class="profile-hero">
+    <div class="profile-avatar" id="profile-avatar">
+      <span id="avatar-initials">?</span>
+      <div class="profile-avatar-level" id="avatar-level">1</div>
+    </div>
+    <div class="profile-info">
+      <div class="profile-name" id="profile-name">Loading…</div>
+      <div class="profile-level-row">
+        <span class="profile-level-badge" id="profile-level-badge">🌱</span>
+        <span class="profile-level-name" id="profile-level-name">Beginner</span>
+      </div>
+      <div class="xp-bar-track">
+        <div class="xp-bar-fill" id="xp-bar-fill" style="width:0%"></div>
+      </div>
+      <div class="xp-bar-label">
+        <span id="xp-bar-left">0 XP</span>
+        <span id="xp-bar-right"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-val" id="stat-xp">0</div><div class="stat-label">Total XP</div></div>
+    <div class="stat-card"><div class="stat-val" id="stat-quizzes">0</div><div class="stat-label">Quizzes</div></div>
+    <div class="stat-card"><div class="stat-val" id="stat-avg">—</div><div class="stat-label">Avg score · all time</div></div>
+    <div class="stat-card"><div class="stat-val" id="stat-streak">0 <i data-icon="flame"></i></div><div class="stat-label" id="stat-streak-label">Streak</div></div>
+  </div>
+
+  <!-- Goals, time, subjects, badges (shared with the hub) -->
+  <div id="stats-root"></div>
+
+  <!-- Appearance -->
+  <div class="section" id="appearance">
+    <div class="section-title"><i data-icon="palette"></i> Choose your theme</div>
+    <div class="theme-grid" id="theme-grid"></div>
+  </div>
+
+  <!-- Flashcard answers -->
+  <div class="section" id="card-length-section">
+    <div class="section-title"><i data-icon="layers"></i> Flashcard answers</div>
+    <p class="card-length-help">How much of each answer your flashcards show. Shorter answers are easier to remember.</p>
+    <div class="card-length-options" id="card-length-options"></div>
+  </div>
+
+  <!-- Level ladder -->
+  <div class="section">
+    <div class="section-title"><i data-icon="trophy"></i> Levels</div>
+    <div class="level-ladder" id="level-ladder"></div>
+  </div>
+
+  <!-- Recent sessions -->
+  <div class="section">
+    <div class="section-title"><i data-icon="clipboard-list"></i> Recent quizzes</div>
+    <div class="sessions-list" id="sessions-list"></div>
+  </div>
+
+  <!-- My revision packs: where each came from; ones I chose can be removed -->
+  <div class="section" id="packs-section" hidden>
+    <div class="section-title"><i data-icon="library"></i> Your revision packs</div>
+    <div id="packs-list"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center;">
+      <button class="btn btn-secondary" id="btn-add-pack"><i data-icon="plus"></i> Add a Lobe Limpet pack</button>
+      <button class="btn btn-ghost" id="btn-first-week" style="font-size:0.85rem;" hidden>Show "Your first week" again</button>
+    </div>
+  </div>
+
+  <!-- Parents and teachers who can see my progress -->
+  <div class="section" id="people-section" hidden>
+    <div class="section-title"><i data-icon="users"></i> Who can see your progress</div>
+    <div id="people-list"></div>
+  </div>
+
+  <!-- Delete account (not shown while an adult is previewing) -->
+  <div class="section" id="delete-section">
+    <div class="section-title"><i data-icon="trash-2"></i> Your account</div>
+    <p class="card-length-help">You can delete your account and everything in it at any time. This can't be undone.</p>
+    <button class="btn btn-danger" id="btn-delete-account">Delete my account</button>
+  </div>
+
+</div>
+
+<!-- Loading -->
+<div id="loading-wrap" style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 64px);flex-direction:column;gap:var(--space-md);">
+  <div class="spinner" style="width:48px;height:48px;"></div>
+  <p style="color:var(--color-text-muted);font-family:var(--font-ui);">Loading your profile…</p>
+</div>
+
+<script type="module">
+import { auth, db } from './firebase-config.js?v=20261113d';
+import { requireAuth, handleSignOut, isPreview, isStudent } from './auth.js?v=20261113d';
+import { getLevelInfo, LEVELS, BADGES, currentStreak, streakStatus } from './gamification.js?v=20261113d';
+import { statsSectionsHtml, renderStats } from './stats.js?v=20261113d';
+import { THEMES, themeSwatchHtml, THEME_SWATCH_CSS, themeColour } from './themes.js?v=20261113d';
+import { LENGTHS, lengthOf } from './card-length.js?v=20261113d';
+import { openDeleteAccount } from './account.js?v=20261113d';
+import { plusPillHtml } from './plus.js?v=20261113d';
+import { linksForStudent, removeLinkedParent } from './parent-link.js?v=20261113d';
+import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { packNames, flatPackIds } from './packs.js?v=20261113d';
+import { openChoosePacks, removeChosenPack, packSource, SOURCE_TEXT } from './student-start.js?v=20261113d';
+import { firstStepsState, saveFirstSteps } from './first-steps.js?v=20261113d';
+
+async function showPacks(user, profile) {
+  if (!isStudent(profile)) return;
+  const sec = document.getElementById('packs-section');
+  sec.hidden = false;
+  const ids = flatPackIds(profile).filter(id => id !== profile.myPackId);
+  const names = await packNames(ids).catch(() => ({}));
+  const esc = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const box = document.getElementById('packs-list');
+  box.innerHTML = ids.length ? ids.map(id => {
+    const src = packSource(profile, id);
+    return `<div class="person-row" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--color-border);">
+      <div style="flex:1;"><strong>${esc(names[id] || 'A revision pack')}</strong><div style="font-size:0.82rem;color:var(--color-text-muted);">${esc(SOURCE_TEXT[src] || '')}</div></div>
+      ${src === 'self' && !isPreview() ? `<button class="btn btn-ghost" style="padding:6px 12px;font-size:0.8rem;" data-rm-pack="${esc(id)}">Remove</button>` : ''}</div>`;
+  }).join('') + `<p class="card-length-help" style="margin-top:10px;">Packs from a parent or class can only be changed by them.</p>`
+    : `<p class="card-length-help">No packs yet. Add a Lobe Limpet pack for your subjects, or join a class from your hub.</p>`;
+  box.querySelectorAll('[data-rm-pack]').forEach(b => b.onclick = async () => {
+    if (!confirm(`Remove "${names[b.dataset.rmPack] || 'this pack'}"? Your scores so far are kept.`)) return;
+    b.disabled = true;
+    try { await removeChosenPack(user.uid, profile, b.dataset.rmPack); showPacks(user, profile); }
+    catch (e) { b.disabled = false; alert('Could not remove: ' + e.message); }
+  });
+  const add = document.getElementById('btn-add-pack');
+  add.hidden = isPreview();
+  add.onclick = () => openChoosePacks({ uid: user.uid, profile, toast: (m, t) => window.showToast && window.showToast(m, t), onDone: () => showPacks(user, profile) });
+  const fw = document.getElementById('btn-first-week');
+  fw.hidden = isPreview() || !firstStepsState(profile).hidden;
+  fw.onclick = async () => { await saveFirstSteps(user.uid, profile, { hidden: false }); location.href = 'hub.html'; };
+}
+
+document.head.insertAdjacentHTML('beforeend', `<style>${THEME_SWATCH_CSS}</style>`);
+
+// Flashcard answer length: Full / Short / Key words
+function renderCardLength(user, profile) {
+  const box = document.getElementById('card-length-options');
+  if (!box) return;
+  let current = lengthOf(profile);
+  const draw = () => {
+    box.innerHTML = LENGTHS.map(l => `<button type="button" class="card-length-opt${l.id === current ? ' on' : ''}" data-len="${l.id}" aria-pressed="${l.id === current}">
+      <strong>${l.label}</strong><span>${l.desc}</span></button>`).join('');
+    box.querySelectorAll('[data-len]').forEach(b => b.onclick = async () => {
+      current = b.dataset.len; draw();
+      try { localStorage.setItem('bonce_cardLength', current); } catch (e) {}
+      if (isPreview()) return;
+      try {
+        await updateDoc(doc(db, 'users', user.uid), { cardLength: current });
+        window.showToast && window.showToast('Flashcard answers saved', 'success');
+      } catch (e) { window.showToast && window.showToast('Could not save. Try again.', 'error'); }
+    });
+  };
+  draw();
+}
+
+// Let the student pick their own theme; it applies straight away and is saved
+function renderThemePicker(user, profile) {
+  const grid = document.getElementById('theme-grid');
+  let current = profile.theme || 'edge';
+  grid.innerHTML = THEMES.map(t => themeSwatchHtml(t, t.id === current)).join('');
+  grid.querySelectorAll('[data-theme-id]').forEach(btn => btn.onclick = async () => {
+    const id = btn.dataset.themeId;
+    if (id === current) return;
+    current = id;
+    document.body.setAttribute('data-theme', id);
+    grid.querySelectorAll('.theme-swatch').forEach(b => { b.classList.toggle('selected', b === btn); b.setAttribute('aria-pressed', b === btn); });
+    const av = document.getElementById('profile-avatar');
+    if (av) { const c = themeColour(id); av.style.background = c + '22'; av.style.color = c; }
+    if (isPreview()) return; // previewing adult: try it, but don't save
+    try {
+      await updateDoc(doc(db, 'users', user.uid), { theme: id });
+      if (profile.parentUid) await updateDoc(doc(db, 'users', profile.parentUid, 'children', user.uid), { theme: id }).catch(() => {});
+      window.showToast && window.showToast('Theme saved', 'success');
+    } catch (e) { window.showToast && window.showToast('Could not save your theme. Try again.', 'error'); }
+  });
+}
+
+// Parents and teachers linked to this account. Parents who linked by a
+// request the student accepted can be removed here; others are shown only.
+async function showPeople(user, profile) {
+  const esc = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const ids = [...new Set([profile.parentUid, ...(profile.guardianIds || [])].filter(Boolean))];
+  const tids = [...new Set(profile.teacherIds || [])];
+  if (!ids.length && !tids.length) return;
+  const links = (await linksForStudent(user.uid).catch(() => [])).filter(l => l.status === 'accepted');
+  const nameOf = async id => (await getDoc(doc(db, 'users', id)).catch(() => null))?.data() || {};
+  const rows = await Promise.all([
+    ...ids.map(async id => ({ id, kind: 'Parent', p: await nameOf(id), link: links.find(l => l.by === id && id !== profile.parentUid) })),
+    ...tids.map(async id => ({ id, kind: 'Teacher', p: await nameOf(id) })),
+  ]);
+  document.getElementById('people-section').hidden = false;
+  const box = document.getElementById('people-list');
+  box.innerHTML = rows.map(r => `<div class="person-row" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--color-border);">
+      <div style="flex:1;"><strong>${esc(r.p.name || r.p.email || 'Someone')}</strong><div style="font-size:0.82rem;color:var(--color-text-muted);">${r.kind}${r.p.email ? ' · ' + esc(r.p.email) : ''}</div></div>
+      ${r.link ? `<button class="btn btn-ghost" style="padding:6px 12px;font-size:0.8rem;" data-unlink="${esc(r.link.id)}">Remove</button>` : ''}
+    </div>`).join('') + `<p class="card-length-help" style="margin-top:10px;">Teachers come from the classes you've joined. A parent who set up your account can't be removed here.</p>`;
+  box.querySelectorAll('[data-unlink]').forEach(b => b.onclick = async () => {
+    const link = links.find(l => l.id === b.dataset.unlink);
+    if (!link || !confirm(`Remove ${link.byName || 'this parent'}? They'll no longer see your progress.`)) return;
+    b.disabled = true;
+    try { await removeLinkedParent(user.uid, link); b.closest('.person-row').remove(); }
+    catch (e) { b.disabled = false; alert('Could not remove: ' + e.message); }
+  });
+}
+
+requireAuth(async (user, profile) => {
+  if (!isPreview()) document.getElementById('plus-link').innerHTML = plusPillHtml(profile);
+  if (!isStudent(profile)) { location.href = 'hub.html'; return; }
+  if (isPreview()) document.getElementById('delete-section').hidden = true;
+  else document.getElementById('btn-delete-account').onclick = () => openDeleteAccount({ uid: user.uid, name: profile.name || '', self: true });
+  if (!isPreview()) showPeople(user, profile);
+  showPacks(user, profile);
+
+  // Apply theme
+  if (profile.theme) document.body.setAttribute('data-theme', profile.theme);
+
+  const xp      = profile.xp || 0;
+  const streak  = currentStreak(profile);
+  const sessions = (profile.sessions || []).slice().reverse();
+  const badges  = profile.badges || [];
+  const { current, next, progress, xpIntoLevel, xpNeeded } = getLevelInfo(xp);
+
+  // Avatar
+  const initials = (profile.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  const avatarBg = themeColour(profile.theme);
+  const avatarEl = document.getElementById('profile-avatar');
+  avatarEl.style.background = avatarBg + '22';
+  avatarEl.style.color = avatarBg;
+  document.getElementById('avatar-initials').textContent = initials;
+  document.getElementById('avatar-level').textContent = current.level;
+
+  // Hero info
+  document.getElementById('profile-name').textContent = profile.name || 'Student';
+  document.getElementById('profile-level-badge').textContent = current.icon;
+  document.getElementById('profile-level-name').textContent = current.name;
+  setTimeout(() => { document.getElementById('xp-bar-fill').style.width = progress + '%'; }, 200);
+  document.getElementById('xp-bar-left').textContent = next
+    ? `${xpIntoLevel} / ${xpNeeded} XP to ${next.name}`
+    : 'Maximum level reached!';
+  document.getElementById('xp-bar-right').textContent = next ? `${next.icon} ${next.name}` : '';
+
+  // Stats
+  const quizCount = sessions.length;
+  const avgScore  = quizCount ? Math.round(sessions.reduce((a,s)=>a+(s.pct||0),0)/quizCount) : null;
+  document.getElementById('stat-xp').textContent      = xp;
+  document.getElementById('stat-quizzes').textContent = quizCount;
+  document.getElementById('stat-avg').textContent     = avgScore !== null ? avgScore+'%' : '—';
+  document.getElementById('stat-streak').innerHTML  = streak + ' <i data-icon="flame"></i>';
+  const st = streakStatus(profile);
+  document.getElementById('stat-streak-label').textContent = st.lapsed ? `Streak · best ${st.best}, start again today`
+    : (st.current >= 2 && st.current >= st.best ? 'Streak · 🏆 personal best!' : st.best ? `Streak · best ${st.best}` : 'Streak');
+
+  // Level ladder
+  const ladder = document.getElementById('level-ladder');
+  ladder.innerHTML = LEVELS.map(lv => {
+    const achieved = xp >= lv.xpRequired;
+    const isCurrent = lv.level === current.level;
+    const cls = isCurrent ? 'current' : achieved ? 'achieved' : '';
+    const badge = isCurrent
+      ? '<span class="level-row-badge current">Current</span>'
+      : achieved
+        ? '<span class="level-row-badge achieved"><i data-icon="check"></i></span>'
+        : '';
+    return `<div class="level-row ${cls}">
+      <div class="level-row-icon">${lv.icon}</div>
+      <div class="level-row-info">
+        <div class="level-row-name">${lv.name}</div>
+        <div class="level-row-xp">${lv.xpRequired === 0 ? 'Starting level' : lv.xpRequired + ' XP required'}</div>
+      </div>
+      ${badge}
+    </div>`;
+  }).join('');
+
+  // Goals, time, subjects and badges (shared with the hub)
+  renderThemePicker(user, profile);
+  renderCardLength(user, profile);
+  document.getElementById('stats-root').innerHTML = statsSectionsHtml();
+  const owed = renderStats(profile);
+  if (owed.length && !isPreview()) {
+    updateDoc(doc(db, 'users', user.uid), { badges: [...(profile.badges || []), ...owed] }).catch(() => {});
+    showToast(`${owed.length} new badge${owed.length !== 1 ? 's' : ''} unlocked!`, 'success');
+  }
+
+  // Sessions
+  const list = document.getElementById('sessions-list');
+  if (!sessions.length) {
+    list.innerHTML = '<div class="empty-state">No quiz sessions yet — head to the hub and take your first quiz!</div>';
+  } else {
+    list.innerHTML = sessions.slice(0, 30).map(s => {
+      const pct = s.pct || 0;
+      const cls = pct >= 80 ? 'score-good' : pct >= 50 ? 'score-mid' : 'score-low';
+      const date = s.date ? new Date(s.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
+      const mins = s.minutesSpent ? ` · ${s.minutesSpent}m` : '';
+      return `<div class="session-row">
+        <div>
+          <div class="session-topic">${esc(s.topic || s.subject || 'Quiz')}</div>
+          <div class="session-meta">${date}${mins} · ${s.score}/${s.total} correct</div>
+        </div>
+        <div class="session-score ${cls}">${pct}%</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Show page
+  document.getElementById('loading-wrap').style.display = 'none';
+  document.getElementById('page-content').style.display = 'block';
+});
+
+function esc(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+<script>
+window.showToast = function(msg, type='info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`; t.textContent = msg;
+  c.appendChild(t); setTimeout(() => t.remove(), 3500);
+};
+</script>
+<script src="site.js?v=20261113d"></script>
+</body>
+</html>

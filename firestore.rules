@@ -1,0 +1,467 @@
+rules_version = '2';
+// ============================================================
+// LOBE LIMPET: Firestore security rules
+//
+// Who can see what:
+//   Owner (one account, fixed by its user ID below): everything.
+//   Admins: everything, except only the owner can make or remove admins.
+//   Parents: their own students (parentUid / guardianIds on the student).
+//   Teachers: students in their classes (teacherIds on the student).
+//   Students: their own record.
+//   Revision packs (content/{pack}):
+//     Official packs (made by admins): any signed-in user can read; admins write.
+//     Own packs (ownerUid, visibility 'private'): made by parents and teachers
+//     (and by students, for their own flashcard sets);
+//     only the owner, admins and students given the pack (packIds on the
+//     student) can read; only the owner and admins write.
+//     Library packs (visibility 'library'): frozen copies an admin approved
+//     from someone's own pack; any signed-in user can read them (to copy);
+//     only admins create or change them; the author may delete them.
+//     Owners can offer a pack for the library (libraryStatus 'pending') but
+//     can't approve it themselves.
+//     Students may save AI cheat sheets / notes / short answers on official
+//     and own packs they can read (not library packs).
+//   Students' own flashcard packs (studentMade): their parents and teachers
+//   can read them too. Sets shared with a class live under the teacher's
+//   class (sharedSets): members and the teacher read them.
+//   Private packs given to a student also need the pack's owner to be one
+//   of that student's parents or teachers (not just the id in packIds).
+//   aiUsage: written by the AI Worker; admins and the person read it.
+//   plusRequests: a person asks for Plus; admins read, switch on, clear.
+//   parentLinks: a parent asks to link with a student's existing account;
+//   the student accepts (becoming a guardian link) or declines.
+//   Library reports: any signed-in user can report; admins read and clear.
+//   Settings: any signed-in user can read; admins write.
+//
+// ROLLBACK: if anything stops working, paste the previous rules back
+// in the Firebase console (Firestore Database > Rules) and Publish.
+// ============================================================
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── The owner ─────────────────────────────────────────
+    function ownerUid() { return '0hFoAiW9YFhqk2BovndPnoT1Ul22'; }
+
+    // ── Helpers ───────────────────────────────────────────
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function myEmail() { return request.auth.token.get('email', '').lower(); }
+    function isOwner() { return signedIn() && me() == ownerUid(); }
+    function userDoc(id) { return get(/databases/$(database)/documents/users/$(id)).data; }
+    function hasRole(d, r) { return r in d.get('roles', []) || d.get('role', '') == r; }
+    function isAdmin() {
+      return isOwner() || (signedIn()
+        && exists(/databases/$(database)/documents/users/$(me()))
+        && hasRole(userDoc(me()), 'admin'));
+    }
+    function isAdult(d) { return hasRole(d, 'parent') || hasRole(d, 'teacher') || hasRole(d, 'admin'); }
+    function guardianOf(d) { return d.get('parentUid', '') == me() || me() in d.get('guardianIds', []); }
+    function teacherOf(d) { return me() in d.get('teacherIds', []); }
+    function changedKeys() { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    // A valid, unused, unexpired invite for my email (for admin roles, or
+    // to become a guardian of the students it lists)
+    function inviteFor(code) {
+      let inv = get(/databases/$(database)/documents/invites/$(code)).data;
+      return inv.get('usedBy', null) == null
+        && inv.get('expiresAt', 0) > request.time.toMillis()
+        && (inv.get('email', '') == '' || inv.get('email', '') == myEmail());
+    }
+    function adminInvite(code) {
+      return code != '' && exists(/databases/$(database)/documents/invites/$(code))
+        && inviteFor(code)
+        && get(/databases/$(database)/documents/invites/$(code)).data.get('role', '') == 'admin'
+        && get(/databases/$(database)/documents/invites/$(code)).data.get('email', '') == myEmail();
+    }
+
+    // ── Users ─────────────────────────────────────────────
+    match /users/{uid} {
+      function newData() { return request.resource.data; }
+      function gainsAdmin() { return hasRole(newData(), 'admin') && !hasRole(resource.data, 'admin'); }
+      function adminChanges() { return hasRole(newData(), 'admin') != hasRole(resource.data, 'admin'); }
+      // "plan" holds the study plan; only the value 'plus' (paid) is protected
+      // Plus is stored in "tier" (it used to be "plan", which also holds the
+      // study plan, so both are protected); only admins can switch it on
+      function gainsPlus() {
+        return (newData().get('tier', null) == 'plus' && resource.data.get('tier', null) != 'plus')
+          || (newData().get('plan', null) == 'plus' && resource.data.get('plan', null) != 'plus');
+      }
+
+      // A class you've joined: you're on that class's student list
+      function inClass(j) {
+        return exists(/databases/$(database)/documents/users/$(j.get('teacherUid', 'none'))/classes/$(j.get('classId', 'none'))/students/$(me()));
+      }
+      // Teacher links (teacherIds) let a teacher's own packs be read, so you
+      // can only add the teacher of a class you've just joined (lastJoin),
+      // or remove teachers
+      function teacherIdsCreateOK() {
+        let t = newData().get('teacherIds', []);
+        return t.size() == 0
+          || (t.size() == 1 && t[0] == newData().get('lastJoin', {}).get('teacherUid', '') && inClass(newData().get('lastJoin', {})));
+      }
+      function teacherIdsUpdateOK() {
+        let was = resource.data.get('teacherIds', []).toSet();
+        let now = newData().get('teacherIds', []).toSet();
+        let j = newData().get('lastJoin', {});
+        return was.hasAll(now)
+          || (now == was.union([j.get('teacherUid', '')].toSet()) && inClass(j));
+      }
+      // A student answering a parent's link request (parent-link.js), checked
+      // against the request named in lastParentLink: accepting a pending one
+      // adds that parent to guardianIds; removing an accepted one takes them
+      // off again (never a parent who made the account, parentUid)
+      function parentLinkOK() {
+        let id = newData().get('lastParentLink', '');
+        let path = /databases/$(database)/documents/parentLinks/$(id);
+        let was = resource.data.get('guardianIds', []).toSet();
+        let now = newData().get('guardianIds', []).toSet();
+        return id != '' && exists(path)
+          && get(path).data.studentUid == me()
+          && changedKeys().hasOnly(['guardianIds', 'lastParentLink'])
+          && ((get(path).data.status == 'pending' && now == was.union([get(path).data.by].toSet()))
+              || (get(path).data.status == 'accepted' && now == was.difference([get(path).data.by].toSet())
+                  && get(path).data.by != resource.data.get('parentUid', '')));
+      }
+      // Signing yourself up: no admin (unless invited), no paid plan, no parent links
+      // Admin → Settings can switch off students creating their own accounts
+      function studentSelfSignupOn() {
+        return !exists(/databases/$(database)/documents/settings/signup)
+          || get(/databases/$(database)/documents/settings/signup).data.get('studentSelf', true) != false;
+      }
+      function selfCreateOK() {
+        return (!hasRole(newData(), 'student') || studentSelfSignupOn())
+          && (!hasRole(newData(), 'admin') || adminInvite(newData().get('inviteCode', '')))
+          && newData().get('plan', null) != 'plus' && newData().get('tier', null) != 'plus'
+          && !newData().keys().hasAny(['parentUid', 'guardianIds', 'teacherUid', 'aiLimit'])
+          && teacherIdsCreateOK();
+      }
+      // A parent or teacher creating a student account
+      function studentCreateOK() {
+        return newData().get('role', '') == 'student'
+          && newData().get('roles', ['student']) == ['student']
+          && newData().get('plan', null) != 'plus' && newData().get('tier', null) != 'plus'
+          && ((newData().get('parentUid', '') == me() && hasRole(userDoc(me()), 'parent'))
+              || (newData().get('teacherUid', '') == me() && newData().get('teacherIds', []) == [me()]
+                  && hasRole(userDoc(me()), 'teacher')));
+      }
+      // Editing yourself: can't change plan or who your parents are; can only
+      // add admin with a valid admin invite
+      function selfUpdateOK() {
+        return !changedKeys().hasAny(['parentUid', 'guardianIds', 'teacherUid', 'aiLimit'])
+          && !gainsPlus()
+          && teacherIdsUpdateOK()
+          && (!gainsAdmin() || adminInvite(newData().get('inviteCode', '')));
+      }
+      // A parent editing their student: anything except roles, paid plan and teacher links
+      function guardianUpdateOK() {
+        return !changedKeys().hasAny(['roles', 'role', 'teacherIds', 'teacherUid', 'aiLimit']) && !gainsPlus();
+      }
+      // Accepting an invite that shares this student: add only yourself as a guardian
+      function inviteGuardianOK() {
+        let code = newData().get('lastInvite', '');
+        let inv = get(/databases/$(database)/documents/invites/$(code)).data;
+        return code != ''
+          && changedKeys().hasOnly(['guardianIds', 'lastInvite'])
+          && newData().get('guardianIds', []).toSet() == resource.data.get('guardianIds', []).toSet().union([me()].toSet())
+          && inviteFor(code)
+          && uid in inv.get('studentIds', [])
+          && (inv.get('by', '') == resource.data.get('parentUid', '')
+              || inv.get('by', '') in resource.data.get('guardianIds', [])
+              || hasRole(userDoc(inv.get('by', '')), 'admin'));
+      }
+
+      allow get: if signedIn() && (
+        me() == uid || isAdmin() || guardianOf(resource.data) || teacherOf(resource.data) || isAdult(resource.data));
+      allow list: if isAdmin();
+
+      allow create: if signedIn() && (
+        (me() == uid && selfCreateOK())
+        || (me() != uid && studentCreateOK())
+        || (isAdmin() && (!hasRole(newData(), 'admin') || isOwner())));
+
+      allow update: if signedIn() && (
+        isOwner()
+        || (isAdmin() && uid != ownerUid() && !adminChanges())
+        || (me() == uid && selfUpdateOK())
+        || (me() == uid && parentLinkOK())
+        || (guardianOf(resource.data) && guardianUpdateOK())
+        || (teacherOf(resource.data) && changedKeys().hasOnly(['classes', 'classPacks', 'teacherIds', 'packIds']))
+        || inviteGuardianOK());
+
+      allow delete: if signedIn() && (
+        isOwner()
+        || (isAdmin() && uid != ownerUid())
+        || (resource.data.get('parentUid', '') == me() && resource.data.get('guardianIds', []).removeAll([me()]).size() == 0));
+
+      // A parent's list of their students
+      match /children/{sid} {
+        function guardianOfId(id) { return exists(/databases/$(database)/documents/users/$(id)) && guardianOf(userDoc(id)); }
+        allow read: if signedIn() && (me() == uid || isAdmin());
+        allow create, update: if signedIn() && (me() == uid || me() == sid || isAdmin() || guardianOfId(sid));
+        allow delete: if signedIn() && (me() == uid || me() == sid || isAdmin());
+      }
+
+      // A teacher's classes. Looked up by join code before sign-up, so a
+      // single class can be read by anyone who knows its ID.
+      match /classes/{cid} {
+        allow get: if true;
+        allow list: if signedIn() && (me() == uid || isAdmin());
+        allow write: if signedIn() && (me() == uid || isAdmin());
+
+        match /students/{sid} {
+          allow read: if signedIn() && (me() == uid || me() == sid || isAdmin());
+          allow create, update: if signedIn() && (me() == uid || isAdmin()
+            || (me() == sid && exists(/databases/$(database)/documents/users/$(uid)/classes/$(cid))));
+          allow delete: if signedIn() && (me() == uid || me() == sid || isAdmin());
+        }
+
+        // Flashcard sets a student has shared with the class (cards.html).
+        // Doc id is {ownerUid}_{setId}. Class members and the teacher read;
+        // a member shares their own; the owner, teacher or an admin removes.
+        match /sharedSets/{setId} {
+          function member() { return exists(/databases/$(database)/documents/users/$(uid)/classes/$(cid)/students/$(me())); }
+          function validShare() {
+            return request.resource.data.ownerUid == me()
+              && setId.matches(me() + '_.+')
+              && request.resource.data.cards is list && request.resource.data.cards.size() <= 300
+              && request.resource.data.name is string && request.resource.data.name.size() <= 120;
+          }
+          allow read: if signedIn() && (me() == uid || isAdmin() || member());
+          allow create: if signedIn() && member() && validShare();
+          allow update: if signedIn() && member() && resource.data.ownerUid == me() && validShare();
+          allow delete: if signedIn() && (me() == uid || isAdmin() || resource.data.ownerUid == me());
+        }
+      }
+    }
+
+    // ── Exact-email look-up (no browsing) ─────────────────
+    match /emailIndex/{email} {
+      function manages(id) {
+        return exists(/databases/$(database)/documents/users/$(id))
+          && (guardianOf(userDoc(id)) || teacherOf(userDoc(id)));
+      }
+      allow get: if signedIn();
+      allow list: if isAdmin();
+      allow create, update: if signedIn()
+        && (resource == null || resource.data.uid == request.resource.data.uid || isAdmin())
+        && (isAdmin()
+            || (request.resource.data.uid == me() && email == myEmail())
+            || (request.resource.data.uid != me() && manages(request.resource.data.uid)));
+      allow delete: if isAdmin();
+    }
+
+    // ── Class join codes ──────────────────────────────────
+    match /classCodes/{code} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create: if signedIn() && request.resource.data.teacherUid == me();
+      allow update, delete: if signedIn() && (resource.data.teacherUid == me() || isAdmin());
+    }
+
+    // ── Invites ───────────────────────────────────────────
+    match /invites/{code} {
+      allow get: if true;                     // opened from the invite link, before sign-in
+      allow list: if isAdmin();
+      allow create: if signedIn()
+        && request.resource.data.by == me()
+        && request.resource.data.get('usedBy', null) == null
+        && (request.resource.data.role != 'admin' || isOwner());
+      allow update: if signedIn() && (
+        isAdmin() || resource.data.by == me()
+        || (changedKeys().hasOnly(['usedBy', 'usedAt'])
+            && request.resource.data.usedBy == me()
+            && resource.data.get('usedBy', null) == null
+            && (resource.data.get('email', '') == '' || resource.data.email == myEmail())));
+      allow delete: if signedIn() && (isAdmin() || resource.data.by == me());
+    }
+
+    // ── Revision content ──────────────────────────────────
+    function packDoc(p) { return get(/databases/$(database)/documents/content/$(p)).data; }
+    // Admin packs: visibility 'official', or older packs with no owner
+    function officialPack(d) { return d.get('ownerUid', '') == '' || d.get('visibility', '') == 'official'; }
+    function ownsPack(d) { return signedIn() && d.get('ownerUid', '') == me(); }
+    // A pack given to me: listed on my record (packIds) AND made by one of
+    // my own parents or teachers. packIds alone isn't enough, since a
+    // student can edit their own record; who their parents and teachers
+    // are, they can't.
+    function givenPack(d, p) {
+      let u = userDoc(me());
+      let owner = d.get('ownerUid', '');
+      return exists(/databases/$(database)/documents/users/$(me()))
+        && p in u.get('packIds', [])
+        && owner != ''
+        && (owner == u.get('parentUid', '') || owner in u.get('guardianIds', []) || owner in u.get('teacherIds', []));
+    }
+    function libraryPack(d) { return d.get('visibility', '') == 'library'; }
+    // A student's own flashcard pack: their parents and teachers can read it
+    function studentPackOfMine(d) {
+      return d.get('studentMade', false) == true && d.get('ownerUid', '') != ''
+        && exists(/databases/$(database)/documents/users/$(d.ownerUid))
+        && (guardianOf(userDoc(d.ownerUid)) || teacherOf(userDoc(d.ownerUid)));
+    }
+    function canReadPack(d, p) { return signedIn() && (officialPack(d) || libraryPack(d) || ownsPack(d) || isAdmin() || givenPack(d, p) || studentPackOfMine(d)); }
+    // An owner editing their own (non-library) pack: can't change who owns it or
+    // where it lives, can only ask for library review (or withdraw), and can
+    // only clear the link to its library copy
+    function ownerEditOK() {
+      return ownsPack(resource.data) && !libraryPack(resource.data)
+        && !changedKeys().hasAny(['ownerUid', 'visibility', 'libraryNote', 'libraryApprovedAt', 'sourcePackId'])
+        && (!changedKeys().hasAny(['libraryStatus']) || request.resource.data.get('libraryStatus', '') in ['pending', ''])
+        && (!changedKeys().hasAny(['libraryPackId']) || !('libraryPackId' in request.resource.data));
+    }
+
+    function canWriteInPack(p) {
+      return isAdmin() || (ownsPack(packDoc(p)) && (!libraryPack(packDoc(p)) || request.method == 'delete'));
+    }
+    // Free sample topics: in a Lobe Limpet (official) pack, a topic marked
+    // plusOnly opens its questions and notes only to people with Plus (and
+    // admins). Everyone can still see the topic itself in the list.
+    // Plus of my own, or a parent's Plus covering me: plusFrom must be one
+    // of my parents (parentUid or guardianIds) and that parent must have Plus
+    function plusRecord(d) { return d.get('tier', '') == 'plus' || d.get('plan', '') == 'plus'; }
+    function iHavePlus() {
+      let u = userDoc(me());
+      let from = u.get('plusFrom', '');
+      return plusRecord(u)
+        || (from is string && from != ''
+            && (from == u.get('parentUid', '') || from in u.get('guardianIds', []))
+            && exists(/databases/$(database)/documents/users/$(from))
+            && (plusRecord(userDoc(from)) || hasRole(userDoc(from), 'admin')));
+    }
+    function topicOpen(p, s, t) {
+      return !officialPack(packDoc(p))
+        || get(/databases/$(database)/documents/content/$(p)/subjects/$(s)/topics/$(t)).data.get('plusOnly', false) != true
+        || isAdmin() || iHavePlus();
+    }
+
+    match /content/{p} {
+      allow get: if canReadPack(resource.data, p);
+      // Lists must ask for official packs or the caller's own (admins: all)
+      allow list: if signedIn() && (isAdmin()
+        || resource.data.visibility == 'official'
+        || resource.data.visibility == 'library'
+        || resource.data.ownerUid == me());
+      // Parents and teachers make private packs of their own; students make
+      // one for their own flashcard sets (cards.html)
+      allow create: if isAdmin() || (signedIn()
+        && (hasRole(userDoc(me()), 'parent') || hasRole(userDoc(me()), 'teacher') || hasRole(userDoc(me()), 'student'))
+        && request.resource.data.ownerUid == me()
+        && request.resource.data.visibility == 'private');
+      allow update: if isAdmin() || ownerEditOK();
+      allow delete: if isAdmin() || ownsPack(resource.data);
+
+      // Subjects, topics, questions and notes inside the pack. Spelled out
+      // level by level (not one {rest=**}) so a topic's questions and notes
+      // can need Plus: see topicOpen.
+      match /subjects/{s} {
+        allow read: if canReadPack(packDoc(p), p);
+        allow write: if canWriteInPack(p);
+
+        match /topics/{t} {
+          allow read: if canReadPack(packDoc(p), p);
+          allow write: if canWriteInPack(p);
+
+          // Questions, notes and anything else inside a topic
+          match /{sub}/{rest=**} {
+            allow read: if canReadPack(packDoc(p), p) && topicOpen(p, s, t);
+            allow write: if canWriteInPack(p);
+          }
+        }
+        // Anything else inside a subject
+        match /{other}/{rest=**} {
+          allow read: if other != 'topics' && canReadPack(packDoc(p), p);
+          allow write: if other != 'topics' && canWriteInPack(p);
+        }
+      }
+      // Anything else inside a pack
+      match /{other}/{rest=**} {
+        allow read: if other != 'subjects' && canReadPack(packDoc(p), p);
+        allow write: if other != 'subjects' && canWriteInPack(p);
+      }
+    }
+    // Students can save AI-made cheat sheets, short answers and point notes
+    // (shared with everyone using the pack, so they're only made once)
+    match /content/{p}/subjects/{s}/topics/{t} {
+      allow update: if canReadPack(packDoc(p), p) && !libraryPack(packDoc(p)) && changedKeys().hasOnly(['cheatSheet', 'shortAnswers']);
+      match /notes/{n} {
+        allow create: if canReadPack(packDoc(p), p) && !libraryPack(packDoc(p));
+      }
+    }
+
+    // ── AI usage (written by the AI Worker only) ──────────
+    match /aiUsage/{id} {
+      allow get: if signedIn() && (isAdmin() || resource.data.uid == me());
+      allow list: if isAdmin();
+      allow write: if false;
+    }
+    // Rate limits for signed-out logging (Worker only)
+    match /aiUsageMonth/{id} {
+      allow get: if signedIn() && (isAdmin() || resource.data.uid == me());
+      allow list: if isAdmin();
+      allow write: if false;
+    }
+    match /rateLimits/{id} { allow read, write: if false; }
+
+    // ── Parent link requests (parent-link.js) ─────────────
+    // Id {parentUid}_{studentUid}. A parent asks to link with a student
+    // account that already exists (not one already theirs); the student
+    // accepts or declines, and can later remove a parent linked this way.
+    match /parentLinks/{id} {
+      function stu() { return userDoc(request.resource.data.studentUid); }
+      allow get, list: if signedIn() && (resource.data.by == me() || resource.data.studentUid == me() || isAdmin());
+      allow create: if signedIn()
+        && request.resource.data.by == me()
+        && id == me() + '_' + request.resource.data.studentUid
+        && request.resource.data.status == 'pending'
+        && (hasRole(userDoc(me()), 'parent') || hasRole(userDoc(me()), 'admin'))
+        && exists(/databases/$(database)/documents/users/$(request.resource.data.studentUid))
+        && hasRole(stu(), 'student')
+        && stu().get('parentUid', '') != me() && !(me() in stu().get('guardianIds', []));
+      allow update: if signedIn() && (
+        // the student answers, or removes a parent they linked
+        (resource.data.studentUid == me() && changedKeys().hasOnly(['status', 'decidedAt'])
+          && ((resource.data.status == 'pending' && request.resource.data.status in ['accepted', 'declined'])
+              || (resource.data.status == 'accepted' && request.resource.data.status == 'removed')))
+        // the parent cancels, or asks again after a no
+        || (resource.data.by == me() && request.resource.data.by == me()
+          && request.resource.data.studentUid == resource.data.studentUid
+          && (request.resource.data.status == 'cancelled'
+              || (request.resource.data.status == 'pending' && resource.data.status != 'accepted'))));
+      allow delete: if isAdmin();
+    }
+
+    // ── Asking for Plus ───────────────────────────────────
+    // One request per person (id = their uid); admins switch Plus on in Users
+    match /plusRequests/{uid} {
+      allow get: if signedIn() && (me() == uid || isAdmin());
+      allow list, delete: if isAdmin();
+      allow create, update: if isAdmin() || (signedIn() && me() == uid
+        && request.resource.data.uid == me()
+        && request.resource.data.status == 'pending'
+        && request.resource.data.get('note', '') is string && request.resource.data.get('note', '').size() <= 500);
+    }
+
+    // ── Library reports ───────────────────────────────────
+    match /libraryReports/{id} {
+      allow create: if signedIn() && request.resource.data.by == me()
+        && request.resource.data.note is string && request.resource.data.note.size() <= 1000;
+      allow read, delete: if isAdmin();
+    }
+
+    // ── App settings ──────────────────────────────────────
+    match /settings/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+    // Whether students may sign themselves up: read on the sign-in page, before sign-in
+    match /settings/signup {
+      allow get: if true;
+    }
+
+    // ── Activity log ──────────────────────────────────────
+    match /logs/{id} {
+      allow create: if signedIn() && request.resource.data.uid == me();
+      allow read, delete: if isAdmin();
+    }
+  }
+}
