@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="parent">
 <head>
-  <script src="dev-flag.js?v=20261113k"></script>
+  <script src="dev-flag.js?v=20261113v"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lobe Limpet — Admin</title>
-  <link rel="icon" type="image/svg+xml" href="assets/images/brand/favicon.svg?v=20261113k">
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brand/favicon-32.png?v=20261113k">
-  <link rel="apple-touch-icon" href="assets/images/brand/apple-touch-icon.png?v=20261113k">
-  <link rel="manifest" href="manifest.webmanifest?v=20261113k">
+  <link rel="icon" type="image/svg+xml" href="assets/images/brand/favicon.svg?v=20261113v">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brand/favicon-32.png?v=20261113v">
+  <link rel="apple-touch-icon" href="assets/images/brand/apple-touch-icon.png?v=20261113v">
+  <link rel="manifest" href="manifest.webmanifest?v=20261113v">
   <meta name="apple-mobile-web-app-title" content="Lobe Limpet">
   <meta name="application-name" content="Lobe Limpet">
-  <link rel="stylesheet" href="theme.css?v=20261113k">
-  <script src="icons.js?v=20261113k"></script>
+  <link rel="stylesheet" href="theme.css?v=20261113v">
+  <script src="icons.js?v=20261113v"></script>
   <style>
     /* ── Layout ──────────────────────────────────────────── */
     body { display: flex; min-height: 100vh; background: var(--color-bg); overflow-x: hidden; }
@@ -416,6 +416,24 @@
     .plus-note strong { color: #b97700; }
     .plus-switch { display: inline-flex; align-items: center; gap: 5px; font-size: 0.82rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .plus-switch input { width: auto; margin: 0; }
+    .plus-switch.plus-family { cursor: default; opacity: 0.75; }
+    .acct-no { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; letter-spacing: 0.04em; color: var(--color-text-muted); margin-top: 2px; }
+    .uf-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 12px; font-family: var(--font-ui); font-size: 0.85rem; }
+    .uf-search { display: flex; align-items: center; gap: 6px; flex: 1 1 220px; max-width: 340px; padding: 0 10px; border: 1px solid var(--color-border); border-radius: var(--radius-button); background: var(--color-surface); }
+    .uf-search input { border: 0 !important; background: none !important; padding: 9px 0 !important; width: 100%; box-shadow: none !important; }
+    .uf-search svg { width: 15px; height: 15px; color: var(--color-text-muted); flex-shrink: 0; }
+    .uf-field { display: inline-flex !important; flex-direction: row !important; align-items: center; gap: 6px; color: var(--color-text-muted); font-weight: 600; text-transform: none !important; letter-spacing: 0 !important; margin: 0 !important; }
+    .uf-field select, .uf-dates input { width: auto !important; padding: 7px 10px !important; font-size: 0.85rem; }
+    .uf-dates { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text-muted); }
+    .uf-count { margin-left: auto; color: var(--color-text-muted); }
+    .users-table tr.fam-head td { border-top: 2px solid var(--color-border); }
+    .users-table tr.fam-member td { background: color-mix(in srgb, var(--color-surface-2) 55%, transparent); }
+    .users-table tr.fam-member .user-name { padding-left: 18px; }
+    .users-table.filtering tr.fam-member td { background: none; }
+    .users-table.filtering tr.fam-member .user-name { padding-left: 0; }
+    .users-table.filtering .fam-tick { display: none; }
+    .users-table.filtering tr.fam-head td { border-top: 0; }
+    .fam-tick { color: var(--color-text-muted); margin-right: 2px; }
     .move-btns { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 4px; opacity: 0.55; }
     .item-card:hover .move-btns { opacity: 1; }
     .move-btns .icon-btn { width: 26px; height: 26px; }
@@ -616,8 +634,8 @@
   }
   .trial-note { display: block; margin-top: 8px; padding: 8px 12px; border-radius: 10px; background: rgba(255,122,89,0.10); color: var(--color-text); font-size: 0.88rem; }
 </style>
-  <link rel="stylesheet" href="ui.css?v=20261113k">
-  <link rel="stylesheet" href="stats.css?v=20261113k">
+  <link rel="stylesheet" href="ui.css?v=20261113v">
+  <link rel="stylesheet" href="stats.css?v=20261113v">
 </head>
 <body class="app-layout">
 <div id="toast-container"></div>
@@ -883,6 +901,20 @@
           <button class="btn btn-primary" id="btn-invite"><i data-icon="user-plus"></i> Invite someone</button>
         </div>
       </div>
+      <!-- Filters for the list below (applied in the browser; nothing is reloaded) -->
+      <div class="uf-bar" id="users-filters">
+        <label class="uf-search"><i data-icon="search"></i><input type="search" id="uf-q" placeholder="Search name, email or account no." autocomplete="off"></label>
+        <label class="uf-field">Role
+          <select id="uf-role"><option value="">All roles</option><option value="admin">Admin</option><option value="teacher">Teacher</option><option value="parent">Parent</option><option value="student">Student</option></select></label>
+        <label class="uf-field">Plan
+          <select id="uf-plan"><option value="">All plans</option><option value="plus">Plus (any)</option><option value="own">Plus: their own</option><option value="family">Plus: through family</option><option value="free">Free</option></select></label>
+        <label class="uf-field">Joined
+          <select id="uf-when"><option value="">Any time</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 3 months</option><option value="custom">Between dates…</option></select></label>
+        <span class="uf-dates" id="uf-dates" hidden>
+          <input type="date" id="uf-from" aria-label="Joined from"> to <input type="date" id="uf-to" aria-label="Joined to"></span>
+        <button class="btn btn-ghost btn-sm" id="uf-clear" hidden>Clear</button>
+        <span class="uf-count" id="uf-count" role="status"></span>
+      </div>
       <div id="users-list">
         <div class="empty-state">
           <div class="spinner" style="margin:0 auto;"></div>
@@ -911,7 +943,7 @@
       </div>
       <div id="as-tiles"></div>
       <div class="as-filters">
-        <label class="log-f">Search<input type="search" id="as-search" placeholder="Name, email, parent, teacher or pack"></label>
+        <label class="log-f">Search<input type="search" id="as-search" placeholder="Name, email, account no., parent, teacher or pack"></label>
         <label class="log-f">Show<select id="as-show">
           <option value="all">All students</option>
           <option value="active">Active in the last 7 days</option>
@@ -1396,33 +1428,34 @@
 </script>
 
 <script type="module">
-import { auth, db, storage } from './firebase-config.js?v=20261113k';
-import { requireRole, requireAuth, hasRole, hasPlus, canUseAI, onAiTrial, trialSheetsText, handleSignOut, showToast, openViewAs, primaryRole, rolesOf } from './auth.js?v=20261113k';
-import { listPacks, flatPackIds, samePackIds, isOfficialPack } from './packs.js?v=20261113k';
-import { isPlusOnly, plusTagHtml, addAccessCss } from './access.js?v=20261113k';
-import { syncFamilyPlus } from './family-plus.js?v=20261113k';
-import { pickerHtml, wirePicker, boardTagHtml } from './pack-picker.js?v=20261113k';
-import { openDeleteAccount } from './account.js?v=20261113k';
-import { addDocumentButton } from './doc-text.js?v=20261113k';
-import { openTopicWizard, notesPromptFromText, notesPromptResearch, questionsPrompt } from './topic-wizard.js?v=20261113k';
-import { showPlusUpsell } from './plus.js?v=20261113k';
-import { offerGivePack } from './first-steps.js?v=20261113k';
+import { auth, db, storage } from './firebase-config.js?v=20261113v';
+import { requireRole, requireAuth, hasRole, hasPlus, canUseAI, onAiTrial, trialSheetsText, handleSignOut, showToast, openViewAs, primaryRole, rolesOf } from './auth.js?v=20261113v';
+import { listPacks, flatPackIds, samePackIds, isOfficialPack } from './packs.js?v=20261113v';
+import { isPlusOnly, plusTagHtml, addAccessCss } from './access.js?v=20261113v';
+import { syncFamilyPlus } from './family-plus.js?v=20261113v';
+import { ensureAccountNo, formatAccountNo, accountSearchText } from './account-no.js?v=20261113v';
+import { pickerHtml, wirePicker, boardTagHtml } from './pack-picker.js?v=20261113v';
+import { openDeleteAccount } from './account.js?v=20261113v';
+import { addDocumentButton } from './doc-text.js?v=20261113v';
+import { openTopicWizard, notesPromptFromText, notesPromptResearch, questionsPrompt } from './topic-wizard.js?v=20261113v';
+import { showPlusUpsell } from './plus.js?v=20261113v';
+import { offerGivePack } from './first-steps.js?v=20261113v';
 // "Upload a document" above each box where content is pasted for AI generation
 // (these boxes are only shown to Plus users and admins, who also get "Read with AI")
 ['gen-content', 'kp-paste-content', 'kp-modal-paste-content'].forEach(id => addDocumentButton(document.getElementById(id), {
   askClaude, allowed: () => canAI, onLocked: () => showPlusUpsell('Reading scans and diagrams with AI') }));
 const OWNER_UID = '0hFoAiW9YFhqk2BovndPnoT1Ul22';   // the site owner (same as the security rules)
-import { helloHtml, tilesHtml, attentionHtml, activityHtml, dotHtml, smallBtn, agoText, DAY } from './home-kit.js?v=20261113k';
-import { mountShell } from './shell.js?v=20261113k';
-import { openInviteDialog, signupLink } from './invite.js?v=20261113k';
-import { logEvent, ACTIONS as LOG_ACTIONS, CATS as LOG_CATS } from './log.js?v=20261113k';
-import { videosOf, parseVideoLines, videoLines, readsOf, readLines, parseReadLines } from './videos.js?v=20261113k';
-import { askClaude, MODELS, TASKS, FALLBACK_MODEL, loadAiSettings, textOf, parseJsonLoose, checkLinks, workerAction } from './ai.js?v=20261113k';
-import { REPAIR, SHIELDS, REPAIR_DEFAULTS, SHIELD_DEFAULTS, loadStreakSettings, studyEntries, currentStreak, getLevelInfo } from './gamification.js?v=20261113k';
-import { statsSectionsHtml, renderStats, fmtTime } from './stats.js?v=20261113k';
-import { dueEntries } from './srs.js?v=20261113k';
-import { progressMatches, progressSubjects, forgetProgress } from './progress-tidy.js?v=20261113k';
-import { LEVELS as PLAN_LEVELS, LEVEL_DEFAULTS as PLAN_DEFAULTS, loadPlanSettings } from './plan.js?v=20261113k';
+import { helloHtml, tilesHtml, attentionHtml, activityHtml, dotHtml, smallBtn, agoText, DAY } from './home-kit.js?v=20261113v';
+import { mountShell } from './shell.js?v=20261113v';
+import { openInviteDialog, signupLink } from './invite.js?v=20261113v';
+import { logEvent, ACTIONS as LOG_ACTIONS, CATS as LOG_CATS } from './log.js?v=20261113v';
+import { videosOf, parseVideoLines, videoLines, readsOf, readLines, parseReadLines } from './videos.js?v=20261113v';
+import { askClaude, MODELS, TASKS, FALLBACK_MODEL, loadAiSettings, textOf, parseJsonLoose, checkLinks, workerAction } from './ai.js?v=20261113v';
+import { REPAIR, SHIELDS, REPAIR_DEFAULTS, SHIELD_DEFAULTS, loadStreakSettings, studyEntries, currentStreak, getLevelInfo } from './gamification.js?v=20261113v';
+import { statsSectionsHtml, renderStats, fmtTime } from './stats.js?v=20261113v';
+import { dueEntries } from './srs.js?v=20261113v';
+import { progressMatches, progressSubjects, forgetProgress } from './progress-tidy.js?v=20261113v';
+import { LEVELS as PLAN_LEVELS, LEVEL_DEFAULTS as PLAN_DEFAULTS, loadPlanSettings } from './plan.js?v=20261113v';
 
 // Content generation uses the model chosen in Settings. Wraps the result so
 // the existing code (which expected a fetch Response) works unchanged.
@@ -1438,8 +1471,8 @@ import {
   collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc,
   query, orderBy, serverTimestamp, where, limit, startAfter, arrayUnion, deleteField, writeBatch, getCountFromServer
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { saveEmailIndex } from './email-index.js?v=20261113k';
-import { inOrder } from './order.js?v=20261113k';
+import { saveEmailIndex } from './email-index.js?v=20261113v';
+import { inOrder } from './order.js?v=20261113v';
 import {
   ref as storageRef, uploadBytes, getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
@@ -3957,7 +3990,9 @@ function renderAllStudents() {
     if (show === 'quiet' && u.wk.last >= weekAgo) return false;
     if (show === 'nopack' && u.packIds.length) return false;
     if (!q) return true;
-    return [u.name, u.email, ...u.adults.map(nameOf), ...u.teachers.map(nameOf), ...u.packNames].join(' ').toLowerCase().includes(q);
+    // Name, email, account number (with or without "LL-"), parents, teachers, packs
+    const hay = [u.name, u.email, accountSearchText(u.accountNo), ...u.adults.map(nameOf), ...u.teachers.map(nameOf), ...u.packNames].join(' ').toLowerCase();
+    return q.split(/\s+/).every(w => hay.includes(w));
   });
   const nm = u => (u.name || u.email || '').toLowerCase();
   list.sort(sort === 'name' ? (a, b) => nm(a).localeCompare(nm(b), 'en-GB')
@@ -3972,7 +4007,7 @@ function renderAllStudents() {
       const who = [...u.adults.map(id => `${esc(nameOf(id))} <span class="as-sub" style="display:inline">(parent)</span>`),
                    ...u.teachers.map(id => `${esc(nameOf(id))} <span class="as-sub" style="display:inline">(teacher)</span>`)];
       return `<tr>
-        <td class="as-name"><strong>${esc(u.name || '—')}</strong><small>${esc(u.email || '')}</small></td>
+        <td class="as-name"><strong>${esc(u.name || '—')}</strong><small>${esc(u.email || '')}</small>${u.accountNo ? `<small class="acct-no">${esc(formatAccountNo(u.accountNo))}</small>` : ''}</td>
         <td data-l="Looked after by">${who.length ? who.join('<br>') : '<span class="as-sub">Independent</span>'}</td>
         <td data-l="Packs" class="as-packs">${u.packNames.length ? u.packNames.map(esc).join('<br>') : '<span class="as-quiet">None</span>'}</td>
         <td data-l="This week" class="as-num">${fmtTime(u.wk.secs)}<span class="as-sub">${u.wk.quizzes} quiz${u.wk.quizzes === 1 ? '' : 'zes'}${u.wk.avg !== null ? ` · ${u.wk.avg}%` : ''}</span></td>
@@ -3996,7 +4031,7 @@ function openStudentProgress(uid) {
   const lvl = getLevelInfo(u.xp || 0).current;
   document.getElementById('as-modal-title').textContent = `${u.name || 'Student'}'s progress`;
   document.getElementById('as-modal-body').innerHTML = `
-    <div class="as-meta">${esc(u.email || '')}<br>
+    <div class="as-meta">${esc(u.email || '')}${u.accountNo ? ` · <span class="acct-no" style="display:inline">${esc(formatAccountNo(u.accountNo))}</span>` : ''}<br>
       ${u.adults.length ? `Parents: ${u.adults.map(id => esc(nameOf(id))).join(', ')}<br>` : ''}
       ${u.teachers.length ? `Teachers: ${u.teachers.map(id => esc(nameOf(id))).join(', ')}<br>` : ''}
       Packs: ${u.packNames.length ? u.packNames.map(esc).join(', ') : 'none'}</div>
@@ -4521,6 +4556,52 @@ document.addEventListener('change', async e => {
   finally { box.disabled = false; }
 });
 
+const firstName = n => String(n || '').trim().split(/\s+/)[0];
+
+/* Users & roles order: families together. A family is everyone linked by a
+   student's parents (parentUid, guardianIds) or family Plus (plusFrom).
+   The main parent (the one with Plus of their own, else the one who made
+   most of the students' accounts) comes first, then the rest A–Z.
+   The site owner's family is always first; then families and people on
+   their own are sorted A–Z by the main person's surname (last word of the
+   name). Inside a family: adults first, then students, each by surname. Sets u._famHead / u._famMember. */
+function groupFamilies(users) {
+  const byId = new Map(users.map(u => [u.id, u]));
+  const up = new Map(users.map(u => [u.id, u.id]));
+  const find = x => { while (up.get(x) !== x) { up.set(x, up.get(up.get(x))); x = up.get(x); } return x; };
+  const join = (a, b) => { if (byId.has(a) && byId.has(b)) up.set(find(a), find(b)); };
+  const rolesOfU = u => (Array.isArray(u.roles) && u.roles.length ? u.roles : [u.role || 'student']);
+  users.forEach(u => {
+    if (rolesOfU(u).includes('student')) [u.parentUid, ...(u.guardianIds || [])].filter(Boolean).forEach(p => join(u.id, p));
+    if (u.plusFrom) join(u.id, u.plusFrom);
+  });
+  const fams = new Map();
+  users.forEach(u => { const r = find(u.id); if (!fams.has(r)) fams.set(r, []); fams.get(r).push(u); });
+  const nm = u => String(u.name || u.email || '').trim();
+  const surname = u => { const w = nm(u).split(/\s+/); return (w.length > 1 ? w[w.length - 1] : w[0] || '').toLowerCase(); };
+  const az = (a, b) => nm(a).localeCompare(nm(b), 'en-GB', { sensitivity: 'base' });
+  // Admin, Teacher, Parent, Student (by highest role), then surname, then full name
+  const RANK = { admin: 0, teacher: 1, parent: 2, student: 3 };
+  const rank = u => RANK[primaryRole(rolesOfU(u))] ?? 4;
+  const order = (a, b) => rank(a) - rank(b) || surname(a).localeCompare(surname(b), 'en-GB', { sensitivity: 'base' }) || az(a, b);
+  const groups = [...fams.values()].map(list => {
+    const adults = list.filter(u => !rolesOfU(u).includes('student'));
+    const made = id => list.filter(s => s.parentUid === id).length;
+    const covers = id => list.filter(x => x.plusFrom === id).length;   // whose Plus the family uses
+    const ownPlus = a => (a.tier === 'plus' || a.plan === 'plus' || rolesOfU(a).includes('admin')) ? 1 : 0;
+    const isOwnerU = a => a.id === OWNER_UID ? 1 : 0;   // the site owner always heads their family
+    const head = [...adults].sort((a, b) => isOwnerU(b) - isOwnerU(a) || covers(b.id) - covers(a.id) || ownPlus(b) - ownPlus(a) || made(b.id) - made(a.id) || az(a, b))[0]
+      || [...list].sort(az)[0];
+    const rest = list.filter(u => u !== head).sort(order);
+    list.forEach(u => { u._famHead = false; u._famMember = false; });
+    if (rest.length) { head._famHead = true; rest.forEach(u => { u._famMember = true; }); }
+    return { head, members: [head, ...rest] };
+  });
+  // The site owner's family first, then everyone A–Z by the main person's surname
+  const bySurname = (a, b) => surname(a).localeCompare(surname(b), 'en-GB', { sensitivity: 'base' }) || az(a, b);
+  groups.sort((a, b) => (b.head.id === OWNER_UID) - (a.head.id === OWNER_UID) || bySurname(a.head, b.head));
+  users.splice(0, users.length, ...groups.flatMap(g => g.members));
+}
 async function loadUsers() {
   const list = document.getElementById('users-list');
   list.innerHTML = `<div class="empty-state"><div class="spinner" style="margin:0 auto;"></div></div>`;
@@ -4532,14 +4613,13 @@ async function loadUsers() {
   plusRequests = {}; reqSnap.forEach(d => { if (d.data().status === 'pending') plusRequests[d.id] = d.data(); });
   const users = [];
   snap.forEach(d => users.push({ id: d.id, ...d.data() }));
-  // Sorted by highest role (Admin, Teacher, Parent, Student), then A–Z by name (or email)
-  const RANK = { admin: 0, teacher: 1, parent: 2, student: 3 };
-  const rankOf = u => RANK[primaryRole(Array.isArray(u.roles) && u.roles.length ? u.roles : [u.role || 'student'])] ?? 4;
-  const sortName = u => (u.name || u.email || '').trim().toLowerCase();
-  users.sort((a, b) => rankOf(a) - rankOf(b) || sortName(a).localeCompare(sortName(b), 'en-GB'));
   usersCache = users;
   await migratePlusField(users);
   await syncFamilyPlus(users);   // keep students covered by a parent's Plus in step
+  groupFamilies(users);          // families together, by the main parent's surname
+  // Account numbers for anyone still without one (one at a time; quick)
+  // (stops at the first failure, e.g. before the new security rules are published)
+  for (const u of users.filter(x => !x.accountNo)) { if (!(await ensureAccountNo(u.id, u))) break; }
   if (!users.length) { list.innerHTML = `<div class="empty-state"><h3>No users yet</h3></div>`; return; }
   const roleIcon = { parent:'house', student:'graduation-cap', teacher:'school', admin:'shield' };
   const roleColour = { parent:'badge-success', student:'badge-primary', teacher:'badge-warning', admin:'badge-primary' };
@@ -4548,11 +4628,20 @@ async function loadUsers() {
     <thead><tr><th>Name</th><th>Email</th><th>Roles</th><th>Plan</th><th>Joined</th><th></th></tr></thead>
     <tbody>${users.map(u => {
       const roles = rolesFor(u), student = roles.includes('student');
-      return `<tr data-user-row="${esc(u.id)}">
-      <td><span class="user-name"><span class="user-icon"><i data-icon="${roleIcon[primaryRole(roles)] || 'user'}"></i></span>${esc(u.name||'—')}</span>${plusRequests[u.id] ? `<div class="plus-note"><strong>Asked for Plus${plusRequests[u.id].at ? ' ' + agoText(plusRequests[u.id].at) : ''}</strong>${plusRequests[u.id].note ? `: “${esc(plusRequests[u.id].note)}”` : ''}</div>` : ''}</td>
-      <td class="muted">${esc(u.email||'—')}</td>
+      // Plan for the filter: own Plus (or admin), Plus through family, or free
+      const planKey = (u.tier === 'plus' || u.plan === 'plus' || roles.includes('admin')) ? 'own' : (u.plusFrom && usersCache.some(x => x.id === u.plusFrom)) ? 'family' : 'free';
+      const joined = u.createdAt ? (u.createdAt.seconds ? u.createdAt.seconds * 1000 : Number(u.createdAt) || Date.parse(u.createdAt) || 0) : 0;
+      return `<tr data-user-row="${esc(u.id)}" data-q="${esc(((u.name || '') + ' ' + (u.email || '') + ' ' + accountSearchText(u.accountNo)).toLowerCase())}" data-roles="${esc(roles.join(' '))}" data-plan="${planKey}" data-joined="${joined}" class="${u._famHead ? 'fam-head' : ''}${u._famMember ? ' fam-member' : ''}">
+      <td><span class="user-name">${u._famMember ? '<span class="fam-tick" aria-hidden="true">↳</span>' : ''}<span class="user-icon"><i data-icon="${roleIcon[primaryRole(roles)] || 'user'}"></i></span>${esc(u.name||'—')}</span>${plusRequests[u.id] ? `<div class="plus-note"><strong>Asked for Plus${plusRequests[u.id].at ? ' ' + agoText(plusRequests[u.id].at) : ''}</strong>${plusRequests[u.id].note ? `: “${esc(plusRequests[u.id].note)}”` : ''}</div>` : ''}</td>
+      <td class="muted">${esc(u.email||'—')}${u.accountNo ? `<div class="acct-no" title="Account number">${esc(formatAccountNo(u.accountNo))}</div>` : ''}</td>
       <td>${roles.map(r => `<span class="badge ${roleColour[r]||'badge-primary'}">${r}</span>`).join(' ')}</td>
-      <td>${roles.includes('admin') ? '<span class="muted">Admin</span>' : `<label class="plus-switch" title="Plus: AI features"><input type="checkbox" data-plus-uid="${esc(u.id)}" ${u.tier === 'plus' || u.plan === 'plus' ? 'checked' : ''}> Plus</label>${u.plusFrom && !(u.tier === 'plus' || u.plan === 'plus') ? ` <span class="badge badge-success" title="Covered by ${esc((usersCache.find(x => x.id === u.plusFrom) || {}).name || 'a parent')}'s Plus">Family</span>` : ''}${plusRequests[u.id] ? ' <span class="badge badge-warning">Asked</span>' : ''}`}</td>
+      <td>${roles.includes('admin') ? '<span class="muted">Admin</span>' : (() => {
+        const own = u.tier === 'plus' || u.plan === 'plus';
+        // Covered by a parent's Plus: show it as Plus (ticked, greyed), naming the parent
+        const fam = !own && u.plusFrom ? (usersCache.find(x => x.id === u.plusFrom) || {}) : null;
+        if (fam) return `<label class="plus-switch plus-family" title="Plus through ${esc(fam.name || 'a parent')}. It follows their plan; tick their Plus off to remove it."><input type="checkbox" checked disabled> Plus</label> <span class="badge badge-success">via ${esc(firstName(fam.name) || 'parent')}</span>${plusRequests[u.id] ? ' <span class="badge badge-warning">Asked</span>' : ''}`;
+        return `<label class="plus-switch" title="Plus: AI features"><input type="checkbox" data-plus-uid="${esc(u.id)}" ${own ? 'checked' : ''}> Plus</label>${plusRequests[u.id] ? ' <span class="badge badge-warning">Asked</span>' : ''}`;
+      })()}</td>
       <td class="muted">${u.createdAt ? new Date(u.createdAt.seconds ? u.createdAt.seconds*1000 : u.createdAt).toLocaleDateString('en-GB') : '—'}</td>
       <td class="actions">${student
         ? `<button class="btn btn-secondary btn-sm" data-action="view-as" data-uid="${esc(u.id)}"><i data-icon="eye"></i> View as</button>`
@@ -4561,6 +4650,46 @@ async function loadUsers() {
           ? `<button class="btn btn-ghost btn-sm" data-action="delete-user" data-uid="${esc(u.id)}" data-name="${esc(u.name || u.email || '')}" title="Delete this account"><i data-icon="trash-2"></i></button>` : ''}</td>
     </tr>`; }).join('')}</tbody>
   </table>`;
+  wireUserFilters();
+  applyUserFilters();
+}
+
+/* ── Users & roles filters: name/email, role, joined ── */
+function wireUserFilters() {
+  const bar = document.getElementById('users-filters');
+  if (!bar || bar.dataset.wired) return;
+  bar.dataset.wired = '1';
+  const $f = id => document.getElementById(id);
+  ['uf-q', 'uf-role', 'uf-plan', 'uf-from', 'uf-to'].forEach(id => $f(id).addEventListener('input', applyUserFilters));
+  $f('uf-when').addEventListener('change', () => { $f('uf-dates').hidden = $f('uf-when').value !== 'custom'; applyUserFilters(); });
+  $f('uf-clear').onclick = () => { $f('uf-q').value = ''; $f('uf-role').value = ''; $f('uf-plan').value = ''; $f('uf-when').value = ''; $f('uf-from').value = ''; $f('uf-to').value = ''; $f('uf-dates').hidden = true; applyUserFilters(); };
+}
+function applyUserFilters() {
+  const $f = id => document.getElementById(id);
+  if (!$f('uf-q')) return;
+  const q = $f('uf-q').value.trim().toLowerCase();
+  const role = $f('uf-role').value, when = $f('uf-when').value, plan = $f('uf-plan').value;
+  let from = 0, to = Infinity;
+  if (when === 'custom') {
+    if ($f('uf-from').value) from = new Date($f('uf-from').value + 'T00:00:00').getTime();
+    if ($f('uf-to').value) to = new Date($f('uf-to').value + 'T23:59:59').getTime();
+  } else if (when) from = Date.now() - Number(when) * 86400000;
+  const active = !!(q || role || when || plan);
+  const rows = [...document.querySelectorAll('.users-table tbody tr[data-user-row]')];
+  let shown = 0;
+  rows.forEach(tr => {
+    const j = Number(tr.dataset.joined) || 0;
+    const ok = (!q || q.split(/\s+/).every(w => tr.dataset.q.includes(w)))
+      && (!role || tr.dataset.roles.split(' ').includes(role))
+      && (!plan || (plan === 'plus' ? tr.dataset.plan !== 'free' : tr.dataset.plan === plan))
+      && (!when || (j && j >= from && j <= to));
+    tr.hidden = !ok;
+    if (ok) shown++;
+  });
+  // While filtering, families aren't shown as groups (their heads may be hidden)
+  document.querySelector('.users-table')?.classList.toggle('filtering', active);
+  $f('uf-clear').hidden = !active;
+  $f('uf-count').textContent = active ? `Showing ${shown} of ${rows.length}` : `${rows.length} people`;
 }
 
 // Inline editor for an adult's roles
@@ -4627,6 +4756,6 @@ window.showToast = function(msg, type='info') {
   c.appendChild(t); setTimeout(() => t.remove(), 3500);
 };
 </script>
-<script src="site.js?v=20261113k"></script>
+<script src="site.js?v=20261113v"></script>
 </body>
 </html>
