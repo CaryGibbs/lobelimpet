@@ -13,12 +13,12 @@
 // Lobe Limpet (official) packs can be read by anyone signed in.
 // ============================================================
 
-import { db } from './firebase-config.js?v=20261114c';
-import { listPacks, flatPackIds } from './packs.js?v=20261114c';
-import { pickerHtml, wirePicker, boardTagHtml } from './pack-picker.js?v=20261114c';
-import { firstStepsState, saveFirstSteps, firstStepsHtml, wireFirstSteps, FIRST_STEPS_CSS, appStep, noteAppInstalled } from './first-steps.js?v=20261114c';
-import { studyEntries } from './gamification.js?v=20261114c';
-import { logEvent } from './log.js?v=20261114c';
+import { db } from './firebase-config.js?v=20261114h';
+import { listPacks, flatPackIds } from './packs.js?v=20261114h';
+import { pickerHtml, wirePicker, boardTagHtml } from './pack-picker.js?v=20261114h';
+import { firstStepsState, saveFirstSteps, firstStepsHtml, wireFirstSteps, FIRST_STEPS_CSS, appStep, noteAppInstalled } from './first-steps.js?v=20261114h';
+import { studyEntries } from './gamification.js?v=20261114h';
+import { logEvent } from './log.js?v=20261114h';
 import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -82,7 +82,7 @@ export function noPackHtml(joinForm) {
         <p>Type or import your cards; each one becomes quiz questions.</p>
         <a class="btn btn-secondary" href="cards.html"><i data-icon="layers"></i> My flashcards</a></div>
     </div>
-    <p class="ss-parent">Want revision made from your own class notes or worksheets? A parent can link to your account (they choose Add student and use your email) and turn your school sheets into notes and quizzes.</p>
+    <p class="ss-parent">Want revision made from your own class notes or worksheets? A parent can link to your account (they choose Add student and use your email) and turn your revision lists into notes and quizzes.</p>
   </div>`;
 }
 

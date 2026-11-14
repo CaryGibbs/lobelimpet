@@ -2,11 +2,11 @@
 // CLASP — Shared Auth Utilities (Firestore version)
 // ============================================================
 
-import { auth, db } from './firebase-config.js?v=20261114c';
-import { ensureAccountNo } from './account-no.js?v=20261114c';
+import { auth, db } from './firebase-config.js?v=20261114h';
+import { ensureAccountNo } from './account-no.js?v=20261114h';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { doc, getDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { logEvent, setLogActor, pageRole } from './log.js?v=20261114c';
+import { logEvent, setLogActor, pageRole } from './log.js?v=20261114h';
 
 // Never wait forever on the network: give up after `ms` so the UI can recover
 function withTimeout(promise, ms, label = 'Request') {
@@ -212,10 +212,11 @@ export function aiTrialLeft(profile) {
 }
 export function onAiTrial(profile) { return aiTrialLeft(profile) > 0; }
 export function canUseAI(profile) { return hasPlus(profile) || onAiTrial(profile); }
-// "2 worksheets" / "1 worksheet" left on the free try
-export function trialSheetsText(profile) {
+// "2 revision lists" / "1 revision list" left on the free try
+// (teachers pass 'upload': "2 uploads")
+export function trialSheetsText(profile, unit = 'revision list') {
   const n = Math.max(1, Math.ceil(aiTrialLeft(profile) / TOKENS_PER_SHEET));
-  return `${n} worksheet${n === 1 ? '' : 's'}`;
+  return `${n} ${unit}${n === 1 ? '' : 's'}`;
 }
 // The adult views a person can switch between, in a fixed order
 export function viewsOf(profile) {
@@ -253,6 +254,7 @@ export async function handleSignOut() {
   if (_preview) { exitPreview(); return; } // in a preview window, "Sign out" just leaves the preview
   await Promise.race([logEvent('account.signout'), new Promise(r => setTimeout(r, 1500))]);
   await signOut(auth);
+  try { localStorage.removeItem('ll_home'); } catch (e) {} // the next person to sign in gets their own home
   window.location.href = 'login.html';
 }
 
