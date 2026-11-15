@@ -6,10 +6,11 @@
 // with the topic so it loads instantly for everyone afterwards.
 // ============================================================
 
-import { db } from './firebase-config.js?v=20261114m';
-import { isPreview, previewInfo, showToast, hasRole, isStudent } from './auth.js?v=20261114m';
-import { awardXp, BADGES } from './gamification.js?v=20261114m';
-import { askClaude, jsonOf } from './ai.js?v=20261114m';
+import { db } from './firebase-config.js?v=20261115h';
+import { isPreview, previewInfo, showToast, hasRole, isStudent } from './auth.js?v=20261115h';
+import { awardXp, BADGES } from './gamification.js?v=20261115h';
+import { askClaude, jsonOf } from './ai.js?v=20261115h';
+import { showBadgePops } from './badge-pop.js?v=20261115h';
 import { doc, getDoc, setDoc, updateDoc, deleteField, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
@@ -240,10 +241,13 @@ async function toggleLearned() {
 
 // Tell the student about any badges they've just earned
 export function celebrate(result) {
-  (result?.newlyEarned || []).forEach((id, i) => {
+  const ids = result?.newlyEarned || [];
+  if (!ids.length) return;
+  // Each badge pops out from under Lobey's shell; a plain message if that can't load
+  showBadgePops(ids).catch(() => ids.forEach((id, i) => {
     const b = BADGES.find(x => x.id === id);
     if (b) setTimeout(() => showToast(`${b.icon} New badge: ${b.name}`, 'success'), 600 * i);
-  });
+  }));
 }
 
 // First time a student opens a topic's cheat sheet: count it and award XP
