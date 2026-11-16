@@ -7,12 +7,12 @@
 // Parent changes are saved as plan.overrides.<day> on the student.
 // ============================================================
 
-import { byOrder } from './order.js?v=20261115j';
-import { db } from './firebase-config.js?v=20261115j';
+import { byOrder } from './order.js?v=20261116a';
+import { db } from './firebase-config.js?v=20261116a';
 import { doc, updateDoc, deleteField, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { logEvent } from './log.js?v=20261115j';
-import { packNames } from './packs.js?v=20261115j';
-import { planSchedule, planSummary, planPack, planPacks, LEVELS, targetText, loadPlanSettings } from './plan.js?v=20261115j';
+import { logEvent } from './log.js?v=20261116a';
+import { packNames } from './packs.js?v=20261116a';
+import { planSchedule, planSummary, planPack, planPacks, LEVELS, targetText, loadPlanSettings } from './plan.js?v=20261116a';
 
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -106,7 +106,7 @@ export async function openPlanCalendar(profile, opts = {}) {
     const mins = ahead.reduce((a, d) => a + (d.L.mins || 0), 0);
     const covered = new Set(ahead.flatMap(d => (d.subjects || []).map(x => x.id)).filter(id => subjects.some(s => s.id === id)));
     const who = opts.name ? `${esc(opts.name)}'s` : 'Your';
-    const levelOpts = [['', 'Auto'], ['rest', '😴 Rest day'], ['relaxed', '🌱 Relaxed'], ['steady', '📘 Steady'], ['push', '🚀 Exam push'], ['final', '🔥 Final days']];
+    const levelOpts = [['', 'Auto'], ['rest', '😴 Rest day'], ...['relaxed', 'steady', 'push', 'final'].map(k => [k, `${LEVELS[k].emoji} ${LEVELS[k].label} · ${LEVELS[k].mins} min`])];
     overlay.innerHTML = `<div class="pv-modal" role="dialog" aria-modal="true" aria-label="Plan to exams">
       <div class="pv-head"><div><h2>${who} plan${exam ? ` to ${esc(exam.name || 'exams')}` : ' for the next two weeks'}</h2></div>
         <button class="pv-close" aria-label="Close">✕</button></div>
