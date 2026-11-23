@@ -140,7 +140,11 @@ service cloud.firestore {
         return (!hasRole(newData(), 'student') || studentSelfSignupOn())
           && (!hasRole(newData(), 'admin') || adminInvite(newData().get('inviteCode', '')))
           && newData().get('plan', null) != 'plus' && newData().get('tier', null) != 'plus'
-          && !newData().keys().hasAny(['parentUid', 'guardianIds', 'teacherUid', 'aiLimit', 'accountNo', 'tierSource', 'plusUntil', 'plusNote'])
+          && !newData().keys().hasAny(['parentUid', 'guardianIds', 'teacherUid', 'aiLimit', 'accountNo', 'tierSource', 'plusUntil', 'plusNote', 'parentConfirmedAt'])
+          // Students signing themselves up give an age band; 13 to 15s get at
+          // most 7 days before a parent must join
+          && (!hasRole(newData(), 'student') || newData().get('ageBand', '') in ['13-15', '16+'])
+          && (newData().get('ageBand', '') != '13-15' || newData().get('trialEnds', 0) <= request.time.toMillis() + 7 * 86400000 + 600000)
           && teacherIdsCreateOK();
       }
       // A parent or teacher creating a student account
@@ -165,7 +169,9 @@ service cloud.firestore {
       // Editing yourself: can't change plan or who your parents are; can only
       // add admin with a valid admin invite
       function selfUpdateOK() {
-        return !changedKeys().hasAny(['parentUid', 'guardianIds', 'teacherUid', 'aiLimit', 'tierSource', 'plusUntil', 'plusNote'])
+        return !changedKeys().hasAny(['parentUid', 'guardianIds', 'teacherUid', 'aiLimit', 'tierSource', 'plusUntil', 'plusNote',
+                                      'ageBand', 'trialEnds', 'parentConfirmedAt',      // under-16s can't remove the parent requirement
+                                      'remindersAllowed'])                              // a parent allows reminders
           && accountNoOK()
           && !gainsPlus()
           && teacherIdsUpdateOK()
@@ -189,8 +195,17 @@ service cloud.firestore {
               || hasRole(userDoc(inv.get('by', '')), 'admin'));
       }
 
+      // Adults' records: other adults (co-parents, family Plus checks) and the
+      // students linked to them (their parents and teachers) can read them;
+      // other students can't (safeguarding)
+      function linkedToMe(id) {
+        let mine = userDoc(me());
+        return id == mine.get('parentUid', '') || id in mine.get('guardianIds', []) || id in mine.get('teacherIds', []);
+      }
       allow get: if signedIn() && (
-        me() == uid || isAdmin() || guardianOf(resource.data) || teacherOf(resource.data) || isAdult(resource.data));
+        me() == uid || isAdmin() || guardianOf(resource.data) || teacherOf(resource.data)
+        || (isAdult(resource.data) && exists(/databases/$(database)/documents/users/$(me()))
+            && (isAdult(userDoc(me())) || linkedToMe(uid))));
       allow list: if isAdmin();
 
       allow create: if signedIn() && (
@@ -211,6 +226,16 @@ service cloud.firestore {
         isOwner()
         || (isAdmin() && uid != ownerUid())
         || (resource.data.get('parentUid', '') == me() && resource.data.get('guardianIds', []).removeAll([me()]).size() == 0));
+
+      // Reminders on this person's devices (Web Push subscriptions); only
+      // they can add or remove them, and only the AI Worker sends to them
+      match /push/{pid} {
+        allow read, delete: if signedIn() && me() == uid;
+        allow create, update: if signedIn() && me() == uid
+          && request.resource.data.keys().hasOnly(['endpoint', 'p256dh', 'auth', 'at', 'ua'])
+          && request.resource.data.endpoint is string && request.resource.data.endpoint.matches('https://.*')
+          && request.resource.data.endpoint.size() < 1000;
+      }
 
       // A parent's list of their students
       match /children/{sid} {
@@ -272,7 +297,9 @@ service cloud.firestore {
         return exists(/databases/$(database)/documents/users/$(id))
           && (guardianOf(userDoc(id)) || teacherOf(userDoc(id)));
       }
-      allow get: if signedIn();
+      // Only admins (and the AI Worker) can read it: nobody can look up
+      // who uses an email address (safeguarding)
+      allow get: if isAdmin();
       allow list: if isAdmin();
       allow create, update: if signedIn()
         && (resource == null || resource.data.uid == request.resource.data.uid || isAdmin())
@@ -459,24 +486,18 @@ service cloud.firestore {
     match /parentLinks/{id} {
       function stu() { return userDoc(request.resource.data.studentUid); }
       allow get, list: if signedIn() && (resource.data.by == me() || resource.data.studentUid == me() || isAdmin());
-      allow create: if signedIn()
-        && request.resource.data.by == me()
-        && id == me() + '_' + request.resource.data.studentUid
-        && request.resource.data.status == 'pending'
-        && (hasRole(userDoc(me()), 'parent') || hasRole(userDoc(me()), 'admin'))
-        && exists(/databases/$(database)/documents/users/$(request.resource.data.studentUid))
-        && hasRole(stu(), 'student')
-        && stu().get('parentUid', '') != me() && !(me() in stu().get('guardianIds', []));
+      // Requests are made by the AI Worker (requestLink), which checks the
+      // account is at least a day old and tells the student's other parents
+      allow create: if false;
       allow update: if signedIn() && (
         // the student answers, or removes a parent they linked
         (resource.data.studentUid == me() && changedKeys().hasOnly(['status', 'decidedAt'])
           && ((resource.data.status == 'pending' && request.resource.data.status in ['accepted', 'declined'])
               || (resource.data.status == 'accepted' && request.resource.data.status == 'removed')))
-        // the parent cancels, or asks again after a no
+        // the parent cancels (asking again goes through the Worker)
         || (resource.data.by == me() && request.resource.data.by == me()
           && request.resource.data.studentUid == resource.data.studentUid
-          && (request.resource.data.status == 'cancelled'
-              || (request.resource.data.status == 'pending' && resource.data.status != 'accepted'))));
+          && request.resource.data.status == 'cancelled'));
       allow delete: if isAdmin();
     }
 

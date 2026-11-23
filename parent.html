@@ -329,6 +329,10 @@
         <input type="checkbox" id="manage-plan-reviews" checked style="margin-top:3px;">
         <span>Daily goal includes clearing due reviews<br><span class="form-hint" style="font-weight:400;">On Steady, Exam push and Final days. Untick to make reviews optional: they still show up, they just don't block the goal.</span></span>
       </label>
+      <label class="check-row" style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-weight:600;font-size:0.9rem;cursor:pointer;">
+        <input type="checkbox" id="manage-reminders" style="margin-top:3px;">
+        <span>Allow reminders on their phone<br><span class="form-hint" style="font-weight:400;">At most one a day: 4:30pm if reviews are waiting, or 7pm if their streak would end. They still choose to turn them on, in their Profile.</span></span>
+      </label>
       <div class="plan-exams" id="manage-exams"></div>
       <div class="form-hint">Don't know the dates of each paper yet? Add one row for the week with All subjects. Once you do, add a row per paper with its subject, and the plan revises each one in the days before it.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
@@ -455,7 +459,7 @@ import { ownPackStats, firstStepsState, saveFirstSteps, askedToShow, firstStepsH
 import { showPlusUpsell } from './plus.js?v=20261120d';
 import { marksFullThisWeek } from './marks.js?v=20261120d';
 import { syncMyChildPlus, syncMyCoParentPlus } from './family-plus.js?v=20261120d';
-import { saveEmailIndex, findByEmail } from './email-index.js?v=20261120d';
+import { saveEmailIndex, checkAccount } from './email-index.js?v=20261123e';
 import { sendStudentSetup } from './mail.js?v=20261123a';
 import { getLevelInfo, lastActive, lastActiveText, studyEntries, currentStreak, streakStatus, repairOffer, REPAIR, loadStreakSettings } from './gamification.js?v=20261120d';
 import { THEMES, themeColour, themeSwatchHtml, THEME_SWATCH_CSS } from './themes.js?v=20261120d';
@@ -471,7 +475,8 @@ import { listPacks, packNames, packSections, flatPackIds } from './packs.js?v=20
 import { pickerHtml, wirePicker, boardTagHtml } from './pack-picker.js?v=20261120d';
 import { openDeleteAccount } from './account.js?v=20261120d';
 import { openPasswordHelp } from './password-help.js?v=20261123a';
-import { sendLinkRequest, myLinkRequests, cancelLinkRequest } from './parent-link.js?v=20261120d';
+import { myLinkRequests, cancelLinkRequest } from './parent-link.js?v=20261123e';
+import { workerAction } from './ai.js?v=20261120d';
 import {
   doc, setDoc, getDoc, updateDoc, deleteDoc, deleteField,
   collection, getDocs, onSnapshot, serverTimestamp, query, where, arrayUnion, arrayRemove
@@ -684,7 +689,7 @@ async function refreshFromChildRecords() {
     records[id] = p;
     syncMyChildPlus(parentUid, shellProfile, id, p);   // my Plus covers my students
     const keep = ['name', 'email', 'theme', 'groupIds', 'groupId', 'packIds', 'currentPackId', 'myPackId', 'sessions', 'streak', 'bestStreak', 'plan', 'planGoals', 'shields', 'streakRepair', 'lastRepairDay', 'lastShieldUsed', 'lastRevisionDate', 'lastActiveAt', 'xp', 'level',
-                  'study', 'studySubjects', 'parentUid', 'guardianIds', 'classPacks', 'srs', 'cardLength', 'aiMarksFull'];
+                  'study', 'studySubjects', 'parentUid', 'guardianIds', 'classPacks', 'srs', 'cardLength', 'aiMarksFull', 'remindersAllowed', 'ageBand'];
     const fresh = {};
     keep.forEach(k => { if (p[k] !== undefined) fresh[k] = p[k]; });
     liveStats[id] = fresh;
@@ -1002,9 +1007,11 @@ window._addChild = async function() {
   document.getElementById('link-offer').innerHTML = '';
   // Does this email already have an account? Then ask the student to link instead
   btn.classList.add('loading');
-  const existing = await findByEmail(email).catch(() => null);
+  let existing = null;
+  try { existing = await checkAccount(email); }
+  catch (e) { btn.classList.remove('loading'); showErr('add-error', e.message); return; }
   btn.classList.remove('loading');
-  if (existing) { offerLink(existing, name); return; }
+  if (existing?.exists) { offerLink(existing, name, email); return; }
   // No password: make a random one and email them a link to choose their own
   const ownPassword = !password;
   if (!ownPassword && password.length < 8) { showErr('add-error', 'Password must be at least 8 characters, or leave it blank.'); return; }
@@ -1080,16 +1087,15 @@ function showAddedDone(name, email, how) {
 
 /* ── Linking a student who already has an account ─────────── */
 let pendingLinks = [];
-function offerLink(other, typedName) {
+function offerLink(other, typedName, email) {
   const box = document.getElementById('link-offer');
   document.getElementById('add-error').classList.remove('visible');
-  const roles = other.roles || [];
-  if (other.id === parentUid) { showErr('add-error', "That's your own email address."); return; }
-  if (childrenData[other.id]) { showErr('add-error', `${other.name || 'That student'} is already in your list.`); return; }
-  if (!roles.includes('student')) { showErr('add-error', 'That email belongs to a parent or teacher account, not a student. Use a different email for the student.'); return; }
-  const waiting = pendingLinks.find(l => l.studentUid === other.id && l.status === 'pending');
+  if (other.kind === 'self') { showErr('add-error', "That's your own email address."); return; }
+  if (other.mine) { showErr('add-error', `${typedName || 'That student'} is already in your list.`); return; }
+  if (other.kind !== 'student') { showErr('add-error', 'That email belongs to a parent or teacher account, not a student. Use a different email for the student.'); return; }
+  const waiting = pendingLinks.find(l => (l.studentEmail || '').toLowerCase() === email && l.status === 'pending');
   box.innerHTML = `<div class="link-offer">
-    <strong>${esc(other.name || typedName || 'This student')} already has a Lobe Limpet account.</strong>
+    <strong>${esc(typedName || 'This student')} already has a Lobe Limpet account.</strong>
     <p>${waiting ? "You've already asked them. They'll appear in your list once they accept." : "Send them a request to link with you. Once they accept in their hub, you'll see their progress here and can set up packs and plans. They keep everything they've done so far."}</p>
     ${waiting ? '' : '<button class="btn btn-primary" id="btn-send-link"><i data-icon="send"></i> Send link request</button>'}
   </div>`;
@@ -1097,9 +1103,9 @@ function offerLink(other, typedName) {
   if (b) b.onclick = async () => {
     b.disabled = true;
     try {
-      await sendLinkRequest({ parentUid, parentName: shellProfile?.name || '', parentEmail: shellProfile?.email || '', student: other, typedName: typedName || other.name });
+      const r = await workerAction('requestLink', { email, typedName });
       document.getElementById('modal-add').classList.remove('open');
-      showToast(`Request sent. ${typedName || other.name || 'They'} will see it next time they open Lobe Limpet.`, 'success');
+      showToast(r.status === 'already' ? `${typedName || 'They'} is already linked with you.` : r.status === 'waiting' ? `You've already asked. ${typedName || 'They'} will see it next time they open Lobe Limpet.` : `Request sent. ${typedName || 'They'} will see it next time they open Lobe Limpet.`, 'success');
       loadPendingLinks();
     } catch (e) { b.disabled = false; showErr('add-error', 'Could not send the request: ' + e.message); }
   };
@@ -1176,6 +1182,7 @@ function renderPlanEditor() {
   };
   sel.onchange = hint; hint();
   document.getElementById('manage-plan-reviews').checked = !managePlan.reviewsOff;
+  document.getElementById('manage-reminders').checked = childrenData[managingChildId]?.remindersAllowed === true;
   const box = document.getElementById('manage-exams');
   // Which revision pack the exams are on (sets the subjects in the day-by-day plan)
   const stu = childrenData[managingChildId] || {};
@@ -1281,16 +1288,18 @@ window._saveChild = async function() {
     if (managePlan.overrides) plan.overrides = managePlan.overrides;   // keep day-by-day changes
     if (managePlan.reviewsOff) plan.reviewsOff = true;                 // reviews optional (default: required)
     const was = { ...(childrenData[managingChildId] || {}) };
+    const remindersAllowed = document.getElementById('manage-reminders').checked;
     await updateDoc(doc(db, 'users', managingChildId), {
-      name, theme: manageTheme, groupIds, packIds, cardLength, plan,
+      name, theme: manageTheme, groupIds, packIds, cardLength, plan, remindersAllowed,
       groupId: groupIds[0] || null
     });
+    if ((was.remindersAllowed === true) !== remindersAllowed) logEvent('student.edit', { target: name, targetId: managingChildId, detail: remindersAllowed ? 'Allowed reminders' : 'Turned off reminders' });
     const planText = p => `${p?.mode || 'auto'}${p?.reviewsOff ? ' · reviews optional' : ''}${(p?.exams || []).length ? ' · ' + p.exams.map(e => `${e.name} ${e.start}${e.end ? '–' + e.end : ''}`).join('; ') : ''}`;
     if (planText(was.plan) !== planText(plan)) logEvent('plan.change', { target: name, targetId: managingChildId, detail: planText(plan) });
     const changed = [was.name !== name && 'name', was.theme !== manageTheme && 'theme', JSON.stringify([...(was.groupIds || [])].sort()) !== JSON.stringify([...groupIds].sort()) && 'packs', (was.cardLength || 'full') !== cardLength && 'card length'].filter(Boolean);
     if (changed.length) logEvent('student.edit', { target: name, targetId: managingChildId, detail: 'Changed ' + changed.join(', ') });
     // Remember what was saved, so the list doesn't redraw from the copy read when the page opened
-    const saved = { name, theme: manageTheme, groupIds, cardLength, plan };
+    const saved = { name, theme: manageTheme, groupIds, cardLength, plan, remindersAllowed };
     liveStats[managingChildId] = { ...(liveStats[managingChildId] || {}), ...saved };
     Object.assign(childrenData[managingChildId], saved);
     renderChildren();
@@ -1332,23 +1341,13 @@ window._shareStudent = async function() {
   if (!email) { showErr('manage-error', 'Enter the other parent\'s email address.'); return; }
   const btn = document.getElementById('btn-share'); btn.disabled = true;
   try {
-    // Exact-email look-up (the security rules don't allow searching all users)
-    const other = await findByEmail(email);
-    if (!other) { showErr('manage-error', 'No Lobe Limpet account uses that email. Ask them to create a parent account first.'); return; }
-    if (other.id === parentUid) { showErr('manage-error', 'That\'s your own account.'); return; }
-    const theirRoles = other.roles || [];
-    if (!theirRoles.some(r => r === 'parent' || r === 'admin')) { showErr('manage-error', 'That account isn\'t a parent account. They need to sign up as a parent.'); return; }
-    // Link the student to them, and add the student to their list
-    await updateDoc(doc(db, 'users', managingChildId), { guardianIds: arrayUnion(other.id) });
-    await setDoc(doc(db, 'users', other.id, 'children', managingChildId), {
-      name: child.name, email: child.email, theme: child.theme || 'edge',
-      groupIds: child.groupIds || [], createdAt: Date.now(), sharedBy: parentUid
-    }, { merge: true });
-    child.guardianIds = [...new Set([...(child.guardianIds || []), other.id])];
-    logEvent('student.share', { target: child.name, targetId: managingChildId, detail: `Shared with ${other.name || email}` });
+    // The Worker finds the account by email (nobody can look up names or ids)
+    await workerAction('shareStudent', { studentUid: managingChildId, email });
+    const fresh = await getDoc(doc(db, 'users', managingChildId)).catch(() => null);
+    if (fresh?.exists()) child.guardianIds = fresh.data().guardianIds || child.guardianIds || [];
     document.getElementById('share-email').value = '';
     document.getElementById('manage-error').classList.remove('visible');
-    showToast(`Shared with ${other.name || email}`, 'success');
+    showToast(`Shared with ${email}`, 'success');
     renderGuardians(managingChildId);
   } catch (e) {
     showErr('manage-error', 'Could not share: ' + e.message);
