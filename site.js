@@ -26,8 +26,10 @@
 
   // The signed-in person's own home in the app (student hub, or their
   // parent/teacher/admin page). Remembered by auth.js; sign-in page if unknown.
-  var myHome = 'login.html';
-  try { myHome = localStorage.getItem('ll_home') || 'login.html'; } catch (e) {}
+  var myHome = 'login.html', likelyIn = false;
+  try { likelyIn = !!localStorage.getItem('ll_home'); myHome = localStorage.getItem('ll_home') || 'login.html'; } catch (e) {}
+  // Remembered as signed in (ll_home is cleared on sign-out): draw the header that
+  // way from the start, so it doesn't jump when sign-in is confirmed a moment later
   window.LL_MY_HOME = myHome;
 
   // ── Public header ───────────────────────────────────────
@@ -35,26 +37,33 @@
   if (head) {
     head.outerHTML = '<header><div class="wrap nav">' + BRAND +
       '<div class="nav-right"><nav class="nav-links" aria-label="Main">' +
-      '<a href="./"' + cur('index.html') + '>Parents</a>' +
+      '<a href="parents.html"' + cur('parents.html') + '>Parents</a>' +
       '<a href="students.html"' + cur('students.html') + '>Students</a>' +
       '<a href="teachers.html"' + cur('teachers.html') + '>Teachers</a>' +
       '<a href="features.html"' + cur('features.html') + '>Features</a>' +
       '<a href="plus.html"' + cur('plus.html') + '>Pricing</a>' +
+      '<a href="resources.html"' + cur('resources.html') + '>Resources</a>' +
+      '<a href="about.html"' + cur('about.html') + '>About</a>' +
       '<a href="help.html"' + cur('help.html') + '>Help</a></nav>' +
-      '<a class="nav-signin" href="login.html" id="nav-btn">Sign in</a>' +
-      '<a class="btn btn-coral nav-signup" href="login.html?signup=' + signupType + '" id="nav-signup">Sign up free</a>' +
+      // Sign in / Sign out: always there and the same width, so the menu never shifts
+      '<a class="nav-signin" href="login.html" id="nav-btn"' + (likelyIn ? ' data-out="1"' : '') + '>' + (likelyIn ? 'Sign out' : 'Sign in') + '</a>' +
+      (likelyIn ? '<a class="btn btn-coral nav-signup" href="' + myHome + '" id="nav-signup">Go to my home</a>'
+                : '<a class="btn btn-coral nav-signup" href="login.html?signup=' + signupType + '" id="nav-signup">Sign up free</a>') +
       '<button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="nav-menu"><span></span><span></span><span></span></button>' +
       '</div></div>' +
       // Phone menu (the links above are hidden on narrow screens)
       '<nav class="nav-menu" id="nav-menu" aria-label="Menu" hidden>' +
-      '<a href="./"' + cur('index.html') + '>For parents</a>' +
+      '<a href="./"' + cur('index.html') + '>Home</a>' +
+      '<a href="parents.html"' + cur('parents.html') + '>For parents</a>' +
       '<a href="students.html"' + cur('students.html') + '>For students</a>' +
       '<a href="teachers.html"' + cur('teachers.html') + '>For teachers</a>' +
       '<a href="features.html"' + cur('features.html') + '>Features</a>' +
       '<a href="plus.html"' + cur('plus.html') + '>Pricing</a>' +
+      '<a href="resources.html"' + cur('resources.html') + '>Resources</a>' +
+      '<a href="about.html"' + cur('about.html') + '>About us</a>' +
       '<a href="help.html"' + cur('help.html') + '>Help</a>' +
-      '<a href="contact.html"' + cur('contact.html') + '>Contact</a>' +
-      '<a href="login.html" id="menu-signin">Sign in</a>' +
+      '<a href="contact.html"' + cur('contact.html') + '>Contact us</a>' +
+      '<a href="' + (likelyIn ? myHome : 'login.html') + '" id="menu-signin">' + (likelyIn ? 'My home' : 'Sign in') + '</a>' +
       '</nav></header>';
     var tog = document.getElementById('nav-toggle'), menu = document.getElementById('nav-menu');
     var setOpen = function (open) { menu.hidden = !open; tog.setAttribute('aria-expanded', open); tog.classList.toggle('open', open); };
@@ -69,7 +78,7 @@
   if (foot) {
     foot.outerHTML = '<footer class="site-foot"><div class="wrap"><div class="foot-grid">' +
       '<div>' + BRAND + '<p class="foot-blurb">Snap a revision list and get everything needed to revise it.</p></div>' +
-      '<div><h4>Lobe Limpet</h4><ul><li><a href="./">For parents</a></li><li><a href="students.html">For students</a></li><li><a href="teachers.html">For teachers</a></li><li><a href="features.html">Features</a></li><li><a href="plus.html">Pricing</a></li><li><a href="help-your-child-revise.html">Helping your child revise</a></li></ul></div>' +
+      '<div><h4>Lobe Limpet</h4><ul><li><a href="parents.html">For parents</a></li><li><a href="students.html">For students</a></li><li><a href="teachers.html">For teachers</a></li><li><a href="features.html">Features</a></li><li><a href="plus.html">Pricing</a></li><li><a href="resources.html">Resources and guides</a></li><li><a href="free-revision-quizzes.html">Free revision quizzes</a></li></ul></div>' +
       '<div><h4>Get started</h4><ul><li><a href="login.html?signup=' + signupType + '" id="foot-signup">Sign up free</a></li><li><a href="login.html" id="foot-signin">Sign in</a></li><li><a href="help.html">Help &amp; FAQs</a></li><li><a href="contact.html">Contact us</a></li></ul></div>' +
       '<div><h4>Company</h4><ul><li><a href="about.html">About us</a></li><li><a href="press.html">Press and brand</a></li><li><a data-email></a></li></ul></div>' +
       '<div><h4>Legal</h4><ul><li><a href="privacy.html">Privacy notice</a></li><li><a href="terms.html">Terms of use</a></li></ul></div>' +
@@ -117,17 +126,28 @@
   if (head) {
     var check = function () {
       Promise.all([
-        import('./firebase-config.js?v=20261123h'),
+        import('./firebase-config.js?v=20261124u'),
         import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js')
       ]).then(function (m) {
         m[1].onAuthStateChanged(m[0].auth, function (user) {
-          if (!user) return;
+          if (!user) {
+            // Remembered as signed in, but the sign-in has gone (expired, or another
+            // browser tab signed out): put the signed-out header back
+            if (!likelyIn) return;
+            likelyIn = false;
+            try { localStorage.removeItem('ll_home'); } catch (e) {}
+            var su = document.getElementById('nav-signup');
+            if (su) { su.textContent = 'Sign up free'; su.href = 'login.html?signup=' + signupType; }
+            var si = document.getElementById('nav-btn'); if (si) { si.textContent = 'Sign in'; si.removeAttribute('data-out'); }
+            var ms = document.getElementById('menu-signin'); if (ms) { ms.textContent = 'Sign in'; ms.href = 'login.html'; }
+            return;
+          }
           // Signed in: "Sign up free" becomes a direct way back to their home,
           // and the sign-in links go there too
           var up = document.getElementById('nav-signup');
           if (up) { up.textContent = 'Go to my home'; up.href = myHome; }
           var inBtn = document.getElementById('nav-btn');
-          if (inBtn) inBtn.hidden = true;
+          if (inBtn) { inBtn.textContent = 'Sign out'; inBtn.setAttribute('data-out', '1'); }
           var fu = document.getElementById('foot-signup');
           if (fu) fu.parentNode.hidden = true;
           ['foot-signin', 'menu-signin'].forEach(function (id) {
@@ -141,6 +161,37 @@
     ('requestIdleCallback' in window) ? requestIdleCallback(check, { timeout: 1500 }) : setTimeout(check, 300);
   }
 
+  // ── Links to other websites open in a new tab, so Lobe Limpet stays open,
+  //    with a small ↗ so people know before they tap ──
+  var extLinks = function () {
+    document.querySelectorAll('a[href^="http"]').forEach(function (a) {
+      var u; try { u = new URL(a.href); } catch (x) { return; }
+      if (u.host === location.host || /(^|\.)lobelimpet\.com$/.test(u.hostname)) return;
+      a.target = '_blank';
+      var rel = (a.rel || '').split(/\s+/); if (rel.indexOf('noopener') < 0) a.rel = (a.rel + ' noopener').trim();
+      if (a.closest('header, .ll-slimfoot') || a.querySelector('img') || a.classList.contains('btn') || a.dataset.noArrow !== undefined) return;
+      if (!a.querySelector('.ext-mark')) {
+        a.insertAdjacentHTML('beforeend', '<span class="ext-mark" aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span>');
+        if (!a.title) a.title = 'Opens in a new tab';
+      }
+    });
+  };
+  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', extLinks) : extLinks();
+
+  // ── "Sign out" in the website header ──
+  if (head) document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('#nav-btn[data-out]');
+    if (!a) return;
+    e.preventDefault();
+    try { localStorage.removeItem('ll_home'); } catch (x) {}
+    Promise.all([
+      import('./firebase-config.js?v=20261124u'),
+      import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js')
+    ]).then(function (m) { return m[1].signOut(m[0].auth); })
+      .catch(function () {})
+      .then(function () { location.reload(); });
+  });
+
   // ── "Get help" buttons (data-get-help) open the support form ──
   // support.js is only loaded when one is pressed. data-get-help="plus"
   // picks that topic to start with.
@@ -148,20 +199,20 @@
     var b = e.target.closest && e.target.closest('[data-get-help]');
     if (!b) return;
     e.preventDefault();
-    import('./support.js?v=20261123h').then(function (m) {
+    import('./support.js?v=20261124u').then(function (m) {
       m.openSupport({ topic: b.getAttribute('data-get-help') || '' });
     }).catch(function () { location.href = 'contact.html'; });
   });
 
   // ── Help answers open over the page (help-sheet.js) ─────
   var hs = document.createElement('script');
-  hs.src = 'help-sheet.js?v=20261123h';
+  hs.src = 'help-sheet.js?v=20261124u';
   hs.defer = true;
   document.head.appendChild(hs);
 
   // ── Install as an app (service worker + home screen offer) ─
   var pwa = document.createElement('script');
-  pwa.src = 'pwa.js?v=20261123h';
+  pwa.src = 'pwa.js?v=20261124u';
   pwa.defer = true;
   document.head.appendChild(pwa);
 })();
