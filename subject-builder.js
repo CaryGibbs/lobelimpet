@@ -13,11 +13,11 @@
 // without sending the whole document again and again (cost).
 // ============================================================
 
-import { db } from './firebase-config.js?v=20261126l';
-import { askClaude, textOf, findArrayLoose } from './ai.js?v=20261126l';
-import { readDocument, readDocumentWithAI } from './doc-text.js?v=20261126l';
-import { notesPromptFromText, notesPromptResearch, questionsPrompt, notesToText, QUESTION_TYPES, injectStyle as injectWizardStyle } from './topic-wizard.js?v=20261126l';
-import { logEvent } from './log.js?v=20261126l';
+import { db } from './firebase-config.js?v=20261126n';
+import { askClaude, textOf, findArrayLoose } from './ai.js?v=20261126n';
+import { readDocument, readDocumentWithAI } from './doc-text.js?v=20261126n';
+import { notesPromptFromText, notesPromptResearch, questionsPrompt, notesToText, QUESTION_TYPES, injectStyle as injectWizardStyle } from './topic-wizard.js?v=20261126n';
+import { logEvent } from './log.js?v=20261126n';
 import {
   doc, getDocs, updateDoc, addDoc, collection, serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -303,7 +303,7 @@ export async function openSubjectBuilder({ pack, subject, mode = 'sheet', trialT
   /* Step 2: tick and name the topics */
   function step2() {
     const opts = t => `<option value="new" ${t.target === 'new' ? 'selected' : ''}>New topic</option>` +
-      st.existing.map(x => `<option value="${esc(x.id)}" ${t.target === x.id ? 'selected' : ''}>Add to “${esc(x.name)}”</option>`).join('');
+      st.existing.map(x => `<option value="${esc(x.id)}" ${t.target === x.id ? 'selected' : ''}>${mode === 'ai' && x.notesSource === 'ai' ? `Rewrite “${esc(x.name)}”` : `Add to “${esc(x.name)}”`}</option>`).join('');
     const matched = st.plan.filter(t => t.target !== 'new').length;
     body().innerHTML = `
       <h3 class="tw-h">${mode === 'ai' ? (st.plan.length === 1 ? 'One topic' : `${st.plan.length} topics`) : st.plan.length === 1 ? 'We found one topic' : `We found ${st.plan.length} topics`}</h3>
@@ -386,16 +386,24 @@ export async function openSubjectBuilder({ pack, subject, mode = 'sheet', trialT
       if (same) { same.idx = [...new Set([...same.idx, ...t.idx])].sort((a, b) => a - b); if (t.about) same.about = [same.about, t.about].filter(Boolean).join('; '); continue; }
       st.results.push({ ...t, key, state: 'waiting', notes: 0, questions: 0, error: '', topicId: t.target === 'new' ? null : t.target });
     }
-    st.step = 3; st.done = false; st.stopped = false; st.stopReason = ''; render();
-    let next = 0, order = st.existing.length;
+    st.step = 3; render();
+    st.order = st.existing.length;
+    await runAll(st.results);
+  }
+  // Make these topics, a few at a time (also "Make the rest" after a stop)
+  async function runAll(list) {
+    st.done = false; st.stopped = false; st.stopReason = '';
+    list.forEach(r => { r.state = 'waiting'; r.error = ''; });
+    step3();
+    let next = 0;
     const worker = async () => {
-      while (!st.stopped && next < st.results.length) {
-        const r = st.results[next++];
-        await makeOne(r, () => order++);
+      while (!st.stopped && next < list.length) {
+        const r = list[next++];
+        await makeOne(r, () => st.order++);
         step3();
       }
     };
-    await Promise.all(Array.from({ length: Math.min(AT_ONCE, st.results.length) }, worker));
+    await Promise.all(Array.from({ length: Math.min(AT_ONCE, list.length) }, worker));
     st.results.filter(r => r.state === 'waiting').forEach(r => { r.state = 'skipped'; });
     st.done = true;
     const made = st.results.filter(r => r.notes || r.questions);
@@ -410,27 +418,39 @@ export async function openSubjectBuilder({ pack, subject, mode = 'sheet', trialT
       const own = r.idx.length ? excerptOf(st.lines, r.idx) : '';
       const source = own.replace(/\s/g, '').length >= 40 ? own : st.text;
       const focus = `Only write notes about the topic "${r.name}"${r.about ? ` (${r.about})` : ''}. ${source === st.text ? 'The document covers other topics too: ignore everything that isn\'t about this one.' : 'If a line is clearly about a different topic, leave it out.'}\n\n`;
+      // Notes already saved on an earlier go (stopped before its questions): just make the questions
+      let notes = r.savedNotes;
+      if (!notes) {
       r.state = 'notes'; step3();
-      const notes = asGroups(mode === 'ai'
+      notes = asGroups(mode === 'ai'
         ? await askList(notesPromptResearch(`${topicCtx}${r.about ? `. Cover: ${r.about}` : ''}`), 16000)
         : await askList(focus + notesPromptFromText(source, st.kind, topicCtx), st.kind === 'extract' ? 8000 : 16000));
       if (!pointCount(notes)) throw new Error('No notes came back');
       // Save the notes (a new topic is made now, so unticked ones never exist)
       let existing = st.existing.find(x => x.id === r.topicId);
       if (!r.topicId) {
-        const ref = await addDoc(collection(db, subjPath), { name: r.name, keyPoints: notes, videos: [], order: nextOrder(), createdAt: serverTimestamp() });
+        const ref = await addDoc(collection(db, subjPath), { name: r.name, keyPoints: notes, notesSource: mode === 'ai' ? 'ai' : 'material', videos: [], order: nextOrder(), createdAt: serverTimestamp() });
         r.topicId = ref.id;
         existing = { id: ref.id, name: r.name, keyPoints: notes };
         st.existing.push(existing);
         logEvent('content.topic', { target: label, detail: 'Created (topics from a sheet)' });
       } else {
-        const keyPoints = [...asGroups(existing?.keyPoints || []), ...notes];
-        await updateDoc(doc(db, `${subjPath}/${r.topicId}`), { keyPoints });
-        if (existing) existing.keyPoints = keyPoints;
+        // Build with AI over a topic whose notes were also written by AI (or that has none): replace, so nothing
+        // is repeated. Anything else is added to (a sheet can bring new points to a topic).
+        const from = mode === 'ai' ? 'ai' : 'material';
+        const had = asGroups(existing?.keyPoints || []);
+        const replace = !had.length || (from === 'ai' && existing?.notesSource === 'ai');
+        const keyPoints = replace ? notes : [...had, ...notes];
+        const notesSource = replace ? from : (existing?.notesSource === from ? from : 'mixed');
+        await updateDoc(doc(db, `${subjPath}/${r.topicId}`), { keyPoints, notesSource });
+        if (existing) { existing.keyPoints = keyPoints; existing.notesSource = notesSource; }
+        r.replaced = replace && had.length > 0;
       }
       r.notes = pointCount(notes);
+      r.savedNotes = notes;
       logEvent('content.keypoints', { target: label, detail: `${mode === 'ai' ? 'Build with AI' : 'Topics from a sheet'}: ${r.notes} notes added` });
-      if (st.stopped) { r.state = 'done'; return; }
+      }
+      if (st.stopped) { r.state = 'part'; return; }
 
       // Questions from the notes, not repeating any already on the topic
       r.state = 'questions'; step3();
@@ -455,20 +475,24 @@ export async function openSubjectBuilder({ pack, subject, mode = 'sheet', trialT
   }
   function step3() {
     if (!box.isConnected) return;
-    const icon = { waiting: '○', notes: '…', questions: '…', done: '✓', failed: '!', skipped: '–' };
+    const icon = { waiting: '○', notes: '…', questions: '…', done: '✓', failed: '!', skipped: '–', part: '½' };
+    // The reason everything stopped is shown once at the top, not on every row
+    const why = r => st.stopReason && r.error === st.stopReason ? 'AI stopped (see above)' : r.error;
     const what = r => r.state === 'waiting' ? (st.stopped ? 'Not made' : 'Waiting')
       : r.state === 'notes' ? 'Writing the notes…'
       : r.state === 'questions' ? `${r.notes} notes ✓ · writing ${st.qty} questions…`
-      : r.state === 'done' ? `${r.notes} notes · ${r.questions} questions`
-      : r.state === 'skipped' ? 'Not made'
-      : (r.notes ? `${r.notes} notes ✓ · questions not made: ` : 'Not made: ') + r.error;
+      : r.state === 'done' ? `${r.notes} notes${r.replaced ? ' (replaced the earlier AI notes)' : ''} · ${r.questions} questions`
+      : r.state === 'skipped' ? 'Not made yet'
+      : r.state === 'part' ? `${r.notes} notes ✓ · questions not made yet`
+      : (r.notes ? `${r.notes} notes ✓ · questions not made: ` : 'Not made: ') + why(r);
+    const rest = st.results.filter(r => r.state !== 'done');
     const done = st.results.filter(r => r.state === 'done');
     const working = !st.done;
     body().innerHTML = `
       <h3 class="tw-h">${working ? 'Making your topics' : done.length ? `${done.length} topic${done.length === 1 ? '' : 's'} ready` : 'Nothing was made'}</h3>
       <p class="tw-hint">${working ? 'Each topic is saved as soon as it\'s ready. Keep this open until they\'re all done.'
         : done.length ? 'Students can now learn from the notes and quiz on the questions. Open a topic to check it or change anything.' : ''}</p>
-      ${st.stopReason ? `<p class="tw-gen-note">${esc(st.stopReason)}${/free try|Plus/i.test(st.stopReason) ? ' <a href="plus.html">See Plus</a>' : ''}</p>` : ''}
+      ${st.stopReason ? `<p class="tw-gen-note">${esc(st.stopReason)}${/free try|Plus/i.test(st.stopReason) ? ' <a href="plus.html">See Plus</a>' : ''}${!working && rest.length ? ` The topics that finished are saved. When it's sorted, tap <b>Make the rest</b>.` : ''}</p>` : ''}
       <div class="sb-results">${st.results.map(r => `
         <div class="sb-res sb-${r.state}">
           <span class="sb-ic">${r.state === 'notes' || r.state === 'questions' ? '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block"></span>' : icon[r.state]}</span>
@@ -478,8 +502,9 @@ export async function openSubjectBuilder({ pack, subject, mode = 'sheet', trialT
     body().querySelectorAll('[data-open]').forEach(b => b.onclick = () => { const id = b.dataset.open; finish(); onOpenTopic(id, pack, subject); });
     foot().innerHTML = working
       ? `<button class="btn btn-secondary" data-go="stop">Stop after these</button>`
-      : `<button class="btn btn-primary" data-go="done" style="margin:0 0 0 auto">Done</button>`;
+      : `${rest.length ? `<button class="btn btn-secondary" data-go="rest">✨ Make the rest (${rest.length})</button>` : ''}<button class="btn btn-primary" data-go="done" style="margin:0 0 0 auto">Done</button>`;
     foot().querySelector('[data-go="stop"]')?.addEventListener('click', () => { st.stopped = true; step3(); });
+    foot().querySelector('[data-go="rest"]')?.addEventListener('click', () => runAll(st.results.filter(r => r.state !== 'done')));
     foot().querySelector('[data-go="done"]')?.addEventListener('click', finish);
   }
 
@@ -508,6 +533,7 @@ function injectStyle() {
   .sb-res .sb-main strong { font-family: var(--font-ui); font-size: 0.92rem; }
   .sb-ic { width: 18px; text-align: center; font-weight: 800; color: var(--color-text-muted); }
   .sb-done .sb-ic { color: var(--color-success); }
+  .sb-part .sb-ic { color: var(--color-warning, #c98a00); }
   .sb-failed .sb-ic, .sb-failed small { color: var(--color-danger); }
   @media (max-width: 560px) { .sb-row { grid-template-columns: auto 1fr; } .sb-target { grid-column: 2; } }
   </style>`);
