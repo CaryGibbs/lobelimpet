@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="parent">
 <head>
-  <script src="dev-flag.js?v=20261126b"></script>
+  <script src="dev-flag.js?v=20261126l"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex">
   <title>Lobe Limpet — Admin</title>
-  <link rel="icon" type="image/svg+xml" href="assets/images/brand/favicon.svg?v=20261126b">
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brand/favicon-32.png?v=20261126b">
-  <link rel="apple-touch-icon" href="assets/images/brand/apple-touch-icon.png?v=20261126b">
-  <link rel="manifest" href="manifest.webmanifest?v=20261126b">
+  <link rel="icon" type="image/svg+xml" href="assets/images/brand/favicon.svg?v=20261126l">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brand/favicon-32.png?v=20261126l">
+  <link rel="apple-touch-icon" href="assets/images/brand/apple-touch-icon.png?v=20261126l">
+  <link rel="manifest" href="manifest.webmanifest?v=20261126l">
   <meta name="apple-mobile-web-app-title" content="Lobe Limpet">
   <meta name="application-name" content="Lobe Limpet">
-  <link rel="stylesheet" href="theme.css?v=20261126b">
-  <script src="icons.js?v=20261126b"></script>
+  <link rel="stylesheet" href="theme.css?v=20261126l">
+  <script src="icons.js?v=20261126l"></script>
   <style>
     /* ── Layout ──────────────────────────────────────────── */
     body { display: flex; min-height: 100vh; background: var(--color-bg); overflow-x: hidden; }
@@ -544,10 +544,34 @@
   .ts-callout-ic { font-size: 1.5rem; }
   .notes-ready { display: inline-block; margin-top: 6px; font-family: var(--font-ui); font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--color-primary-glow); color: var(--color-primary); }
   /* "Turn class notes into revision" quick start */
+  .std-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  .std-grid select, .std-grid input { width: 100%; }
+  .std-check { display: flex !important; align-items: center; gap: 8px; font-weight: 400 !important; text-transform: none !important; letter-spacing: 0 !important; font-size: 0.88rem !important; margin: 0 0 10px !important; cursor: pointer; }
+  .std-check input { width: auto !important; margin: 0; }
+  .std-warn { background: color-mix(in srgb, var(--color-warning, #e0a000) 14%, var(--color-surface)); border-radius: 10px; padding: 8px 12px; font-size: 0.86rem; margin: -4px 0 12px; }
+  #modal-group input[readonly], #modal-group textarea[readonly] { background: var(--color-surface-2, #f4f4f4); color: var(--color-text); }
+  @media (max-width: 560px) { .std-grid { grid-template-columns: 1fr; } }
   .cn-field { margin-bottom: 14px; }
   .cn-field > label { display: block; font-family: var(--font-ui); font-size: 0.82rem; font-weight: 700; margin-bottom: 6px; }
   .cn-field select, .cn-field input { width: 100%; }
   .cn-field input { margin-top: 6px; }
+  .fill-start { border: 2px dashed color-mix(in srgb, var(--color-primary) 45%, var(--color-border)); border-radius: 16px; background: var(--color-primary-glow); padding: 16px 18px; }
+  .fill-head { font-family: var(--font-ui); margin-bottom: 12px; }
+  .fill-ways { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+  .fill-way { text-align: left; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: start; background: var(--color-surface); border: 2px solid var(--color-border); border-radius: 14px; padding: 12px 14px; cursor: pointer; font: inherit; color: inherit; }
+  .fill-way:hover { border-color: var(--color-primary); }
+  .fill-way .fill-ic { grid-row: span 2; font-size: 1.5rem; line-height: 1.1; }
+  .fill-way b { font-family: var(--font-ui); font-size: 0.95rem; }
+  .fill-way small { color: var(--color-text-muted); font-size: 0.82rem; line-height: 1.4; }
+  .fill-way.needs-plus b::after { content: ' ✨ Plus'; font-size: 0.68rem; font-weight: 800; color: #e0643f; }
+  .sheet-start { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px 18px; border: 2px dashed color-mix(in srgb, var(--color-primary) 45%, var(--color-border)); border-radius: 16px; background: var(--color-primary-glow); }
+  .sheet-start-ic { font-size: 2rem; }
+  .sheet-start > div:nth-child(2) { flex: 1; min-width: 220px; }
+  .sheet-start strong { font-family: var(--font-ui); }
+  .sheet-start p { margin: 4px 0 0; font-size: 0.88rem; color: var(--color-text-muted); }
+  .cn-kind { display: flex; flex-direction: column; gap: 6px; }
+  .cn-kind label { display: flex !important; align-items: flex-start; gap: 8px; font-weight: 400 !important; font-size: 0.88rem !important; cursor: pointer; margin: 0 !important; }
+  .cn-kind input { width: auto !important; margin: 3px 0 0 !important; }
   .cn-lead { margin: 0 0 16px; color: var(--color-text-muted); font-size: 0.9rem; line-height: 1.5; }
   .plus-note { display: flex; gap: 8px; align-items: flex-start; margin: 0 0 var(--space-md); padding: 10px 14px; border-radius: var(--radius-button); background: var(--color-primary-glow); color: var(--color-text); font-size: 0.86rem; line-height: 1.45; }
   .plus-note i { color: var(--color-primary); flex-shrink: 0; margin-top: 2px; }
@@ -695,8 +719,8 @@
   .nw-pick span { flex: 1 1 auto; }
   @media (max-width: 980px) { .news-grid { grid-template-columns: 1fr; } }
 </style>
-  <link rel="stylesheet" href="ui.css?v=20261126b">
-  <link rel="stylesheet" href="stats.css?v=20261126b">
+  <link rel="stylesheet" href="ui.css?v=20261126l">
+  <link rel="stylesheet" href="stats.css?v=20261126l">
 <!-- Cloudflare Web Analytics (live site only) --><script>if(/(^|\.)lobelimpet\.com$/.test(location.hostname)){var s=document.createElement('script');s.defer=true;s.src='https://static.cloudflareinsights.com/beacon.min.js';s.setAttribute('data-cf-beacon','{"token": "03f4e033e3af48988266f6935bed3b9c"}');document.head.appendChild(s);}</script><!-- End Cloudflare Web Analytics -->
 </head>
 <body class="app-layout">
@@ -777,7 +801,11 @@
           <div class="panel-title" id="topics-panel-title">Topics</div>
           <div class="panel-subtitle">Topics within this subject</div>
         </div>
-        <button class="btn btn-primary" data-action="new-topic">＋ New topic</button>
+        <div class="panel-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary" data-action="topics-from-sheet" title="Photo or file of a sheet that covers several topics: AI splits it into topics, each with notes and questions"><i data-icon="file-text"></i> Topics from a sheet</button>
+          <button class="btn btn-secondary" data-action="build-with-ai" title="No sheet needed: AI suggests the topics from the subject, level and board (or topics you type), then writes notes and questions"><i data-icon="sparkles"></i> Build with AI</button>
+          <button class="btn btn-primary" data-action="new-topic">＋ New topic</button>
+        </div>
       </div>
       <div class="cards-grid" id="topics-grid"></div>
     </div>
@@ -1353,17 +1381,29 @@
       <div class="modal-title" id="modal-group-title">New revision pack</div>
       <button class="modal-close" data-close="modal-group" aria-label="Close"><i data-icon="x"></i></button>
     </div>
+    <!-- Admin: a Lobe Limpet pack is described by these, and named from them (official-pack.js) -->
+    <div id="group-std" hidden>
+      <div class="std-grid">
+        <div class="form-group"><label for="std-level">Level</label><select id="std-level"></select></div>
+        <div class="form-group"><label for="std-board">Exam board or awarding body</label><input id="std-board" list="std-boards" maxlength="40" placeholder="e.g. AQA, DVSA, CIPD"><datalist id="std-boards"></datalist></div>
+        <div class="form-group"><label for="std-subject" id="std-subject-label">Subject</label><input id="std-subject" list="std-subjects" maxlength="60" placeholder="e.g. History, Religious Studies A"><datalist id="std-subjects"></datalist></div>
+        <div class="form-group"><label for="std-code">Code <span style="font-weight:400;text-transform:none;">(optional: spec or unit code)</span></label><input id="std-code" maxlength="16" placeholder="e.g. 8145"></div>
+      </div>
+      <div class="std-warn" id="std-warn" hidden></div>
+      <label class="std-check" id="std-subj-row"><input type="checkbox" id="std-add-subject" checked> Add the subject inside the pack, with this level and board</label>
+      <label class="std-check"><input type="checkbox" id="std-custom"> Write my own name and description (not the standard ones)</label>
+    </div>
     <div class="form-group">
       <label>Pack name</label>
       <input type="text" id="group-name-input" placeholder="e.g. Year 10 GCSE" maxlength="60">
     </div>
     <div class="form-group">
       <label>Description <span style="font-weight:400;text-transform:none;">(optional)</span></label>
-      <input type="text" id="group-desc-input" placeholder="e.g. Autumn mock exams" maxlength="120">
+      <textarea id="group-desc-input" placeholder="e.g. Autumn mock exams" maxlength="400" rows="3" style="width:100%;resize:vertical;"></textarea>
     </div>
     <div style="display:flex;gap:var(--space-sm);justify-content:flex-end;margin-top:var(--space-md);">
       <button class="btn btn-secondary" data-close="modal-group">Cancel</button>
-      <button class="btn btn-primary" data-action="save-group" id="btn-save-group">Save group</button>
+      <button class="btn btn-primary" data-action="save-group" id="btn-save-group">Save pack</button>
     </div>
   </div>
 </div>
@@ -1397,7 +1437,8 @@
         <label>Level</label>
         <select id="subject-level-input">
           <option value="">Not set</option><option>GCSE</option><option>A level</option><option>AS level</option>
-          <option>National 5</option><option>Higher</option><option>KS3</option><option>Other</option>
+          <option>National 5</option><option>Higher</option><option>KS3</option>
+          <option>University</option><option value="Professional">Professional qualification</option><option value="Driving">Driving test</option><option>Other</option>
         </select>
       </div>
     </div>
@@ -1670,39 +1711,43 @@
 </script>
 
 <script type="module">
-import { auth, db, storage } from './firebase-config.js?v=20261126b';
-import { requireRole, requireAuth, hasRole, hasPlus, canUseAI, onAiTrial, trialSheetsText, handleSignOut, showToast, openViewAs, primaryRole, rolesOf } from './auth.js?v=20261126b';
-import { listPacks, flatPackIds, samePackIds, isOfficialPack } from './packs.js?v=20261126b';
-import { isPlusOnly, plusTagHtml, addAccessCss } from './access.js?v=20261126b';
-import { syncFamilyPlus } from './family-plus.js?v=20261126b';
-import { ensureAccountNo, formatAccountNo, accountSearchText } from './account-no.js?v=20261126b';
-import { pickerHtml, wirePicker, boardTagHtml } from './pack-picker.js?v=20261126b';
-import { openDeleteAccount } from './account.js?v=20261126b';
-import { openPasswordHelp } from './password-help.js?v=20261126b';
-import { addDocumentButton } from './doc-text.js?v=20261126b';
-import { openTopicWizard, notesPromptFromText, notesPromptResearch, questionsPrompt } from './topic-wizard.js?v=20261126b';
-import { MARK_OPTIONS, marksOf, marksLabel, estimateMarks } from './question-marks.js?v=20261126b';
-import { mountMarksTool } from './marks-tool.js?v=20261126b';
-import { showPlusUpsell } from './plus.js?v=20261126b';
-import { offerGivePack } from './first-steps.js?v=20261126b';
-import { spellingMode, isLanguageSubject } from './spelling.js?v=20261126b';
+import { auth, db, storage } from './firebase-config.js?v=20261126l';
+import { requireRole, requireAuth, hasRole, hasPlus, canUseAI, onAiTrial, aiTrialLeft, trialSheetsText, handleSignOut, showToast, openViewAs, primaryRole, rolesOf } from './auth.js?v=20261126l';
+import { listPacks, flatPackIds, samePackIds, isOfficialPack } from './packs.js?v=20261126l';
+import { isPlusOnly, plusTagHtml, addAccessCss } from './access.js?v=20261126l';
+import { syncFamilyPlus } from './family-plus.js?v=20261126l';
+import { ensureAccountNo, formatAccountNo, accountSearchText } from './account-no.js?v=20261126l';
+import { pickerHtml, wirePicker, boardTagHtml, packMeta } from './pack-picker.js?v=20261126l';
+import { openDeleteAccount } from './account.js?v=20261126l';
+import { openPasswordHelp } from './password-help.js?v=20261126l';
+import { addDocumentButton } from './doc-text.js?v=20261126l';
+import { openTopicWizard, notesPromptFromText, notesPromptResearch, questionsPrompt } from './topic-wizard.js?v=20261126l';
+import { MARK_OPTIONS, marksOf, marksLabel, estimateMarks } from './question-marks.js?v=20261126l';
+import { mountMarksTool } from './marks-tool.js?v=20261126l';
+import { showPlusUpsell } from './plus.js?v=20261126l';
+import { offerGivePack } from './first-steps.js?v=20261126l';
+import { openSubjectBuilder, TOKENS_PER_TOPIC } from './subject-builder.js?v=20261126l';
+import { openMakeRevision, emojiFor } from './make-revision.js?v=20261126l';
+import { SCHOOL_LEVELS, OTHER_LEVELS, STD_BOARDS, OTHER_BODIES, SUBJECT_BOARD, isSchoolLevel, needsBoard, tidyBoard, officialName, officialDescription, refreshOfficialDescription } from './official-pack.js?v=20261126l';
+import { openDeletePack, restorePack, isBinned, binDaysLeft, binExpired, addBinCss, BIN_DAYS, openDeleteItem, restoreItem } from './pack-bin.js?v=20261126l';
+import { spellingMode, isLanguageSubject } from './spelling.js?v=20261126l';
 // "Upload a document" above each box where content is pasted for AI generation
 // (these boxes are only shown to Plus users and admins, who also get "Read with AI")
 ['gen-content', 'kp-paste-content', 'kp-modal-paste-content'].forEach(id => addDocumentButton(document.getElementById(id), {
   askClaude, allowed: () => canAI, onLocked: () => showPlusUpsell('Reading scans and diagrams with AI') }));
 const OWNER_UID = '0hFoAiW9YFhqk2BovndPnoT1Ul22';   // the site owner (same as the security rules)
-import { helloHtml, tilesHtml, attentionHtml, activityHtml, dotHtml, smallBtn, agoText, DAY } from './home-kit.js?v=20261126b';
-import { mountShell } from './shell.js?v=20261126b';
-import { openInviteDialog, signupLink } from './invite.js?v=20261126b';
-import { logEvent, ACTIONS as LOG_ACTIONS, CATS as LOG_CATS } from './log.js?v=20261126b';
-import { videosOf, parseVideoLines, videoLines, readsOf, readLines, parseReadLines } from './videos.js?v=20261126b';
-import { askClaude, MODELS, TASKS, FALLBACK_MODEL, loadAiSettings, textOf, parseJsonLoose, checkLinks, workerAction } from './ai.js?v=20261126b';
-import { IS_DEV, PRICING_DOC, PAYMENTS_DOC, BILLING_COLL, STRIPE_DASH, PAID_STATES, getPricing, getPaymentsMode, gbp, perWeekText, dateText as payDate } from './billing.js?v=20261126b';
-import { REPAIR, SHIELDS, REPAIR_DEFAULTS, SHIELD_DEFAULTS, loadStreakSettings, studyEntries, currentStreak, getLevelInfo, lastActive, lastActiveText } from './gamification.js?v=20261126b';
-import { statsSectionsHtml, renderStats, fmtTime } from './stats.js?v=20261126b';
-import { dueEntries } from './srs.js?v=20261126b';
-import { progressMatches, progressSubjects, forgetProgress } from './progress-tidy.js?v=20261126b';
-import { LEVELS as PLAN_LEVELS, LEVEL_DEFAULTS as PLAN_DEFAULTS, loadPlanSettings } from './plan.js?v=20261126b';
+import { helloHtml, tilesHtml, attentionHtml, activityHtml, dotHtml, smallBtn, agoText, DAY } from './home-kit.js?v=20261126l';
+import { mountShell } from './shell.js?v=20261126l';
+import { openInviteDialog, signupLink } from './invite.js?v=20261126l';
+import { logEvent, ACTIONS as LOG_ACTIONS, CATS as LOG_CATS } from './log.js?v=20261126l';
+import { videosOf, parseVideoLines, videoLines, readsOf, readLines, parseReadLines } from './videos.js?v=20261126l';
+import { askClaude, MODELS, TASKS, FALLBACK_MODEL, loadAiSettings, textOf, parseJsonLoose, checkLinks, workerAction } from './ai.js?v=20261126l';
+import { IS_DEV, PRICING_DOC, PAYMENTS_DOC, BILLING_COLL, STRIPE_DASH, PAID_STATES, getPricing, getPaymentsMode, gbp, perWeekText, dateText as payDate } from './billing.js?v=20261126l';
+import { REPAIR, SHIELDS, REPAIR_DEFAULTS, SHIELD_DEFAULTS, loadStreakSettings, studyEntries, currentStreak, getLevelInfo, lastActive, lastActiveText } from './gamification.js?v=20261126l';
+import { statsSectionsHtml, renderStats, fmtTime } from './stats.js?v=20261126l';
+import { dueEntries } from './srs.js?v=20261126l';
+import { progressMatches, progressSubjects, forgetProgress } from './progress-tidy.js?v=20261126l';
+import { LEVELS as PLAN_LEVELS, LEVEL_DEFAULTS as PLAN_DEFAULTS, loadPlanSettings } from './plan.js?v=20261126l';
 
 // Content generation uses the model chosen in Settings. Wraps the result so
 // the existing code (which expected a fetch Response) works unchanged.
@@ -1718,9 +1763,9 @@ import {
   collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc,
   query, orderBy, serverTimestamp, where, limit, startAfter, arrayUnion, deleteField, writeBatch, getCountFromServer
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { saveEmailIndex } from './email-index.js?v=20261126b';
-import { TOPIC_LABEL as SUPPORT_TOPICS } from './support.js?v=20261126b';
-import { inOrder } from './order.js?v=20261126b';
+import { saveEmailIndex } from './email-index.js?v=20261126l';
+import { TOPIC_LABEL as SUPPORT_TOPICS } from './support.js?v=20261126l';
+import { inOrder } from './order.js?v=20261126l';
 import {
   ref as storageRef, uploadBytes, getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
@@ -1754,13 +1799,15 @@ const MINE = (() => { const m = new URLSearchParams(location.search).get('mine')
 let canAI = true;
 let plusNow = true;     // Plus itself (copying a Lobe Limpet pack needs real Plus, not the free try)
 let iAmAdmin = false;   // an admin in My packs can also make a pack official
+let mineProfile = null; // (for the free-try estimate in Topics from a sheet)
 // Plus features are shown to everyone; using one without Plus explains and offers an upgrade
 function aiAllowed(feature = 'Creating with AI') { if (!canAI) showPlusUpsell(feature); return canAI; }
 // AI buttons get a small "Plus" tag for people without Plus
-const PLUS_BUTTONS = '[data-action="create-with-ai"],[data-qtab="generate"],[data-action="generate-questions"],[data-action="generate-everything"],[data-action="also-generate-questions"],[data-action="suggest-links"],[data-action="gen-keypoints"],[data-action="gen-keypoints-panel"],[data-action="research-keypoints"],[data-action="research-keypoints-panel"]';
+const PLUS_BUTTONS = '[data-action="create-with-ai"],[data-qtab="generate"],[data-action="generate-questions"],[data-action="generate-everything"],[data-action="also-generate-questions"],[data-action="suggest-links"],[data-action="gen-keypoints"],[data-action="gen-keypoints-panel"],[data-action="research-keypoints"],[data-action="research-keypoints-panel"],[data-action="topics-from-sheet"],[data-action="build-with-ai"]';
 
 function startMine(user, profile) {
   currentAdminUid = user.uid;
+  mineProfile = profile;
   canAI = canUseAI(profile);
   plusNow = hasPlus(profile);
   iAmAdmin = hasRole(profile, 'admin');
@@ -1772,6 +1819,8 @@ function startMine(user, profile) {
   const back = MINE === 'teacher' ? 'teacher-dashboard.html#classes' : 'parent.html#students';
   const backLabel = MINE === 'teacher' ? 'My classes' : 'My students';
   document.querySelector('#panel-groups .panel-title').textContent = 'My packs';
+  document.querySelector('#panel-groups .panel-header [data-action="new-group"]').textContent = '＋ Make revision';
+  document.querySelector('#panel-subjects .panel-header [data-action="new-subject"]').textContent = '＋ Add a subject';
   document.querySelector('#panel-groups .panel-subtitle').innerHTML =
     `Build revision for your own ${MINE === 'teacher' ? 'classes' : 'students'}. Packs are private: only you and the students you give them to can see them. Assign them in <a href="${back}">${backLabel}</a>.` +
     (onAiTrial(profile) ? `<span class="trial-note">✨ <strong>Free try:</strong> create with AI from about ${trialSheetsText(profile)} or sets of class notes, then it's part of <a href="plus.html">Plus</a>.</span>` : '');
@@ -2472,10 +2521,13 @@ document.addEventListener('click', async e => {
   if (qtype)  { selectQType(qtype); return; }
   if (qtab)   { switchQTab(qtab); return; }
 
-  if (action === 'new-group')               openGroupModal();
+  if (action === 'new-group')               MINE ? makeRevision() : openGroupModal();
   else if (action === 'save-group')         saveGroup();
   else if (action === 'edit-group')         openGroupModal(t.dataset.id);
-  else if (action === 'del-group')          confirmDelete('group', t.dataset.id, t.dataset.name);
+  else if (action === 'del-group')          openDeletePack({ pack: { id: t.dataset.id, name: t.dataset.name }, role: MINE || 'admin', uid: currentAdminUid, toast: showToast, onDone: loadGroups });
+  else if (action === 'bin-restore')        restoreBinned(t.dataset.id);
+  else if (action === 'bin-restore-item')   restoreBinnedItem(t.dataset.id);
+  else if (action === 'bin-forever')        deleteForever(t.dataset.id, t.dataset.name);
   else if (action === 'copy-pack')          copyPackClicked(t);
   else if (action === 'toggle-plus-topic')  togglePlusTopic(t);
   else if (action === 'free-sample')        openFreeSample(t.dataset.id, t.dataset.name);
@@ -2494,17 +2546,20 @@ document.addEventListener('click', async e => {
   else if (action === 'sc-off')             setSharedCardsOff(t.dataset.id, true);
   else if (action === 'sc-on')              setSharedCardsOff(t.dataset.id, false);
 
-  else if (action === 'new-subject')        openSubjectModal();
+  else if (action === 'new-subject')        MINE ? makeRevision(selectedGroup) : openSubjectModal();
   else if (action === 'suggest-links')      suggestLinks();
   else if (action === 'add-suggested')      addSuggestedLinks();
   else if (action === 'save-subject')       saveSubject();
   else if (action === 'edit-subject')       openSubjectModal(t.dataset.id);
-  else if (action === 'del-subject')        confirmDelete('subject', t.dataset.id, t.dataset.name);
+  else if (action === 'del-subject')        openDeleteItem({ kind: 'subject', pack: { id: selectedGroup.id, name: selectedGroup.name }, subject: { id: t.dataset.id, name: t.dataset.name }, uid: currentAdminUid, onDone: loadSubjects, onRestored: refreshAfterRestore });
 
   else if (action === 'new-topic')          openTopicModal();
+  else if (action === 'topics-from-sheet')  openTopicsFromSheet();
+  else if (action === 'build-with-ai')      openTopicsFromSheet('ai');
+  else if (action === 'type-topics')        openTypeTopics();
   else if (action === 'save-topic')         saveTopic();
   else if (action === 'edit-topic')         openTopicModal(t.dataset.id);
-  else if (action === 'del-topic')          confirmDelete('topic', t.dataset.id, t.dataset.name);
+  else if (action === 'del-topic')          openDeleteItem({ kind: 'topic', pack: { id: selectedGroup.id, name: selectedGroup.name }, subject: { id: selectedSubject.id, name: selectedSubject.name }, topic: { id: t.dataset.id, name: t.dataset.name }, uid: currentAdminUid, onDone: loadTopics, onRestored: refreshAfterRestore });
   else if (action === 'add-keypoint')       addKpRow('kp-list');
   else if (action === 'add-group')          addKpGroup('kp-list');
   else if (action === 'add-keypoint-panel') addKpRow('kp-list-panel');
@@ -2602,11 +2657,25 @@ async function loadGroups() {
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><h3>Couldn't load packs</h3><p>${esc(e.message)}</p></div>`;
     return;
   }
+  // Packs in Recently deleted: listed separately; cleared for good after BIN_DAYS
+  if (!MINE) {
+    // (holding packs for subjects/topics an admin deleted are the admin's own)
+    (await getDocs(query(collection(db, 'content'), where('ownerUid', '==', currentAdminUid))).catch(() => null))
+      ?.forEach(d => { if (d.data().binFor) list.push({ id: d.id, data: d.data() }); });
+  }
+  binnedPacks = list.filter(p => isBinned(p.data));
+  for (const p of binnedPacks.filter(p => binExpired(p.data))) {
+    await deletePackTree(p.id).then(() => logEvent('content.delete', { target: p.data.name, targetId: p.id, detail: `Deleted ${p.data.binFor ? p.data.binFor.kind + ' “' + p.data.binFor.name + '”' : 'revision pack'} for good (${BIN_DAYS} days in Recently deleted)` })).catch(e => console.warn('Bin clear-out failed', p.id, e.message));
+  }
+  binnedPacks = binnedPacks.filter(p => !binExpired(p.data));
+  for (let i = list.length - 1; i >= 0; i--) if (isBinned(list[i].data)) list.splice(i, 1);
+  renderBin();
   grid.innerHTML = '';
   if (MINE && !list.length) grid.insertAdjacentHTML('beforeend', `<div class="empty-state" style="grid-column:1/-1;">
       <div class="empty-state-icon"><i data-icon="folder"></i></div>
-      <h3>No packs yet</h3>
-      <p>Make a pack, add subjects and topics, then write questions. Your students see it once you assign it.</p></div>`);
+      <h3>No revision yet</h3>
+      <p>Pick a subject, then fill it from a photo of a school sheet, let AI build it, or use one of our ready-made packs.</p>
+      <button class="btn btn-primary" data-action="new-group" style="margin-top:10px">＋ Make revision</button></div>`);
   if (!MINE && list.length) {
     // Admin: Lobe Limpet packs grouped by level and subject, with a filter bar (pack-picker.js)
     grid.insertAdjacentHTML('beforeend', `<div class="admin-picker" style="grid-column:1/-1;">${pickerHtml({ official: list.map(p => ({ id: p.id, ...p.data })), officialTitle: '',
@@ -2617,8 +2686,77 @@ async function loadGroups() {
     list.forEach(p => grid.querySelector(`[data-pack-slot="${CSS.escape(p.id)}"]`)?.replaceWith(groupCard(p.id, p.data)));
     wirePicker(grid.querySelector('.admin-picker'));
   } else list.forEach(p => grid.appendChild(groupCard(p.id, p.data)));
-  grid.insertAdjacentHTML('beforeend', `<div class="add-card" data-action="new-group">＋ New pack</div>`);
+  grid.insertAdjacentHTML('beforeend', `<div class="add-card" data-action="new-group">${MINE ? '＋ Make revision' : '＋ New pack'}</div>`);
   if (MINE) { renderOfficialToCopy(); loadLibraryBrowse(); }
+}
+
+/* ── Recently deleted packs (pack-bin.js) ─────────────────── */
+let binnedPacks = [];
+function renderBin() {
+  addBinCss();
+  let box = document.getElementById('pack-bin');
+  if (!box) {
+    document.getElementById('panel-groups').insertAdjacentHTML('beforeend', `<div id="pack-bin" class="official-copy" hidden>
+      <div class="official-copy-head"><i data-icon="trash-2"></i> Recently deleted</div>
+      <p class="official-copy-sub">Deleted packs, subjects and topics stay here for ${BIN_DAYS} days. Restore one to bring it back, with students' progress${MINE ? ' (a pack is given back to whoever had it)' : ''}.</p>
+      <div id="pack-bin-list" class="bin-list"></div></div>`);
+    box = document.getElementById('pack-bin');
+  }
+  box.hidden = !binnedPacks.length;
+  document.getElementById('pack-bin-list').innerHTML = binnedPacks.map(p => {
+    const n = binDaysLeft(p.data);
+    // A subject or topic, kept in its own holding pack
+    if (p.data.binFor) {
+      const f = p.data.binFor;
+      return `<div class="bin-row"><div><strong>${f.kind === 'subject' ? 'Subject' : 'Topic'}: ${esc(f.name)}</strong>
+        <small>From ${f.kind === 'topic' ? `${esc(f.subjectName)} in ` : ''}${esc(f.packName || 'a pack')} · deleted ${new Date(p.data.binned.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · gone for good in ${n} day${n === 1 ? '' : 's'}</small></div>
+        <button class="btn btn-secondary" data-action="bin-restore-item" data-id="${esc(p.id)}"><i data-icon="rotate-ccw"></i> Restore</button>
+        <button class="bin-forever" data-action="bin-forever" data-id="${esc(p.id)}" data-name="${esc(f.name)}">Delete forever</button></div>`;
+    }
+    const had = (p.data.binned.kids || []).length + (p.data.binned.classes || []).length + (p.data.binned.users || []).length;
+    return `<div class="bin-row"><div><strong>Pack: ${esc(p.data.name || 'Untitled pack')}</strong>
+      <small>Deleted ${new Date(p.data.binned.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · gone for good in ${n} day${n === 1 ? '' : 's'}${had ? ` · ${had} ${MINE === 'teacher' ? (had === 1 ? 'class' : 'classes') : (had === 1 ? 'student' : 'students')} had it` : ''}</small></div>
+      <button class="btn btn-secondary" data-action="bin-restore" data-id="${esc(p.id)}"><i data-icon="rotate-ccw"></i> Restore</button>
+      <button class="bin-forever" data-action="bin-forever" data-id="${esc(p.id)}" data-name="${esc(p.data.name || 'Untitled pack')}">Delete forever</button></div>`;
+  }).join('');
+}
+async function restoreBinnedItem(id) {
+  const p = binnedPacks.find(x => x.id === id); if (!p) return;
+  const f = p.data.binFor;
+  try {
+    const r = await restoreItem({ id, ...p.data });
+    showToast(`${f.kind === 'subject' ? 'Subject' : 'Topic'} “${f.name}” restored to ${f.packName}${r.packBinned ? ` (that pack is in Recently deleted too: restore it to use it)` : ''}.`, 'success');
+    loadGroups();
+  } catch (e) { showToast('Could not restore it: ' + e.message, 'error'); }
+}
+// After Undo: show the restored subject or topic wherever we are
+function refreshAfterRestore() {
+  if (currentPanel === 'subjects') loadSubjects();
+  else if (currentPanel === 'topics') loadTopics();
+  else if (currentPanel === 'groups') loadGroups();
+}
+async function restoreBinned(id) {
+  const p = binnedPacks.find(x => x.id === id); if (!p) return;
+  try {
+    const back = await restorePack({ pack: { id, name: p.data.name, binned: p.data.binned }, role: MINE || 'admin', uid: currentAdminUid });
+    showToast(`“${p.data.name}” restored${back.length ? ` and given back to ${back.join(', ')}` : ''}.`, 'success');
+    loadGroups();
+  } catch (e) { showToast('Could not restore it: ' + e.message, 'error'); }
+}
+function deleteForever(id, name) {
+  setConfirmButton('Delete forever', true);
+  document.getElementById('confirm-title').textContent = 'Delete forever?';
+  document.getElementById('confirm-msg').textContent = `"${name}" and everything in it will be deleted for good. This can't be undone.`;
+  confirmCallback = async () => {
+    try {
+      await deletePackTree(id);
+      logEvent('content.delete', { target: name, targetId: id, detail: 'Deleted revision pack for good (from Recently deleted)' });
+      closeModal('modal-confirm');
+      showToast(`“${name}” deleted for good`, 'success');
+      loadGroups();
+    } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  };
+  openModal('modal-confirm');
 }
 
 function groupCard(id, data) {
@@ -2659,41 +2797,119 @@ function openGroup(id, data) {
   loadSubjects();
 }
 
+// Admin packs are Lobe Limpet packs: level, board, subject and spec code
+// make the name and description the standard way (official-pack.js), unless
+// "Write my own" is ticked. Parents and teachers just name their pack.
+let stdPacks = [];   // other Lobe Limpet packs, for the "already have one" check
+let stdOrig = {};    // the pack as it was, when editing
 async function openGroupModal(id) {
   editingItem = id ? { type:'group', id } : null;
-  document.getElementById('modal-group-title').textContent = id ? 'Edit revision pack' : 'New revision pack';
+  const std = !MINE;
+  document.getElementById('modal-group-title').textContent = id ? (std ? 'Edit Lobe Limpet pack' : 'Edit revision pack') : (std ? 'New Lobe Limpet pack' : 'New revision pack');
   document.getElementById('group-name-input').value = '';
   document.getElementById('group-desc-input').value = '';
+  document.getElementById('group-std').hidden = !std;
+  let data = {};
   if (id) {
     const snap = await getDoc(doc(db, 'content', id));
-    if (snap.exists()) {
-      document.getElementById('group-name-input').value = snap.data().name || '';
-      document.getElementById('group-desc-input').value = snap.data().description || '';
-    }
+    if (snap.exists()) data = snap.data();
+    stdOrig = data;
+    document.getElementById('group-name-input').value = data.name || '';
+    document.getElementById('group-desc-input').value = data.description || '';
+  }
+  if (std) {
+    const opt = (v, l, sel) => `<option value="${esc(v)}" ${sel ? 'selected' : ''}>${esc(l)}</option>`;
+    const m = packMeta(data);
+    const lv = data.level || m.level || 'GCSE';
+    document.getElementById('std-level').innerHTML = `<optgroup label="School and college">${SCHOOL_LEVELS.map(l => opt(l, l, lv === l)).join('')}</optgroup>
+      <optgroup label="Beyond school">${OTHER_LEVELS.map(([v, l]) => opt(v, l, lv === v)).join('')}</optgroup>`;
+    document.getElementById('std-board').value = data.examBoard || m.board || '';
+    document.getElementById('std-subject').value = data.subject || m.subject || '';
+    document.getElementById('std-code').value = data.specCode || m.code || '';
+    document.getElementById('std-subj-row').hidden = !!id;
+    // Other Lobe Limpet packs (for the duplicate check and subject suggestions)
+    stdPacks = [];
+    (await getDocs(collection(db, 'content')).catch(() => null))?.forEach(d => { if (!d.data().ownerUid && d.id !== id && !d.data().binned) stdPacks.push({ id: d.id, ...d.data() }); });
+    document.getElementById('std-subjects').innerHTML = [...new Set([...stdPacks.map(p => p.subject || packMeta(p).subject), 'Driving Theory Test', 'Motorcycle Theory Test'].filter(Boolean))].sort().map(x => `<option value="${esc(x)}">`).join('');
+    document.getElementById('std-boards').innerHTML = [...STD_BOARDS, ...OTHER_BODIES].map(x => `<option value="${esc(x)}">`).join('');
+    // An existing pack whose name isn't the standard one stays as it is until changed
+    const custom = !!id && (data.descAuto === false || (data.name || '') !== officialName(stdFields()));
+    document.getElementById('std-custom').checked = custom;
+    ['std-level', 'std-board', 'std-subject', 'std-code'].forEach(f => document.getElementById(f).oninput = document.getElementById(f).onchange = stdPreview);
+    document.getElementById('std-custom').onchange = stdPreview;
+    stdPreview(true);
+  } else {
+    ['group-name-input', 'group-desc-input'].forEach(f => { document.getElementById(f).readOnly = false; });
   }
   openModal('modal-group');
-  setTimeout(() => document.getElementById('group-name-input').focus(), 50);
+  setTimeout(() => document.getElementById(std ? (id ? 'std-subject' : 'std-subject') : 'group-name-input').focus(), 50);
+}
+function stdFields() {
+  return {
+    level: document.getElementById('std-level').value,
+    board: tidyBoard(document.getElementById('std-board').value),
+    subject: document.getElementById('std-subject').value.trim().replace(/\s+/g, ' ').replace(/^./, c => c.toUpperCase()),
+    code: document.getElementById('std-code').value.trim().toUpperCase(),
+  };
+}
+// Fill the name and description from the fields (unless "Write my own"), and warn about a duplicate
+function stdPreview(first = false) {
+  const f = stdFields(), custom = document.getElementById('std-custom').checked;
+  // Beyond school, the "subject" is the qualification or test
+  document.getElementById('std-subject-label').textContent = isSchoolLevel(f.level) ? 'Subject' : 'Qualification, course or test';
+  document.getElementById('std-subject').placeholder = isSchoolLevel(f.level) ? 'e.g. History, Religious Studies A' : f.level === 'Driving' ? 'e.g. Driving Theory Test' : 'e.g. Level 5 Diploma in People Management';
+  const nameIn = document.getElementById('group-name-input'), descIn = document.getElementById('group-desc-input');
+  nameIn.readOnly = descIn.readOnly = !custom;
+  if (!custom) {
+    nameIn.value = f.subject ? officialName(f) : '';
+    // Editing: keep a description that already names the free topics, if the subject and board are unchanged
+    const fresh = f.subject ? officialDescription({ subject: f.subject, board: f.board, level: f.level }) : '';
+    const keep = editingItem && first === true && descIn.value && fresh && descIn.value.startsWith(fresh.split(':')[0] + ':');
+    if (!keep) descIn.value = fresh;
+  }
+  const same = f.subject && stdPacks.find(p => { const m = packMeta(p); return (p.level || m.level || '') === f.level && tidyBoard(p.examBoard || m.board) === f.board && (p.subject || m.subject || '').toLowerCase() === f.subject.toLowerCase(); });
+  const warn = document.getElementById('std-warn');
+  warn.hidden = !(same || (f.subject && !f.board && needsBoard(f.level)));
+  warn.textContent = same ? `There's already a Lobe Limpet pack for this: “${same.name}”.` : `No exam board chosen: ${f.level} packs should name their board.`;
 }
 
 async function saveGroup() {
+  const std = !MINE, f = std ? stdFields() : null, custom = std && document.getElementById('std-custom').checked;
   const name = document.getElementById('group-name-input').value.trim();
   const desc = document.getElementById('group-desc-input').value.trim();
+  if (std && !custom && !f.subject) { showToast('Add the subject', 'error'); return; }
   if (!name) { showToast('Pack name is required', 'error'); return; }
+  // Lobe Limpet packs keep their level, subject, board and spec code as fields (the pack picker uses them)
+  // descAuto (the description follows the free topics) only for new packs, or when the standard
+  // description was used here: an older pack's hand-tuned description is never rewritten
+  const descAuto = std && !custom && (!editingItem || stdOrig.descAuto === true || desc !== (stdOrig.description || ''));
+  const fields = std ? { level: f.level, subject: f.subject, examBoard: f.board, specCode: f.code, standard: true, descAuto } : {};
   const btn = document.getElementById('btn-save-group');
   btn.classList.add('loading'); btn.disabled = true;
   try {
+    let newId = null;
     if (editingItem) {
-      await updateDoc(doc(db, 'content', editingItem.id), { name, description: desc });
+      await updateDoc(doc(db, 'content', editingItem.id), { name, description: desc, ...fields });
       logEvent('content.pack', { target: name, targetId: editingItem.id, detail: 'Edited' });
+      if (descAuto) await refreshOfficialDescription(editingItem.id).catch(() => {});
     } else {
       const owner = MINE ? { ownerUid: currentAdminUid, visibility: 'private' } : { visibility: 'official' };
-      const ref = await addDoc(collection(db, 'content'), { name, description: desc, ...owner, createdAt: serverTimestamp() });
+      const ref = await addDoc(collection(db, 'content'), { name, description: desc, ...owner, ...fields, createdAt: serverTimestamp() });
+      newId = ref?.id;
       logEvent('content.pack', { target: name, targetId: ref?.id, detail: 'Created' });
+      // The subject inside, set up the same way
+      if (std && f.subject && document.getElementById('std-add-subject').checked) {
+        const sd = { name: f.subject, emoji: emojiFor(f.subject), resources: [], examBoard: SUBJECT_BOARD[f.board] || f.board, level: f.level === 'Other' ? '' : f.level,
+          spelling: isLanguageSubject(f.subject) ? 'strict' : 'relaxed', order: 0, createdAt: serverTimestamp() };
+        await addDoc(collection(db, `content/${ref.id}/subjects`), sd);
+        logEvent('content.subject', { target: `${name} › ${sd.name}`, detail: 'Created' });
+      }
     }
     closeModal('modal-group');
     await loadGroups();
     showToast(editingItem ? 'Revision pack updated' : 'Revision pack created', 'success');
     editingItem = null;
+    if (newId && std) openGroup(newId, { name, visibility: 'official' });
   } catch(e) { showToast('Error: ' + e.message, 'error'); }
   btn.classList.remove('loading'); btn.disabled = false;
 }
@@ -2751,7 +2967,12 @@ async function loadSubjects() {
   orderedItems.subjects = list;
   grid.innerHTML = '';
   list.forEach((x, i) => grid.appendChild(subjectCard(x.id, x, i, list.length)));
-  grid.insertAdjacentHTML('beforeend', `<div class="add-card" data-action="new-subject">＋ New subject</div>`);
+  grid.insertAdjacentHTML('beforeend', `<div class="add-card" data-action="new-subject">＋ ${MINE ? 'Add a subject' : 'New subject'}</div>`);
+  if (MINE && !list.length) grid.insertAdjacentHTML('afterbegin', `<div class="sheet-start" style="grid-column:1/-1;">
+      <div class="sheet-start-ic">📚</div>
+      <div><strong>Add the first subject to ${esc(selectedGroup?.name || 'this pack')}</strong>
+      <p>Fill it from a photo of a school sheet, let AI build it from the subject, or type the topics yourself.</p></div>
+      <button class="btn btn-primary" data-action="new-subject">＋ Add a subject</button></div>`);
   orderBar('subjects-grid', 'subjects', list.length);
 }
 
@@ -2805,7 +3026,9 @@ async function openSubjectModal(id) {
     if (snap.exists()) {
       document.getElementById('subject-name-input').value = snap.data().name || '';
       document.getElementById('subject-emoji-input').value = snap.data().emoji || '';
-      document.getElementById('subject-board-input').value = snap.data().examBoard || '';
+      const bSel = document.getElementById('subject-board-input'), bVal = snap.data().examBoard || '';
+      if (bVal && ![...bSel.options].some(o => o.value === bVal)) bSel.add(new Option(bVal, bVal));   // e.g. DVSA
+      bSel.value = bVal;
       document.getElementById('subject-level-input').value = snap.data().level || '';
       spellSel.value = spellingMode(snap.data());
       document.getElementById('subject-res-input').value = (snap.data().resources || []).map(r => `${r.label} | ${r.url}`).join('\n');
@@ -2935,6 +3158,23 @@ async function loadTopics() {
   grid.innerHTML = '';
   list.forEach((t, i) => grid.appendChild(topicCard(t.id, t, counts[t.id] || 0, i, list.length)));
   grid.insertAdjacentHTML('beforeend', `<div class="add-card" data-action="new-topic">＋ New topic</div>`);
+  // An empty subject: the quickest start is a sheet that lists the topics
+  // An empty subject: three ways to fill it
+  if (!list.length) {
+    const subj = esc(selectedSubject?.name || 'this subject');
+    const course = esc([selectedSubject?.level, selectedSubject?.examBoard, selectedSubject?.name].filter(Boolean).join(' ') || 'the subject');
+    grid.insertAdjacentHTML('afterbegin', `<div class="fill-start" style="grid-column:1/-1;">
+      <div class="fill-head"><strong>How do you want to fill ${subj}?</strong></div>
+      <div class="fill-ways">
+        <button class="fill-way" data-action="topics-from-sheet"><span class="fill-ic">📷</span><b>From a sheet</b>
+          <small>A revision list, worksheet, specification or syllabus. We split it into topics, each with notes and questions from its own part.</small></button>
+        <button class="fill-way" data-action="build-with-ai"><span class="fill-ic">✨</span><b>Build with AI</b>
+          <small>No sheet needed. Topics from ${course} (or ones you type), then notes and questions for each.</small></button>
+        <button class="fill-way" data-action="type-topics"><span class="fill-ic">✏️</span><b>Type the topic names</b>
+          <small>Just the names for now, all at once. Add notes and questions to each later.</small></button>
+      </div></div>`);
+  }
+  if (!canAI) grid.querySelectorAll('[data-action="topics-from-sheet"],[data-action="build-with-ai"]').forEach(b => b.classList.add('needs-plus'));
   orderBar('topics-grid', 'topics', list.length);
 }
 
@@ -3459,13 +3699,13 @@ async function renderTopicStatus() {
     : !notes ? 'Add notes too, so students can learn the topic before they quiz.'
     : 'Students can learn from the notes and quiz on the questions.';
 }
-async function openCreateWithAI({ start = '' } = {}) {
+async function openCreateWithAI({ start = '', onBack = null } = {}) {
   if (!selectedTopic || !aiAllowed('Create with AI')) return;
   const sSnap = await getDoc(doc(db, subjectsPath(), selectedSubject.id)).catch(() => null);
   const sd = sSnap?.data() || {};
   const pack = selectedGroup ? { id: selectedGroup.id, name: selectedGroup.name } : null;
   openTopicWizard({
-    topic: selectedTopic, topicPath: `${topicsPath()}/${selectedTopic.id}`, start,
+    topic: selectedTopic, topicPath: `${topicsPath()}/${selectedTopic.id}`, start, onBack,
     subject: { name: selectedSubject.name, examBoard: sd.examBoard || '', level: sd.level || '' },
     onDone: (saved = {}) => {
       loadExistingQuestions(); getDoc(doc(db, topicsPath(), selectedTopic.id)).then(s => updateGenKpPreview(s.data()?.keyPoints || [])).catch(() => {});
@@ -3493,7 +3733,7 @@ async function startFromLink() {
   const start = q.get('start'), packId = q.get('pack');
   if (!start && !packId) return;
   try { history.replaceState(null, '', `admin.html?mine=${MINE}`); } catch (e) {}
-  if (start === 'newpack') { openGroupModal(); return; }
+  if (start === 'newpack') { makeRevision(); return; }
   if (start === 'classnotes') { openClassNotesStart(packId); return; }
   if (!packId) return;
   const pSnap = await getDoc(doc(db, 'content', packId)).catch(() => null);
@@ -3517,13 +3757,88 @@ async function startFromLink() {
   openGroup(packId, pack.data);
 }
 
+// "Topics from a sheet" for the open subject (subject-builder.js)
+async function openTopicsFromSheet(mode = 'sheet') {
+  if (!selectedGroup || !selectedSubject || !aiAllowed(mode === 'ai' ? 'Building a subject with AI' : 'Making topics from a sheet')) return;
+  const sSnap = await getDoc(doc(db, subjectsPath(), selectedSubject.id)).catch(() => null);
+  const sd = sSnap?.data() || {};
+  openBuilder({ pack: { id: selectedGroup.id, name: selectedGroup.name }, subject: { ...sd, id: selectedSubject.id, name: selectedSubject.name, examBoard: sd.examBoard || '', level: sd.level || '' }, mode });
+}
+// Several topic names at once (no AI): one per line
+function openTypeTopics() {
+  if (!selectedGroup || !selectedSubject) return;
+  document.getElementById('type-topics')?.remove();
+  document.body.insertAdjacentHTML('beforeend', `<div class="modal-overlay open" id="type-topics" role="dialog" aria-modal="true" aria-labelledby="tt-title"><div class="modal" style="max-width:480px">
+    <div class="modal-header"><h2 id="tt-title">Topics for ${esc(selectedSubject.name)}</h2><button class="modal-close" data-tt="close" aria-label="Close">✕</button></div>
+    <p style="margin:0 0 10px;color:var(--color-text-muted);font-size:0.9rem">One per line, in the order students should see them. Copying a list from a specification is fine: bullets and numbers are tidied away.</p>
+    <textarea id="tt-text" rows="8" style="width:100%;resize:vertical" placeholder="e.g.
+Medieval England: the reign of Edward I
+The Tudors
+The Cold War"></textarea>
+    <div class="error-msg" id="tt-err"></div>
+    <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+      <button class="btn btn-secondary" data-tt="close">Cancel</button><button class="btn btn-primary" id="tt-go">Make these topics</button></div>
+  </div></div>`);
+  const box = document.getElementById('type-topics');
+  box.querySelectorAll('[data-tt="close"]').forEach(b => b.onclick = () => box.remove());
+  setTimeout(() => document.getElementById('tt-text').focus(), 30);
+  document.getElementById('tt-go').onclick = async () => {
+    const norm = x => String(x || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const names = document.getElementById('tt-text').value.split('\n').map(x => x.replace(/^[\s•\-*\d.)]+/, '').trim()).filter(Boolean)
+      .filter((x, i, all) => all.findIndex(y => norm(y) === norm(x)) === i).slice(0, 60);   // repeats dropped, whatever the capitals
+    const err = document.getElementById('tt-err');
+    if (!names.length) { err.textContent = 'Type at least one topic.'; err.classList.add('visible'); return; }
+    const go = document.getElementById('tt-go'); go.disabled = true; go.classList.add('loading');
+    try {
+      const have = inOrder(await getDocs(collection(db, topicsPath())).catch(() => null));
+      const fresh = names.filter(n => !have.some(h => norm(h.name) === norm(n)));
+      await Promise.all(fresh.map((name, i) => addDoc(collection(db, topicsPath()), { name, keyPoints: [], videos: [], order: have.length + i, createdAt: serverTimestamp() })));
+      logEvent('content.topic', { target: `${selectedSubject.name}`, detail: `${fresh.length} topics typed in` });
+      box.remove();
+      showToast(`${fresh.length} topic${fresh.length === 1 ? '' : 's'} made${fresh.length < names.length ? ` (${names.length - fresh.length} already there)` : ''}. Open one to add notes and questions.`, 'success');
+      loadTopics();
+    } catch (e) { go.disabled = false; go.classList.remove('loading'); err.textContent = 'Could not make them: ' + e.message; err.classList.add('visible'); }
+  };
+}
+
+// The sheet / AI builder. pack and subject may not exist yet (no ids): prepare() makes them
+// when building starts. Afterwards the subject's topics are shown.
+function openBuilder({ pack, subject, mode = 'sheet', prepare = null, onBack = null, onClose = null }) {
+  const left = MINE && mineProfile && !hasPlus(mineProfile) ? aiTrialLeft(mineProfile) : 0;
+  const show = (p, s) => {
+    if (selectedGroup?.id !== p.id) openGroup(p.id, { name: p.name });
+    if (selectedSubject?.id !== s.id || currentPanel !== 'topics') openSubject(s.id, s); else loadTopics();
+  };
+  openSubjectBuilder({
+    pack, subject, mode, prepare, onBack, onClose,
+    trialTopics: left ? Math.floor(left / TOKENS_PER_TOPIC) : null,
+    onDone: ({ topics, questions, pack: p, subject: s }) => {
+      show(p, s);
+      showToast(`${topics} topic${topics === 1 ? '' : 's'} made, with ${questions} questions`, 'success');
+      if (MINE && questions) offerGivePack({ role: MINE, uid: currentAdminUid, pack: { id: p.id, name: p.name }, toast: showToast });
+    },
+    onOpenTopic: (id, p, s) => { show(p, s); openTopic(id); },
+  });
+}
+
+// "Make revision" (make-revision.js): parents' and teachers' way to start a pack or add a subject
+function makeRevision(presetPack = null) {
+  openMakeRevision({
+    role: MINE, uid: currentAdminUid, canAI, onLocked: f => showPlusUpsell(f), toast: showToast,
+    presetPack: presetPack ? { id: presetPack.id, name: presetPack.name } : null,
+    onChanged: () => { loadGroups(); if (selectedGroup && document.getElementById('panel-subjects')?.classList.contains('active')) loadSubjects(); },
+    openSubject: (pack, subject) => { openGroup(pack.id, pack.data); openSubject(subject.id, subject.data); },
+    openBuilder,
+  });
+}
+
 // "Turn class notes into revision": pick (or make) where it goes, then Create with AI
-async function openClassNotesStart(packId = '') {
+async function openClassNotesStart(packId = '', subjectId = '') {
   if (!aiAllowed('Turning class notes into revision')) return;
   document.getElementById('cn-start')?.remove();
   const packs = [];
   (await getDocs(query(collection(db, 'content'), where('ownerUid', '==', currentAdminUid))).catch(() => null))
-    ?.forEach(d => { if (d.data().visibility !== 'library') packs.push({ id: d.id, ...d.data() }); });
+    ?.forEach(d => { if (d.data().visibility !== 'library' && !d.data().binned) packs.push({ id: d.id, ...d.data() }); });
   const t = x => x?.toMillis?.() || 0;
   packs.sort((a, b) => t(a.createdAt) - t(b.createdAt));
   const NEW = '__new';
@@ -3531,13 +3846,18 @@ async function openClassNotesStart(packId = '') {
   document.body.insertAdjacentHTML('beforeend', `<div class="modal-overlay open" id="cn-start" role="dialog" aria-modal="true" aria-labelledby="cn-title"><div class="modal" style="max-width:480px">
     <div class="modal-header"><h2 id="cn-title">📷 Turn class notes into revision</h2><button class="modal-close" data-cn="close" aria-label="Close">✕</button></div>
     <p class="cn-lead">First, where should it go? Then take a photo or upload the sheet, and we'll make notes and quiz questions from exactly that.</p>
+    <div class="cn-field"><label>What does the sheet cover?</label>
+      <div class="cn-kind">
+        <label><input type="radio" name="cn-kind" value="one" checked> <span><b>One topic</b>, e.g. notes from one lesson</span></label>
+        <label><input type="radio" name="cn-kind" value="many"> <span><b>Several topics</b>, e.g. a revision list, knowledge organiser or test topics. We'll split it into topics for you.</span></label>
+      </div></div>
     <div class="cn-field"><label for="cn-pack">Pack</label>
       <select id="cn-pack">${packs.map(p => opt(p.id, p.name || 'Untitled pack', p.id === packId)).join('')}${opt(NEW, '＋ A new pack', !packs.length)}</select>
       <input id="cn-pack-new" placeholder="e.g. Year 9 revision" hidden></div>
     <div class="cn-field"><label for="cn-subj">Subject</label>
       <select id="cn-subj"></select>
       <input id="cn-subj-new" placeholder="e.g. Religious Studies" hidden></div>
-    <div class="cn-field"><label for="cn-topic">Topic</label>
+    <div class="cn-field" id="cn-topic-field"><label for="cn-topic">Topic</label>
       <select id="cn-topic"></select>
       <input id="cn-topic-new" placeholder="e.g. Marriage and the family" hidden>
       <div class="form-hint" id="cn-topic-hint" style="font-size:0.78rem;color:var(--color-text-muted);margin-top:6px"></div></div>
@@ -3571,34 +3891,46 @@ async function openClassNotesStart(packId = '') {
     showNew($('cn-pack'), $('cn-pack-new'));
     subs = [];
     if ($('cn-pack').value !== NEW) subs = inOrder(await getDocs(collection(db, `content/${$('cn-pack').value}/subjects`)).catch(() => null));
-    $('cn-subj').innerHTML = subs.map((x, i) => opt(x.id, `${x.emoji || '📚'} ${x.name}`, i === 0)).join('') + opt(NEW, '＋ A new subject', !subs.length);
+    const pick = subs.some(x => x.id === subjectId) ? subjectId : subs[0]?.id;
+    $('cn-subj').innerHTML = subs.map(x => opt(x.id, `${x.emoji || '📚'} ${x.name}`, x.id === pick)).join('') + opt(NEW, '＋ A new subject', !subs.length);
     await fillTopics();
   }
   $('cn-pack').onchange = fillSubjects;
   $('cn-subj').onchange = fillTopics;
   $('cn-topic').onchange = () => showNew($('cn-topic'), $('cn-topic-new'));
+  const many = () => box.querySelector('[name="cn-kind"]:checked')?.value === 'many';
+  box.querySelectorAll('[name="cn-kind"]').forEach(r => r.onchange = () => {
+    $('cn-topic-field').hidden = many();
+    $('cn-go').textContent = many() ? 'Next: add the sheet →' : 'Next: add the notes →';
+  });
   await fillSubjects();
   $('cn-go').onclick = async () => {
     const err = $('cn-err'); err.classList.remove('visible');
     const need = (sel, input, what) => sel.value === NEW && !input.value.trim() ? what : '';
-    const missing = need($('cn-pack'), $('cn-pack-new'), 'a name for the pack') || need($('cn-subj'), $('cn-subj-new'), 'the subject') || need($('cn-topic'), $('cn-topic-new'), 'the topic');
+    const missing = need($('cn-pack'), $('cn-pack-new'), 'a name for the pack') || need($('cn-subj'), $('cn-subj-new'), 'the subject') || (many() ? '' : need($('cn-topic'), $('cn-topic-new'), 'the topic'));
     if (missing) { err.textContent = `Add ${missing}.`; err.classList.add('visible'); return; }
-    const go = $('cn-go'); go.disabled = true; go.classList.add('loading');
+    const go = $('cn-go');
+    // Several topics: nothing is made until topics start being made in the builder,
+    // so Back from it comes straight back to this dialog as it was
+    if (many()) {
+      const packNew = $('cn-pack').value === NEW, subjNew = $('cn-subj').value === NEW;
+      const draftPack = packNew ? { id: null, name: $('cn-pack-new').value.trim() } : { id: $('cn-pack').value, name: packs.find(p => p.id === $('cn-pack').value)?.name || '' };
+      const sd = subjNew ? { name: $('cn-subj-new').value.trim() } : (subs.find(x => x.id === $('cn-subj').value) || {});
+      box.style.display = 'none';
+      openBuilder({ pack: draftPack, subject: { ...sd, id: subjNew ? null : $('cn-subj').value }, mode: 'sheet',
+        prepare: async () => {
+          const t = await makePackAndSubject();
+          loadGroups();
+          return { pack: { id: t.pack.id, name: t.pack.data.name }, subject: { ...t.subject.data, id: t.subject.id } };
+        },
+        onBack: () => { box.style.display = ''; },
+        onClose: () => box.remove(),
+      });
+      return;
+    }
+    go.disabled = true; go.classList.add('loading');
     try {
-      let pack;
-      if ($('cn-pack').value === NEW) {
-        const data = { name: $('cn-pack-new').value.trim(), description: '', ownerUid: currentAdminUid, visibility: 'private', createdAt: serverTimestamp() };
-        const ref = await addDoc(collection(db, 'content'), data);
-        logEvent('content.pack', { target: data.name, targetId: ref.id, detail: 'Created (class notes)' });
-        pack = { id: ref.id, data };
-      } else pack = { id: $('cn-pack').value, data: packs.find(p => p.id === $('cn-pack').value) };
-      let subject;
-      if ($('cn-subj').value === NEW) {
-        const data = { name: $('cn-subj-new').value.trim(), emoji: '📚', resources: [], examBoard: '', level: '', order: subs.length, createdAt: serverTimestamp() };
-        const ref = await addDoc(collection(db, `content/${pack.id}/subjects`), data);
-        logEvent('content.subject', { target: `${pack.data.name} › ${data.name}`, detail: 'Created (class notes)' });
-        subject = { id: ref.id, data };
-      } else subject = { id: $('cn-subj').value, data: subs.find(x => x.id === $('cn-subj').value) };
+      const { pack, subject } = await makePackAndSubject();
       let topic;
       if ($('cn-topic').value === NEW) {
         const data = { name: $('cn-topic-new').value.trim(), keyPoints: [], videos: [], order: topics.length, createdAt: serverTimestamp() };
@@ -3609,12 +3941,31 @@ async function openClassNotesStart(packId = '') {
       box.remove();
       loadGroups();
       goToTopic(pack, subject, topic);
-      openCreateWithAI();
+      // Back: this dialog again, with what was just made now listed (so Next can't make it twice)
+      openCreateWithAI({ onBack: () => openClassNotesStart(pack.id, subject.id) });
     } catch (e) {
       go.disabled = false; go.classList.remove('loading');
       err.textContent = 'Could not set that up: ' + e.message; err.classList.add('visible');
     }
   };
+  // Make (or find) the chosen pack and subject
+  async function makePackAndSubject() {
+    let pack;
+    if ($('cn-pack').value === NEW) {
+      const data = { name: $('cn-pack-new').value.trim(), description: '', ownerUid: currentAdminUid, visibility: 'private', createdAt: serverTimestamp() };
+      const ref = await addDoc(collection(db, 'content'), data);
+      logEvent('content.pack', { target: data.name, targetId: ref.id, detail: 'Created (class notes)' });
+      pack = { id: ref.id, data };
+    } else pack = { id: $('cn-pack').value, data: packs.find(p => p.id === $('cn-pack').value) };
+    let subject;
+    if ($('cn-subj').value === NEW) {
+      const data = { name: $('cn-subj-new').value.trim(), emoji: '📚', resources: [], examBoard: '', level: '', order: subs.length, createdAt: serverTimestamp() };
+      const ref = await addDoc(collection(db, `content/${pack.id}/subjects`), data);
+      logEvent('content.subject', { target: `${pack.data.name} › ${data.name}`, detail: 'Created (class notes)' });
+      subject = { id: ref.id, data };
+    } else subject = { id: $('cn-subj').value, data: subs.find(x => x.id === $('cn-subj').value) };
+    return { pack, subject };
+  }
 }
 
 /* ── AI GENERATION ───────────────────────────────────────── */
@@ -4957,6 +5308,7 @@ async function togglePlusTopic(btn) {
     logEvent('content.topic', { target: btn.dataset.name, targetId: btn.dataset.id, detail: on ? 'Made Plus only' : 'Made a free sample' });
     showToast(`"${btn.dataset.name}" is now ${on ? 'Plus only' : 'free'}`, 'success');
     loadTopics();
+    if (selectedGroup) refreshOfficialDescription(selectedGroup.id).catch(() => {});
   } catch (e) { showToast('Could not change it: ' + e.message, 'error'); btn.disabled = false; }
 }
 
@@ -4990,6 +5342,7 @@ async function openFreeSample(packId, name) {
       logEvent('content.pack', { target: name, targetId: packId, detail: `Free sample: ${n} per subject (${free} free, ${plus} Plus only)` });
       closeModal('modal-confirm');
       showToast(`"${name}": ${free} free topic${free === 1 ? '' : 's'}, ${plus} Plus only`, 'success');
+      refreshOfficialDescription(packId).then(d => { if (d) loadGroups(); }).catch(() => {});
     } catch (e) { showToast('Error: ' + e.message, 'error'); }
   };
   openModal('modal-confirm');
@@ -5673,6 +6026,6 @@ window.showToast = function(msg, type='info') {
   c.appendChild(t); setTimeout(() => t.remove(), 3500);
 };
 </script>
-<script src="site.js?v=20261126b"></script>
+<script src="site.js?v=20261126l"></script>
 </body>
 </html>

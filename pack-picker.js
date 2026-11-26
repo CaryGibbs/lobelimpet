@@ -13,13 +13,14 @@
 // ============================================================
 
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const LEVELS = ['GCSE', 'AS level', 'A level'];
+const LEVELS = ['KS3', 'GCSE', 'AS level', 'A level', 'National 5', 'Higher', 'University', 'Professional', 'Driving'];
+const LEVEL_LABEL = { Professional: 'Professional qualifications', Driving: 'Driving test' };
 const normLevel = l => {
   const s = String(l || '').trim();
   if (/^gcse/i.test(s)) return 'GCSE';
   if (/^as[ -]?level/i.test(s)) return 'AS level';
   if (/^a[ -]?level/i.test(s)) return 'A level';
-  return '';
+  return LEVELS.find(x => x.toLowerCase() === s.toLowerCase()) || '';
 };
 const normBoard = b => {
   const s = String(b || '').trim();
@@ -49,8 +50,9 @@ export const PICKER_CSS = `
   .pp-levels { display: inline-flex; border: 1px solid var(--color-border); border-radius: 999px; overflow: hidden; }
   .pp-levels button { border: 0; background: none; padding: 6px 12px; font-family: var(--font-ui); font-size: 0.8rem; font-weight: 700; color: var(--color-text-muted); cursor: pointer; }
   .pp-levels button.on { background: var(--color-primary); color: var(--color-on-primary, #fff); }
-  .pp-bar select, .pp-bar input { font: inherit; font-size: 0.85rem; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text); }
-  .pp-bar input { flex: 1; min-width: 140px; }
+  .pp-bar select, .pp-bar input { font: inherit; font-size: 0.85rem; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text); margin: 0 !important; }
+  .pp-bar select { width: auto !important; flex: 0 0 auto; }
+  .pp-bar input { flex: 1 1 180px; width: auto !important; min-width: 140px; }
   .pp-level { font-family: var(--font-ui); font-size: 0.8rem; font-weight: 800; color: var(--color-text); margin: 12px 0 2px; }
   .pp-subject { font-family: var(--font-ui); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted); margin: 8px 0 4px; }
   .pp-board { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--color-border); font-family: var(--font-ui); font-size: 0.68rem; font-weight: 700; color: var(--color-text-muted); vertical-align: middle; white-space: nowrap; }
@@ -77,7 +79,7 @@ export function pickerHtml({ mine = [], official = [], item, mineTitle = 'My pac
   const levelsPresent = LEVELS.filter(l => official.some(p => packMeta(p).level === l));
   const bar = showBar ? `<div class="pp-bar">
       ${levelsPresent.length > 1 ? `<span class="pp-levels" role="group" aria-label="Level">
-        <button type="button" class="on" data-pp-level="">All</button>${levelsPresent.map(l => `<button type="button" data-pp-level="${esc(l)}">${esc(l)}</button>`).join('')}</span>` : ''}
+        <button type="button" class="on" data-pp-level="">All</button>${levelsPresent.map(l => `<button type="button" data-pp-level="${esc(l)}">${esc(LEVEL_LABEL[l] || l)}</button>`).join('')}</span>` : ''}
       ${boards.length > 1 ? `<select data-pp-board aria-label="Exam board"><option value="">All boards</option>${boards.map(b => `<option>${esc(b)}</option>`).join('')}</select>` : ''}
       <input type="search" data-pp-search placeholder="Search subject, board or spec code" aria-label="Search packs">
     </div>` : '';
@@ -87,7 +89,7 @@ export function pickerHtml({ mine = [], official = [], item, mineTitle = 'My pac
   const levelOrder = [...LEVELS, 'Other'].filter(l => byLevel[l]);
   const officialHtml = levelOrder.map(l => {
     const subs = Object.keys(byLevel[l]).sort((a, b) => a === 'Other' ? 1 : b === 'Other' ? -1 : a.localeCompare(b, 'en-GB'));
-    return `<div class="pp-group" data-pp-group><div class="pp-level">${esc(l === 'Other' ? 'Other packs' : l)}</div>${subs.map(s => `<div class="pp-group" data-pp-group>
+    return `<div class="pp-group" data-pp-group><div class="pp-level">${esc(l === 'Other' ? 'Other packs' : LEVEL_LABEL[l] || l)}</div>${subs.map(s => `<div class="pp-group" data-pp-group>
         <div class="pp-subject">${esc(s === 'Other' ? (l === 'Other' ? '' : 'Other') : s)}</div>
         <div class="pp-items">${byLevel[l][s].sort((a, b) => (packMeta(a).board || '').localeCompare(packMeta(b).board || '') || a.name.localeCompare(b.name)).map(row).join('')}</div></div>`).join('')}</div>`;
   }).join('');
